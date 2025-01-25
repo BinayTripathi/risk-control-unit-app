@@ -1,28 +1,88 @@
 {
   "expo": {
     "name": "icheckify",
-    "slug": "icheckify",
-    "version": "1.0.0",
+    "slug": "RiskControlUnit",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "newArchEnabled": true,
+    "plugins": [
+      ["@react-native-voice/voice"],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
+        }
+      ], [
+      "react-native-document-scanner-plugin",
+      {
+        "cameraPermission": "We need camera access, so you can scan documents"
+      } ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
+        }
+      ], 
+      ["expo-secure-store",
+      {
+        "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+      }
+     ],
+     [["./withDrawableAssets.js","./assets"] ,"@config-plugins/react-native-quick-actions"]
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.binaytripathi.RiskControlUnit",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to let user click client photos and scan documents"
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "buildToolsVersion": "35.0.0",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "usesCleartextTraffic": true,
+       "uses-permission android":"name",
+      "permissions": [
+        "CAMERA", 
+        "READ_PHONE_STATE",
+        "READ_PHONE_NUMBERS",
+        "RECEIVE_SMS",
+        "READ_SMS",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.binaytripathi.icheckify"    ,
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f63f5431-06a6-4b51-9967-2e3beb9b0119"
+      }
     }
   }
 }

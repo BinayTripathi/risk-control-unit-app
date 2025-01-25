@@ -1,0 +1,94 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
+        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '29')
+        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
+        targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '29')
+        kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.24'
+
+        ndkVersion = "26.1.10909125"
+
+        println "buildToolsVersion: ${buildToolsVersion}"
+        println "minSdkVersion: ${minSdkVersion}"
+        println "compileSdkVersion: ${compileSdkVersion}"
+        println "targetSdkVersion: ${targetSdkVersion}"
+    }
+     subprojects { subproject ->
+        afterEvaluate{
+            if((subproject.plugins.hasPlugin('android') || subproject.plugins.hasPlugin('android-library'))) {
+                android {
+                    compileSdkVersion rootProject.ext.compileSdkVersion
+                    buildToolsVersion rootProject.ext.buildToolsVersion
+                    
+                    defaultConfig {
+
+                        versionCode 2
+                        versionName "2.0"                        
+                        multiDexEnabled true
+                        
+
+                    }
+
+                    signingConfigs {
+                        debug {
+                            storeFile file('debug.keystore')
+                            storePassword 'android'
+                            keyAlias 'androiddebugkey'
+                            keyPassword 'android'
+                        }
+                    // Add release block in signiningConfigs 
+                        release {
+                                if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+                                    storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                                    storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                                    keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                                    keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+                                }
+                            }
+                        }
+                
+                    buildTypes {
+                        debug {
+                            signingConfig signingConfigs.debug
+                        }
+                        release {
+                            // Caution! In production, you need to generate your own keystore file.
+                            // see https://reactnative.dev/docs/signed-apk-android.
+                            signingConfig signingConfigs.release
+                        }
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath('com.android.tools.build:gradle')
+        classpath('com.facebook.react:react-native-gradle-plugin')
+        classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url(new File(['node', '--print', "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim(), '../android'))
+        }
+        maven {
+            // Android JSC is installed from npm
+            url(new File(['node', '--print', "require.resolve('jsc-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), '../dist'))
+        }
+
+        google()
+        mavenCentral()
+        maven { url 'https://www.jitpack.io' }
+    }
+}

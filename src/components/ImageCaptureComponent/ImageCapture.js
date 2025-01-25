@@ -1,0 +1,572 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { StyleSheet, TouchableOpacity, View, Alert,Text, Dimensions, ActivityIndicator, } from "react-native";
+import { FontAwesome, AntDesign, Ionicons } from '@expo/vector-icons';
+
+import { useCameraDevice, useCameraPermission, CameraCaptureError, Camera, useFrameProcessor} from 'react-native-vision-camera'
+import { Face,
+  runAsync,
+  useFaceDetector,
+  FaceDetectionOptions} from 'react-native-vision-camera-face-detector'
+import { Worklets } from 'react-native-worklets-core'
+import * as FileSystem from 'expo-file-system';
+
+import {useWindowDimensions} from 'react-native';
+import { AnimatedCircularProgress } from "react-native-circular-progress"
+import Svg, {Polyline} from "react-native-svg";
+
+
+import Paragraph from '@components/UI/Paragraph'
+import { DOC_TYPE } from '@core/constants';
+
+const cameraMarginTop = 70
+const { width: windowWidth, height: windowHeight } = Dimensions.get("window")
+const PREVIEW_SIZE = 325
+const PREVIEW_RECT = {
+  minX: (windowWidth - PREVIEW_SIZE) / 2,
+  minY: cameraMarginTop + 20,
+  width: PREVIEW_SIZE,
+  height: PREVIEW_SIZE,
+}
+
+const instructionsText = {
+  initialPrompt: "Position your face in the circle",
+  performActions: "Keep the device still and perform the following actions:",
+  tooClose: "You're too close. Hold the device further.",
+  tooFar: "You're too far. Hold the device closer."
+}
+
+const livelinessDetectionParam = {
+  BLINK: { instruction: "Blink both eyes", minProbability: 0.3 },
+  TURN_HEAD_LEFT: { instruction: "Turn head left", maxAngle: 15 },
+  TURN_HEAD_RIGHT: { instruction: "Turn head right", minAngle: -15 },
+  NOD: { instruction: "Nod", minDiff: 1.5 },
+  SMILE: { instruction: "Smile", minProbability: 0.7 },
+}
+
+
+const detectionsList = [
+  "BLINK",
+  "TURN_HEAD_LEFT",
+  "TURN_HEAD_RIGHT",
+  "SMILE",
+  "NOD",
+  
+]
+
+const initialState = {
+  faceDetected: false ,
+  faceTooBig: false ,
+  faceTooSmall: false ,
+  detectionsList,
+  currentDetectionIndex: 0,
+  progressFill: 0,
+  processComplete: false,
+  highLevelInstruction: instructionsText.initialPrompt,
+  actionToPerform: ''
+}
+  
+
+const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
+ 
+
+  const { hasPermission, setHasPermission } = useCameraPermission();
+  const [isCameraInitialized, setIsCameraInitialized] = useState(false)
+  const [flashMode, setFlashMode] = useState('off');
+  const [type, setType] = useState('front');
+  const device = useCameraDevice(type)
+  let camera = useRef(null);
+
+  const faceDetectionOptions = useRef( {
+    classificationMode: 'all',
+    contourMode: 'all',
+    performanceMode: 'fast',
+    //autoScale: true
+
+  } ).current
+  const { detectFaces } = useFaceDetector( faceDetectionOptions )
+
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  
+  const {height: screenHeight, width: screenWidth} = useWindowDimensions();  
+  const [faceData, setFaceData] = React.useState(initialState);
+  const [faces, setFaces] = React.useState([]);
+  const [faceDataForBounding, setFaceDataForBounding] = React.useState(initialState);
+  const [faceCont, setFaceCont] = useState()
+  const rollAngles = useRef([])
+  const [livelinessCheckDone, setLivelinessCheckDone] = useState(false)
+  
+  if (hasPermission === null) {
+    return <Text>Checking camera permission...</Text>;
+  } else if (!hasPermission) {
+    return <Text>Camera permission not granted</Text>;
+  }
+
+  if (!device) {
+    return <Text>No camera device available</Text>;
+  }
+
+  useEffect(() => {
+    (async () => {
+      await requestCameraPermission();
+    })();
+  }, [device]);
+
+  const requestCameraPermission = async () => {
+    const status = await Camera.getCameraPermissionStatus();
+    console.log('status',status);
+    
+    /*if (status === 'granted') {
+      setHasPermission(true);
+    } else if (status === 'notDetermined') {
+      const permission = await Camera.requestCameraPermission();
+      setHasPermission(permission === 'authorized');
+    } else {
+      setHasPermission(false);
+    }*/
+  };
+
+
+  const flashModeHandler = () => {
+    
+    if (flashMode === 'on') {
+      setFlashMode(() => 'off');
+    } else if (flashMode === 'off') {
+      setFlashMode(() =>'on');
+    } 
+  };
+
+
+  const handleDetectedFaces = Worklets.createRunOnJS( (faces) => { 
+
+    setFaceDataForBounding(faces);
+    if (faces.length === 1) {
+      let face = faces[0]
+
+      let pathKey = Object.keys(face.contours.FACE)
+     let stringPth = ''
+     pathKey.forEach(key=> {
+      stringPth += `${Math.ceil( face.contours.FACE[key]['x'] * 200 )},${Math.ceil(face.contours.FACE[key]['y'] * 200)} `
+     })
+     setFaceCont(stringPth)
+      
+      let faceBoundary = {
+        //minX: face.bounds.x,
+        //minY: face.bounds.y,
+        minY: face.contours.FACE['0']['y'],
+        minX: face.contours.FACE['0']['x'],
+        width: face.bounds.width,
+        height: face.bounds.height
+      }
+      //console.log(faceBoundary)
+      const edgeOffset = 10
+      const faceRectSmaller = {
+        width: faceBoundary.width + edgeOffset,
+        height: faceBoundary.height + edgeOffset,
+        //minY: faceBoundary.minY + edgeOffset ,
+        //minX: faceBoundary.minX + edgeOffset 
+        minY: face.contours.FACE['0']['y'],
+        minX: face.contours.FACE['0']['x']
+      }
+  
+      let previewContainsFace = true/*contains({
+        outside: PREVIEW_RECT,
+        inside: faceBoundary
+      })*/
+  
+      let isPreviewTooSmall = false//faceBoundary.width < PREVIEW_SIZE
+
+      //Camera is very close
+      if(!previewContainsFace && !isPreviewTooSmall) {        
+        let payload = {...faceData,
+          faceDetected: true ,
+          faceTooBig: true,
+          faceTooSmall: false,
+          highLevelInstruction: instructionsText.tooClose,
+          faceBoundary,
+          faceRectSmaller
+
+        }
+        setFaceData(payload)
+      }
+
+      //Camera is very far
+      if(previewContainsFace && isPreviewTooSmall) {
+        let payload = {...faceData,
+          faceDetected: true ,
+          faceTooBig: false,
+          faceTooSmall: true,
+          highLevelInstruction: instructionsText.tooFar,
+          faceBoundary,
+          faceRectSmaller
+        }
+        setFaceData(payload)
+      }
+
+      
+      if(previewContainsFace && !isPreviewTooSmall) {
+        
+        if(faceData.currentDetectionIndex < faceData.detectionsList.length){
+          const detectionAction = faceData.detectionsList[faceData.currentDetectionIndex]
+        let payload = {...faceData,
+          faceDetected: true ,
+          faceTooBig: false,
+          faceTooSmall: false,
+          highLevelInstruction: instructionsText.performActions,
+          progressFill: 100 / (faceData.detectionsList.length + 1),
+          actionToPerform: livelinessDetectionParam[detectionAction].instruction,
+          faceBoundary,
+          faceRectSmaller
+        }
+        setFaceData(payload)
+        handleUserActions(detectionAction,face)
+        } else {
+          let payload = {...faceData,
+            faceDetected: true ,
+            faceTooBig: false,
+            faceTooSmall: false,
+            highLevelInstruction: 'Liveliness Detection Done',
+            progressFill: 100 / (faceData.detectionsList.length + 1),
+            actionToPerform: 'Please click image capture button',
+            faceBoundary,
+            faceRectSmaller
+          }
+          setFaceData(payload)
+          setLivelinessCheckDone(true)
+        }
+        
+      }
+      
+    } else 
+      setFaceData(initialState)   
+  })
+
+
+
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet'
+      const faces = detectFaces(frame)
+      /*for (const face of faces || []) {
+        // Draw lines
+        var rect = SKRect.create(10,10,100,100)
+          frame.drawRect(rect, linePaint)
+        }*/
+      // ... chain some asynchronous frame processor
+      // ... do something asynchronously with frame
+      handleDetectedFaces(faces)
+    // ... chain frame processors
+    // ... do something with frame
+  }, [handleDetectedFaces])
+
+  const handleFacesDetected = ({ faces }) => {
+    
+    //setLastFaceDetectionTime(Date.now())
+     
+  }
+
+
+
+  const handleUserActions = (detectionAction, face) => {
+
+    console.log(`${faceData.length} < ${docType.faceCount} && ${livelinessCheckDone}`)
+    switch (detectionAction) {
+      case "BLINK":
+        const leftEyeClosed =
+          face.leftEyeOpenProbability <= livelinessDetectionParam.BLINK.minProbability
+        const rightEyeClosed =
+          face.rightEyeOpenProbability <= livelinessDetectionParam.BLINK.minProbability
+        if (leftEyeClosed && rightEyeClosed) {
+          let newFaceData = {...faceData,
+            currentDetectionIndex : faceData.currentDetectionIndex + 1
+            //progressFill: newProgressFill
+          } 
+          setFaceData(newFaceData)
+          console.log('---------blinking called')
+        }
+        return
+      case "NOD":
+        // Collect roll angle data
+        rollAngles.current.push(face.rollAngle)
+
+        // Don't keep more than 10 roll angles (10 detection frames)
+        if (rollAngles.current.length > 10) {
+          rollAngles.current.shift()
+        }
+
+        // If not enough roll angle data, then don't process
+        if (rollAngles.current.length < 10) return
+
+        // Calculate avg from collected data, except current angle data
+        const rollAnglesExceptCurrent = [...rollAngles.current].splice(
+          0,
+          rollAngles.current.length - 1
+        )
+
+        // Summation
+        const rollAnglesSum = rollAnglesExceptCurrent.reduce((prev, curr) => {
+          return prev + Math.abs(curr)
+        }, 0)
+
+        // Average
+        const avgAngle = rollAnglesSum / rollAnglesExceptCurrent.length
+
+        // If the difference between the current angle and the average is above threshold, pass.
+        const diff = Math.abs(avgAngle - Math.abs(face.rollAngle))
+
+        if (diff >= livelinessDetectionParam.NOD.minDiff) {
+          let newFaceData = {...faceData,
+            currentDetectionIndex : faceData.currentDetectionIndex + 1
+            //progressFill: newProgressFill
+          } 
+          setFaceData(newFaceData)
+          console.log('---------noded')
+        }
+        return
+      case "TURN_HEAD_LEFT":
+        // Negative angle is the when the face turns left
+        if (face.yawAngle >= livelinessDetectionParam.TURN_HEAD_LEFT.maxAngle) {
+          let newFaceData = {...faceData,
+            currentDetectionIndex : faceData.currentDetectionIndex + 1
+            //progressFill: newProgressFill
+          } 
+          setFaceData(newFaceData)
+          console.log('---------head turned left')
+        }
+        return
+      case "TURN_HEAD_RIGHT":
+        // Positive angle is the when the face turns right
+        if (face.yawAngle <= livelinessDetectionParam.TURN_HEAD_RIGHT.minAngle) {
+          let newFaceData = {...faceData,
+            currentDetectionIndex : faceData.currentDetectionIndex + 1
+            //progressFill: newProgressFill
+          } 
+          setFaceData(newFaceData)
+          console.log('---------head turned right')
+        }
+        return
+      case "SMILE":
+        // Higher probabiltiy is when smiling
+        if (face.smilingProbability >= livelinessDetectionParam.SMILE.minProbability) {
+          let newFaceData = {...faceData,
+            currentDetectionIndex : faceData.currentDetectionIndex + 1
+            //progressFill: newProgressFill
+          } 
+          setFaceData(newFaceData)
+          console.log('---------smiled')
+        }
+        return
+    }
+  }
+
+ 
+  const takePhoto = async () => {
+
+    try {
+      if (!camera.current) {
+        console.error('Camera reference not available.', camera);
+        return;
+      }
+
+      const photo = await camera.current.takePhoto();
+      console.log(photo);
+      
+      if (photo) {
+        console.log(`file://${photo.path}`)
+        const base64 = await FileSystem.readAsStringAsync(`file://${photo.path}`, { encoding: 'base64' });
+        setPhotoData(base64.replaceAll(" ","+"));
+      } else {
+        console.error('Photo captured is undefined or empty.');
+      }
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+    }
+    
+  };
+
+  const onCameraReady = (ref) => {
+    // Camera component is ready, set the camera reference
+    camera.current = ref;// Reference to the Camera component (e.g., obtained from ref prop)
+  };
+
+  function contains({ outside, inside }) {
+    const outsideMaxX = outside.minX + outside.width
+    const insideMaxX = inside.minX + inside.width
+    const outsideMaxY = outside.minY + outside.height
+    const insideMaxY = inside.minY + inside.height
+    if (inside.minX < outside.minX) {
+      return false
+    }
+    if (insideMaxX > outsideMaxX) {
+      return false
+    }
+    if (inside.minY < outside.minY) {
+      return false
+    }
+    if (insideMaxY > outsideMaxY) {
+      return false
+    }
+    return true
+  }
+
+  let boundingArea = faceData.faceBoundary === undefined ? <View/> :
+  
+      <View  style= {[styles.facebox, {marginLeft: PREVIEW_RECT.minX, 
+        marginTop: PREVIEW_RECT.minY, 
+        width: PREVIEW_RECT.width,
+        height: PREVIEW_RECT.height}]}> 
+
+         
+          <Svg height="500" width="500">
+            <Polyline
+              points="100,44 108,43 123,44 134,48 142,53 148,61 151,69 153,77 154,86 155,94 155,103 153,113 150,121 146,126 141,131 137,135"
+              fill="none"
+              stroke="black"
+              strokeWidth="3"
+            />
+          </Svg>
+
+      </View>
+    
+  
+  
+
+  return (
+    <View style={[styles.container, {width: screenWidth, paddingHorizontal: 4}]}>     
+          
+        <View style={styles.top}>       
+        
+          
+          <Camera style={styles.cameraContainer} 
+              ref={(ref) => onCameraReady(ref)} 
+              type={type} 
+              device={device}
+              frameProcessor={frameProcessor}
+              flashMode={flashMode === "on" ? "on": "off"}
+              isActive={true}
+              photo={true}/>
+              {boundingArea}
+        </View>
+        
+        <View style={styles.instructionsContainer}>
+          <Text style={styles.instructions}>{faceData.highLevelInstruction}</Text>
+          <Text style={styles.action}>{faceData.actionToPerform}</Text>
+        </View>
+        <View style={styles.bottom}>
+            
+          <TouchableOpacity
+              onPress={() => {
+              setType(
+                type === 'back'
+                  ? 'front'
+                  : 'back'
+              );
+            }}
+              style={{
+                backgroundColor: type === 'back' ? "#0f0f0f" : "#f0f0f0",
+                color: type === 'back' ? "white" : "#fff",
+                borderRadius: 70,
+                height: 65,
+                width: 65,
+              }}><View style={{flex: 1, alignItems: "center", justifyContent: "center"}}>
+                {type === 'back'
+                  ? <AntDesign name="retweet" size={24} color="white" />
+                  : <AntDesign name="retweet" size={24} color="black" />
+              }
+              </View>                 
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={takePhoto} disabled={faces.length < docType.faceCount && !livelinessCheckDone}>
+              <FontAwesome name="camera" style={[ faces.length < docType.faceCount && !livelinessCheckDone? 
+                { color: "grey", fontSize: 40} :{ color: "white", fontSize: 40}]}  />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={flashModeHandler}
+              style={{                  
+                borderRadius: 70,
+                height: 65,
+                width: 65,
+              }}
+            >
+              <View style={{flex: 1, alignItems: "center", justifyContent: "center", borderRadius: 1000,  borderColor: "white",borderWidth: 1,}}>
+                <Ionicons  name= { flashMode === "off" ? "flash":"flash-off"} style={{ color: "#fff", fontSize: 24}} />
+              </View>
+            </TouchableOpacity>
+        </View>
+      
+    </View>
+  );
+}
+
+export default ImageCapture;
+
+const styles = StyleSheet.create({
+    container: {
+      flex:1,
+      maxWidth: 450,
+    },
+    cameraContainer: {
+      flex: 1,
+      marginTop: cameraMarginTop,
+      borderRadius: 10
+    },
+    top: {
+      flex: 6,
+    },
+    bottom: {
+      flex: 1,
+      flexDirection: "row",
+      height: 125,
+     
+      alignItems: "center",
+      justifyContent: "space-around",
+    },
+    button: {
+      height: 65,
+      width: 65,
+      borderRadius: 1000,
+      borderColor: "white",
+      borderWidth: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    facebox: {
+      borderColor: 'green',
+      borderWidth: 2,
+      position: 'absolute',
+    },
+    noFaceWarning : {
+      position: 'absolute',
+      fontWeight: '900',
+      fontSize: 16,
+      color: 'red'
+    },
+    mask: {
+      borderRadius: PREVIEW_SIZE / 2,
+      height: PREVIEW_SIZE,
+      width: PREVIEW_SIZE,
+      marginTop: PREVIEW_RECT.minY,
+      alignSelf: "center",
+      backgroundColor: "white",
+    },
+    circularProgress: {
+      width: PREVIEW_SIZE,
+      height: PREVIEW_SIZE,
+      marginTop: PREVIEW_RECT.minY,
+      marginLeft: PREVIEW_RECT.minX,
+    },
+    instructions: {
+      fontSize: 20,
+      textAlign: "center",
+    },
+    instructionsContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center"
+    },
+    action: {
+      fontSize: 24,
+      textAlign: "center",
+      fontWeight: "bold",
+    }
+  });
