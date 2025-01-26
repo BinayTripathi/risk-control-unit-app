@@ -38,8 +38,8 @@ const CaseGeolocation = ({reloadProp, userLoc, userId}) => {
 
 
   const [initialRegion, setInitialRegion] = useState({
-    latitude: -37,
-    longitude: 145,
+    latitude: userLoc.latitude,
+    longitude:  userLoc.longitude,
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   });

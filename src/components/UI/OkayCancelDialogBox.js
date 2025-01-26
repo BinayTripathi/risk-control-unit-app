@@ -21,7 +21,7 @@ const OkayCancelDialogBox = ({showDialog, setShowDialog, title, content, okayHan
         <Portal>
             <Modal  visible={showDialog} onDismiss={dismissHandler} contentContainerStyle={styles.containerStyle} dismissable={true} >            
                 <Surface style={[styles.surface]}>
-                    <View style={{alignItems: 'center', height: 1}}>
+                    <View style={{alignItems: 'center', height: 1,       color: '#e96969'}}>
                         <Image source={require('@root/assets/green_question.jpg')} style={styles.image} />  
                     </View>                  
                                       
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     containerStyle:   {
         backgroundColor:'transparent', 
         marginHorizontal: 5,
-        alignItems: 'center',
+        alignItems: 'center'
       },
     surface: {
       minHeight: 230,

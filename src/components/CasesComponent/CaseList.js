@@ -27,7 +27,7 @@ export default function CaseList({userLoc,userId}) {
   const [refreshing, setRefreshing] = useState(true);
   const [forceRerender, setForceRerender] = useState('')
 
-  console.log(cases)
+  console.log(cases.length)
   const onChangeSearch = query => setSearchQuery(query);
  
   const dispatchFetchRequest = async () => {
@@ -74,6 +74,7 @@ export default function CaseList({userLoc,userId}) {
   }
 
   const searchCasesByName = (caseToCheck) => {
+    console.log(searchQuery)
     if(searchQuery.length != 0)
       return caseToCheck.customerName.startsWith(searchQuery) || 
               caseToCheck.policyNumber.startsWith(searchQuery)
@@ -85,7 +86,9 @@ export default function CaseList({userLoc,userId}) {
 
     caseMarkers = mergeByClaimId(caseMarkers,cases) 
     //return cases !== undefined ?cases.filter(searchCasesByName).reverse() : null;
-    return caseMarkers !== undefined ?caseMarkers.filter(searchCasesByName).reverse() : null;
+    var caseM = caseMarkers !== undefined ?caseMarkers.filter(searchCasesByName).reverse() : null;
+    console.log(caseM.length)
+    return caseM
   }
 
   let casesToShow = <View style = {{paddingTop: 20}}>
