@@ -89,7 +89,7 @@ export const getAllCases = async (email) => {
     //const url = 'https://rcu.azurewebsites.net/api/agent/agent?email=agent@agency1.com'
     console.log(url)
     let response = await Request.get({url});
-    console.log(response)
+    //console.log(response)
     return response
   } catch (error) {
     console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object

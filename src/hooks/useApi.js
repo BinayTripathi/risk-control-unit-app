@@ -12,7 +12,7 @@ const useApi = (restCall, payload) => {
             resp = await restCall(payload)
             setData(resp.data)
             setLoading(false);
-            console.log(resp.data)
+            //console.log(resp.data)
         }     
           catch(error) {
             setError(error);

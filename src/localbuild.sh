@@ -14,7 +14,7 @@ rm -rf .gradle/ && ./gradlew clean
 
 npm run android
 
-set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=aizaSyAmfJSJM1Ej913jydNhTfDtMQMtng7FXtm
+set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=AIzaSyAprINTY_E5slgC2DIb-ZXF8k9I2pBIwoe
 
 cd android
 gradlew bundleRelease 
@@ -47,3 +47,7 @@ set(ENABLE_FRAME_PROCESSORS ON)
 find_package(react-native-worklets-core REQUIRED CONFIG)
 Run the Project: Finally, launch your project from Android Studio.
 -------------------------------------
+
+
+adb devices
+adb logcat -v time > log.txt

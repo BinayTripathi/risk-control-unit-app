@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { StyleSheet, TouchableOpacity, View, Alert,Text, Dimensions, ActivityIndicator, } from "react-native";
+import { StyleSheet, TouchableOpacity, View, PermissionsAndroid,Text, Dimensions, ActivityIndicator, } from "react-native";
 import { FontAwesome, AntDesign, Ionicons } from '@expo/vector-icons';
 
 import { useCameraDevice, useCameraPermission, CameraCaptureError, Camera, useFrameProcessor} from 'react-native-vision-camera'
@@ -29,7 +29,7 @@ const PREVIEW_RECT = {
 }
 
 const instructionsText = {
-  initialPrompt: "Position your face in the circle",
+  initialPrompt: "Position your face in the screen and hold still",
   performActions: "Keep the device still and perform the following actions:",
   tooClose: "You're too close. Hold the device further.",
   tooFar: "You're too far. Hold the device closer."
@@ -99,7 +99,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
   if (hasPermission === null) {
     return <Text>Checking camera permission...</Text>;
   } else if (!hasPermission) {
-    return <Text>Camera permission not granted</Text>;
+    
   }
 
   if (!device) {
@@ -112,18 +112,41 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
     })();
   }, [device]);
 
-  const requestCameraPermission = async () => {
+  /*const requestCameraPermission = async () => {
     const status = await Camera.getCameraPermissionStatus();
     console.log('status',status);
     
-    /*if (status === 'granted') {
+    if (status === 'granted') {
       setHasPermission(true);
     } else if (status === 'notDetermined') {
       const permission = await Camera.requestCameraPermission();
       setHasPermission(permission === 'authorized');
     } else {
       setHasPermission(false);
-    }*/
+    }
+  };*/
+
+  const requestCameraPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'iCheckify Camera Permission',
+          message:
+            'iCheckify needs access to your camera',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('You can use the camera');
+      } else {
+        console.log('Camera permission denied');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
   };
 
 
@@ -415,15 +438,6 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
         width: PREVIEW_RECT.width,
         height: PREVIEW_RECT.height}]}> 
 
-         
-          <Svg height="500" width="500">
-            <Polyline
-              points="100,44 108,43 123,44 134,48 142,53 148,61 151,69 153,77 154,86 155,94 155,103 153,113 150,121 146,126 141,131 137,135"
-              fill="none"
-              stroke="black"
-              strokeWidth="3"
-            />
-          </Svg>
 
       </View>
     

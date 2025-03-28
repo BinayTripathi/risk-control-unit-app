@@ -96,7 +96,7 @@ export default function RegistrationScreen({ route, navigation }) {
     
     
     try {
-      const granted = await PermissionsAndroid.request(
+      /*const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.READ_PHONE_NUMBERS,
         {
           title: 'iCheckfy Phone State Permission',
@@ -107,7 +107,7 @@ export default function RegistrationScreen({ route, navigation }) {
           buttonPositive: 'OK',
         },
       );
-      console.log(`checking permissions ${granted}`)   
+      console.log(`checking permissions ${granted}`)   */
       
        
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -126,7 +126,7 @@ export default function RegistrationScreen({ route, navigation }) {
   }
 
   _onSmsListenerPressed = async () => {
-    try {
+    /*try {
 
       const grantedRcv = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
@@ -140,7 +140,7 @@ export default function RegistrationScreen({ route, navigation }) {
         },
       );
 
-      /*const grantedRead = await PermissionsAndroid.request(
+      const grantedRead = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.READ_SMS,
         {
           title: 'iCheckfy SMS Permission',
@@ -158,10 +158,10 @@ export default function RegistrationScreen({ route, navigation }) {
           console.log(event.message);
           SmsRetriever.removeSmsListener();
         }); 
-      }*/
+      
     } catch (error) {
       console.log(JSON.stringify(error));
-    }
+    }*/
   };
 
   const registerUser = async () => {

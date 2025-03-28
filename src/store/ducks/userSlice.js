@@ -160,10 +160,12 @@ export const logoutUser = createAction(TYPES.LOGOUT_USER);
   }
 
   export function* asyncRequestValidateUser(action) {
-    try {      
-        const response = yield call(userLogin, action.payload.emailId);
+    try { 
+        // Stoping API call on biometric auth   
+        //const response = yield call(userLogin, action.payload.emailId);
         //const responseUserData = response.data?.token;     
-        const responseUserData = response.data
+        //const responseUserData = response.data
+        const responseUserData = true
         if (responseUserData) {          
           yield put(successValidateUser({...action.payload, data: responseUserData }));
           return reset({routes: [{name: SCREENS.CaseList}]});

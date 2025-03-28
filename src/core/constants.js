@@ -10,8 +10,7 @@ export const SECURE_USER_KEY = "userId"
 export const SECURE_USER_PIN = "pin"
 export const SECURE_REGISTRATION_COMPLETE = "reg_complete"
 
-export const GEOFENCING_RADIUS_IN_METRES = 500000000000
-
+export const GEOFENCING_RADIUS_IN_METRES = 500
 export const UPLOAD_TYPE = {
     PHOTO: 'PHOTO',
     DOCUMENT: 'DOCUMENT',
