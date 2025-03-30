@@ -2,7 +2,7 @@ import {useState, useEffect} from "react";
 import { StyleSheet,  View, FlatList, Text } from "react-native";
 import { Searchbar } from 'react-native-paper';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Toast from 'react-native-root-toast';
 import Background from "@components/UI/Background";
 import Paragraph from '@components/UI/Paragraph'

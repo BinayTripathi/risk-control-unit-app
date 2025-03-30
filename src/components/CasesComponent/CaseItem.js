@@ -20,13 +20,13 @@ function CaseItem({ caseDetails, userLoc }) {
   const caseType =  caseDetails.claimType && caseDetails.claimType != "Death" ? 
   ( <View style={styles.caseTypeHealthContainer}>
         <View style={{ width: 60 }}>
-            <Text style={styles.caseType}> HEALTH</Text>
+            <Text style={styles.caseType}> RCU</Text>
         </View>
     </View>
   ) :
   ( <View style={styles.caseTypeDeathContainer}>
       <View style={{ width: 60 }}>
-          <Text style={styles.caseType}> DEATH</Text>
+          <Text style={styles.caseType}> CLAIM</Text>
       </View>
     </View>
   )

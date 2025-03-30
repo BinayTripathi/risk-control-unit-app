@@ -1,7 +1,7 @@
 import { StyleSheet,View, Text , Dimensions, ScrollView, Button as RNButton} from 'react-native';
 import Checkbox from 'expo-checkbox';
 import { useState } from "react";
-import { useDispatch} from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux';
 import { theme } from '@core/theme';
 import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
 import  CustomTextInput  from "@components/UI/TextInput";
@@ -17,14 +17,22 @@ import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
 const { width, height } = Dimensions.get('window');
 
-const FormInitiator = ({selectedClaimId, userId, caseUpdates}) => {
+const FormInitiator = ({selectedClaimId}) => {
+
+  const caseDetails = useSelector(state => state.casesDetails.selectedCaseDetails)
+  const selectedClaim = caseDetails[selectedClaimId]
 
   const dispatch = useDispatch()
   const [metBeneficiary, setMetBeneficiary] = useState(false);
   const [metNeighbor, setMetNeighbor] = useState(false);
+  const [wentToHospital, setWentToHospital] = useState(false);
+  const [wentToCremetary, setWentToCremetary] = useState(false);
 
   const [propertyOwnership, setPropertyOwnership] = useState("owned");
   const [financialStatus, setFinancialStatus] = useState(0.5)
+
+  const [isIllinessTimiingBeforePolicy, setIsIllinessTimiingBeforePolicy] = useState("no");
+  const [periodOfTreatment, setPeriodOfTreatment] = useState(0.5)
   
   const [personMet, setPersonMet] = useState('')
   const [debouncedPersonMet] = useDebounce(personMet, 5000);
@@ -34,6 +42,9 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates}) => {
 
   let financialStatusString = financialStatus === 0 ? 'LOW' 
   :  financialStatus === 0.5 ? 'MEDIUM' : 'HIGH'
+
+   let DurationOfTreatmentString = periodOfTreatment === 0 ? 'No treatment' 
+  :  financialStatus === 0.5 ? 'Treatment < 6 months' : 'Treatment > 6 months'
 
 
   const BenifiaryFormPart = () => {      
@@ -77,6 +88,54 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates}) => {
              
             </View>
   }
+
+
+  const HospitalFormPart = () => {      
+
+    return <View style={{ marginTop: 10, marginBottom: 20, paddingBottom: 10, marginHorizontal: 10, borderBottomColor: 'grey', borderBottomWidth: 3 }}>
+      <Text style={styles.label1}>Injury/Illness prior to commencement/revival</Text>
+    <RadioButtonGroup containerStyle={{ marginBottom: 10 }}
+                      selected={isIllinessTimiingBeforePolicy}
+                      onSelected={(value) => setIsIllinessTimiingBeforePolicy(value)}
+                      radioBackground="green">
+      <RadioButtonItem value="yes" label="YES" />
+      <RadioButtonItem value="no" label="NO" />
+    </RadioButtonGroup>
+
+   
+
+    <Text style={styles.label1}>Duration of treatment</Text>
+    <Text style={[{marginLeft: 10, fontWeight: 'bold',color: 'red'}]}>{DurationOfTreatmentString}</Text>
+    <View style = {{borderColor: 'black', borderWidth: 1, marginHorizontal: 20, marginBottom: 20}}> 
+      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={1} step= {0.5} minimumTrackTintColor="#5a5757"
+        maximumTrackTintColor="#000000" value={periodOfTreatment} onValueChange = {setPeriodOfTreatment }/>
+    </View>    
+  </View>
+  }
+
+  const CremetaryFormPart = () => {
+
+    const handlePersonMet = (event) => {
+      const value = event.target.value;
+      setPersonMet(value);
+    };
+
+    return <View style= {{paddingBottom : 10}}>
+              <CustomTextInput onChangeText={setPersonMet} value={personMet} label="Name of person met at the cemetery" 
+                underlineColor='#6e6d6d' style= {styles.customInputBox}/>
+              
+              <Text style={styles.label1}> Date and time of death</Text>  
+              <CustomDateTimePicker dateTimeInParent={dateTime} setDateTimeInParent = {setDateTime} label={'Select Date And Time'}>
+                <RNButton color="#69696b" />
+              </CustomDateTimePicker>
+             
+            </View>
+  }
+
+
+
+
+
   const showAlert = () =>
   Dialog.show({
     type: ALERT_TYPE.SUCCESS,
@@ -110,6 +169,9 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates}) => {
   let benificaryForm = metBeneficiary === true ?<BenifiaryFormPart/> : ""
   let neighbourForm = metNeighbor === true ? NeighbourFormPart() : ""
 
+  let hospitalForm = metBeneficiary === true ?<HospitalFormPart/> : ""
+  let cremetoryForm = metNeighbor === true ? CremetaryFormPart() : ""
+
     return (
 
       <View>
@@ -123,19 +185,27 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates}) => {
 
               <View style={[styles.checkboxContainer, { marginBottom: 0, marginTop: 10,}]}>
                 <Checkbox style={styles.checkbox} value={metBeneficiary} onValueChange={setMetBeneficiary} />
-                <Text style={styles.label}>Met beneficiary</Text>
+                {selectedClaim?.policy.claimType !== "Death" ? 
+                   <Text style={styles.label}>Met beneficiary</Text>:
+                   <Text style={styles.label}>Visited Hospital</Text>
+                   }
               </View>
 
-                {benificaryForm}
+              
+                {selectedClaim?.policy.claimType !== "Death" ? benificaryForm : hospitalForm}
 
 
 
               <View style={[styles.checkboxContainer, { marginBottom: 0, marginTop: 10,}]}>
                 <Checkbox style={styles.checkbox} value={metNeighbor} onValueChange={setMetNeighbor} />
-                <Text style={styles.label}>Met Neighbour</Text>
+                
+                {selectedClaim?.policy.claimType !== "Death" ? 
+                   <Text style={styles.label}>Met Neighbour</Text>:
+                   <Text style={styles.label}>Visited Cremetory</Text>
+                   }
               </View>
 
-              {neighbourForm}       
+              {selectedClaim?.policy.claimType !== "Death" ? neighbourForm : cremetoryForm}     
 
           </View>
       </ScrollView>

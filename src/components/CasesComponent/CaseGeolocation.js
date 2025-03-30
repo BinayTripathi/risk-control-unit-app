@@ -10,7 +10,6 @@ import MapView, { Marker, Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import { useIsFocused } from '@react-navigation/native'
 import { useDispatch, useSelector } from 'react-redux';
 import { Searchbar } from 'react-native-paper';
-import {requestCasesCoordinates} from '@store/ducks/cases-slice'
 import MapCallout from '../UI/MapCallout'
 
 
@@ -62,13 +61,13 @@ const CaseGeolocation = ({reloadProp, userLoc, userId}) => {
   }
 
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (isFocused && isConnected && userId) {
       console.log('Fetching coordinates')
       dispatch(requestCasesCoordinates(userId))        
     }  
 
-  }, [dispatch, isFocused])
+  }, [dispatch, isFocused])*/
 
   const onChangeSearch = query => setSearchQuery(query);
 

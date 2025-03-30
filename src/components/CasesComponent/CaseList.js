@@ -8,7 +8,7 @@ import Paragraph from '@components/UI/Paragraph'
 import CaseItem from "@components/CasesComponent/CaseItem";
 import Button from "@components/UI/Button"
 
-import {requestCases, requestCasesOffline} from '@store/ducks/cases-slice'
+import {requestCases, requestCasesOffline, requestCasesCoordinates} from '@store/ducks/cases-slice'
 import { Padder } from "../UI/Wrapper";
 
 export default function CaseList({userLoc,userId}) {
@@ -34,6 +34,7 @@ export default function CaseList({userLoc,userId}) {
       setRefreshing(true)
       console.log('Fetching list')    
       dispatch(requestCases(userId))  
+      dispatch(requestCasesCoordinates(userId))
       setRefreshing(false)   
   }
 
@@ -49,6 +50,7 @@ export default function CaseList({userLoc,userId}) {
             cases
           }
           dispatch(requestCasesOffline(offlineCases)) 
+          dispatch(requestCasesCoordinates(userId))
         }
     }  
   }, [dispatch, isFocused, forceRerender])

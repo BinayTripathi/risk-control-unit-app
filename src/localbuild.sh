@@ -10,11 +10,11 @@ xcopy "gradle.properties" ".\android\gradle.properties" /Y
 copy ".\assets\*.*"  ".\android\app\src\main\res\drawable"
 xcopy "release-key.keystore" ".\android" /Y
 cd android
-rm -rf .gradle/ && ./gradlew clean
+rm -rf .gradle/ && gradlew clean
 
 npm run android
 
-set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=AIzaSyAprINTY_E5slgC2DIb-ZXF8k9I2pBIwoe
+set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=AIzaSyAprINTY_E5slgC2DIb-ZXF8k9I2pBIWOE
 
 cd android
 gradlew bundleRelease 
@@ -35,7 +35,7 @@ https://ickeckify-apk.s3.ap-southeast-2.amazonaws.com/prod/app-release.apk
 
 Bundle Android Resources: Execute the command npx npm run bundle:android to bundle your Android resources.
 
-Clean the Android Project: Navigate to your Android project directory with cd android, then run ./gradlew clean to clean your Android project.
+Clean the Android Project: Navigate to your Android project directory with cd android, then run gradlew clean to clean your Android project.
 
 Remove Dependencies and Android Build: Go back to your project root directory and remove all dependencies and the Android build with the command rm -rf -- node_modules package-lock.json android/build.
 
