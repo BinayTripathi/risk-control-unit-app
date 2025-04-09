@@ -10,7 +10,7 @@ export const SECURE_USER_KEY = "userId"
 export const SECURE_USER_PIN = "pin"
 export const SECURE_REGISTRATION_COMPLETE = "reg_complete"
 
-export const GEOFENCING_RADIUS_IN_METRES = 500
+export const GEOFENCING_RADIUS_IN_METRES = 500000
 export const UPLOAD_TYPE = {
     PHOTO: 'PHOTO',
     DOCUMENT: 'DOCUMENT',
@@ -39,14 +39,6 @@ export const DOC_TYPE = {
             type: UPLOAD_TYPE.PHOTO,
             enabled: true,
             speach: 'Reads face for single client'
-        } ,
-        {
-            name : 'Dual FaceReader',
-            cameraType : 'front',
-            faceCount: 2,
-            icon: 'people-circle',
-            type: UPLOAD_TYPE.PHOTO,
-            speach: 'Reads face for client and agent together'
         },
         {
             name : 'House',
@@ -54,7 +46,16 @@ export const DOC_TYPE = {
             faceCount: 1,
             icon: 'home',
             type: UPLOAD_TYPE.PHOTO,
+            enabled: true,
             speach: 'Reads face for client which their house in the background'
+        },
+        {
+            name : 'Dual FaceReader',
+            cameraType : 'front',
+            faceCount: 2,
+            icon: 'people-circle',
+            type: UPLOAD_TYPE.PHOTO,
+            speach: 'Reads face for client and agent together'
         },
         {
             name : 'Others',

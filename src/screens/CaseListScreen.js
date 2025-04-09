@@ -15,6 +15,8 @@ import {secureGet} from '@helpers/SecureStore'
 export default function CaseListScreen() {
 
   const [userId, setUserId] = useState(null)
+  const [userLocation, setUserLocation] = useState(null)  
+  const layout = useWindowDimensions();
 
   useEffect(() => {
     
@@ -27,8 +29,13 @@ export default function CaseListScreen() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setUserLocation(location.coords);
+      let locationPromise = Location.getLastKnownPositionAsync({});
+      setUserLocation(locationPromise);
+      console.log('promise in parent:', userLocation)
+  
+      setUserLocation(locationPromise);
+      //const corrd = {"accuracy": 60.065399169921875, "altitude": 110.80000305175781, "altitudeAccuracy": 11.02387523651123, "heading": 0, "latitude": -37.8263399, "longitude": 145.2238428, "speed": 0}
+      //setUserLocation(corrd)
 
       console.log('Case List screen : ' + user)
       setUserId(user)
@@ -36,8 +43,7 @@ export default function CaseListScreen() {
     getLocationPermission();
 
   }, []);
-  const [userLocation, setUserLocation] = useState(null)  
-  const layout = useWindowDimensions();
+  
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -46,11 +52,11 @@ export default function CaseListScreen() {
   ]);
 
   const ListView = () => (
-    <CaseList reloadProp={index} userLoc = {userLocation} userId={userId}/>
+    <CaseList reloadProp={index} userLocPromise = {userLocation} userId={userId}/>
 );
 
 const MapView = () => (
-   <CaseGeolocation reloadProp={index} userLoc = {userLocation} userId={userId}/>
+   <CaseGeolocation reloadProp={index} userLocPromise = {userLocation} userId={userId}/>
 );
 
 const renderScene = SceneMap({

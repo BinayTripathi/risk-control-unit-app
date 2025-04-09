@@ -11,7 +11,7 @@ import Button from "@components/UI/Button"
 import {requestCases, requestCasesOffline, requestCasesCoordinates} from '@store/ducks/cases-slice'
 import { Padder } from "../UI/Wrapper";
 
-export default function CaseList({userLoc,userId}) {
+export default function CaseList({userLocPromise,userId}) {
   
   let cases = useSelector((state) => state.cases.cases);
   let caseMarkers = useSelector((state) => state.cases.caseCoordinates);
@@ -71,15 +71,15 @@ export default function CaseList({userLoc,userId}) {
 
   function renderClaimItem(itemData) {
     return(     
-          <CaseItem caseDetails = {itemData.item} userLoc = {userLoc}/>    
+          <CaseItem caseDetails = {itemData.item} userLocPromise = {userLocPromise}/>    
     )
   }
 
   const searchCasesByName = (caseToCheck) => {
     console.log(`SEARCH QUERY - ${searchQuery}`)
     if(searchQuery.length !== '')
-      return caseToCheck.customerName.startsWith(searchQuery) || 
-              caseToCheck.policyNumber.startsWith(searchQuery)
+      return caseToCheck.customerName?.startsWith(searchQuery) || 
+              caseToCheck.policyNumber?.startsWith(searchQuery)
     
     return true
   }

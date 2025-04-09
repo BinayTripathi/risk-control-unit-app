@@ -18,6 +18,7 @@ import Svg, {Polyline} from "react-native-svg";
 import Paragraph from '@components/UI/Paragraph'
 import { DOC_TYPE } from '@core/constants';
 
+let isFrameProcessed = false
 const cameraMarginTop = 70
 const { width: windowWidth, height: windowHeight } = Dimensions.get("window")
 const PREVIEW_SIZE = 325
@@ -166,7 +167,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
     if (faces.length === 1) {
       let face = faces[0]
 
-      let pathKey = Object.keys(face.contours.FACE)
+    let pathKey = Object.keys(face.contours.FACE)
      let stringPth = ''
      pathKey.forEach(key=> {
       stringPth += `${Math.ceil( face.contours.FACE[key]['x'] * 200 )},${Math.ceil(face.contours.FACE[key]['y'] * 200)} `
@@ -174,8 +175,6 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
      setFaceCont(stringPth)
       
       let faceBoundary = {
-        //minX: face.bounds.x,
-        //minY: face.bounds.y,
         minY: face.contours.FACE['0']['y'],
         minX: face.contours.FACE['0']['x'],
         width: face.bounds.width,
@@ -268,29 +267,20 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
 
   const frameProcessor = useFrameProcessor((frame) => {
     'worklet'
+    if(!isFrameProcessed) {
       const faces = detectFaces(frame)
-      /*for (const face of faces || []) {
-        // Draw lines
-        var rect = SKRect.create(10,10,100,100)
-          frame.drawRect(rect, linePaint)
-        }*/
-      // ... chain some asynchronous frame processor
-      // ... do something asynchronously with frame
       handleDetectedFaces(faces)
-    // ... chain frame processors
-    // ... do something with frame
+    } else {
+      console.log("Skipping frame: Previous frame is still being processed");
+    }
+  
+      
   }, [handleDetectedFaces])
-
-  const handleFacesDetected = ({ faces }) => {
-    
-    //setLastFaceDetectionTime(Date.now())
-     
-  }
-
 
 
   const handleUserActions = (detectionAction, face) => {
 
+    if(faceData === undefined || faceData.length === undefined)
     console.log(`${faceData.length} < ${docType.faceCount} && ${livelinessCheckDone}`)
     switch (detectionAction) {
       case "BLINK":

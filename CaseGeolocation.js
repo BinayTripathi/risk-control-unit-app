@@ -3,7 +3,7 @@ import {
   StyleSheet,
   View,
   Dimensions,
-
+  ActivityIndicator 
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker, Circle, PROVIDER_GOOGLE } from "react-native-maps";
@@ -31,11 +31,13 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
   //const userId = useSelector(state => state.user.userId)
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [userLoc, setUserLoc] = useState(null)
+
 
   const dispatch = useDispatch()
   const isFocused = useIsFocused()
 
-  const[ userLoc, setUserLoc] = useState(null)
+
   const [initialRegion, setInitialRegion] = useState(null);
 
   const mapRef = useRef(null);
@@ -55,37 +57,43 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
     }));
   }
 
-  //console.log('promise resolved' + userLocPromise)
+  console.log('promise resolved' + userLocPromise)
   useEffect(() => {
     
+    let isMounted = true;
     let awaitUserPromise = async () => {
     const userLocBlocked = await userLocPromise
-    //console.log(userLocBlocked)
+    console.log(userLocBlocked)
      
-
+    if (isMounted) {
       setUserLoc({
         latitude: userLocBlocked.coords.latitude,
-        longitude: userLocBlocked.coords.longitude
+        longitude: userLocBlocked.coords.latitude
       })
 
 
       setInitialRegion({
         latitude: userLocBlocked.coords.latitude,
-        longitude: userLocBlocked.coords.longitude,
+        longitude: userLocBlocked.coords.latitude,
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
-      })   
+      })
+    }    
   } 
     awaitUserPromise();
 
-  }, [userLocPromise])
-  /*useEffect(() => {
-    if (isFocused && isConnected && userId) {
-      console.log('Fetching coordinates')
-      dispatch(requestCasesCoordinates(userId))        
-    }  
+    return () => {
+      isMounted = false; // Clean up
+    };
 
-  }, [dispatch, isFocused])*/
+  }, [userLocPromise])
+
+  useEffect(() => {
+    if (mapRef.current && initialRegion) {
+      mapRef.current.animateToRegion(initialRegion, 1000); // 1000 ms animation duration
+    }
+  }, [initialRegion]);
+  
 
   const onChangeSearch = query => setSearchQuery(query);
 
@@ -102,16 +110,14 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
   }
 
   const focusMap = (focusMarkers, animated) => {
-    if(userLoc !== null) focusMarkers.push(userLoc)
-    console.log(`Markers received to populate map: ${focusMarkers}`);
-    setTimeout(() => {mapRef?.current?.fitToCoordinates(focusMarkers, {
-      animated, // Smooth transition,
-    })},10)
+    if(userLoc !== null) focusMarkers.push("USER_LOC")
+    //console.log(`Markers received to populate map: ${focusMarkers}`);
+    setTimeout(() => {mapRef?.current?.fitToSuppliedMarkers(focusMarkers, animated)},10)
     
   }
   const autoFocus = () => {
       if (mapRef.current) {       
-        animationTimeout = setTimeout(() => { focusMap(retriveAllCases().map((eachCase) => ({ latitude:eachCase.coordinate.lat, longitude: eachCase.coordinate.lng }) ), true) , timeout });
+        animationTimeout = setTimeout(() => { focusMap(retriveAllCases().map((eachCase) => eachCase.claimId ), true) , timeout });
     }
   }
 
@@ -127,6 +133,14 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
                 title={eachCase.policyNumber} description={eachCase.address}>
                   <MapCallout title={eachCase.policyNumber} description={eachCase.address} claimId={eachCase.claimId}></MapCallout>
                 </Marker >) 
+
+        if(userLoc !== null) {
+          //console.log(userLoc)
+          allMarkers.push(<Marker key ={"USER_LOC"} 
+            identifier={"USER_LOC"} 
+            coordinate={userLoc}
+            title={"You are here"}/>)
+        }
 
         return allMarkers
 
@@ -144,6 +158,17 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
       />)
     }
 
+
+  
+    if (!initialRegion) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      );
+    } else console.log(initialRegion)
+    
+
   return (
     
     <Background>
@@ -157,9 +182,9 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
         </View>
 
         <View style={styles.mapContainer}>
-        {initialRegion !== null && userLoc !== null && ( 
-            <MapView ref={mapRef} provider={PROVIDER_GOOGLE} style={styles.map} initialRegion={initialRegion}
-     
+
+          {initialRegion !== null && (
+            <MapView ref={mapRef} provider={PROVIDER_GOOGLE} style={styles.map} initialRegion={{"latitude": -37.8263242, "latitudeDelta": 0.005, "longitude": -37.8263242, "longitudeDelta": 0.005}}  
             key={userLoc}
             maxZoomLevel={15} 
             showsUserLocation = {true}
@@ -176,9 +201,8 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
               </View>
               )}
             </MapView>
-                 )}
+          )}          
         </View>
-        
       </View>      
     </Background>
   );

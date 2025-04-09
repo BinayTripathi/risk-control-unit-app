@@ -5,14 +5,14 @@ import { useNavigation } from '@react-navigation/native';
 
 import { theme } from '@core/theme';
 //import { selectCase } from "@store/ducks/case-slice";
-import {isPointWithinRadius} from 'geolib'
+import {isPointWithinRadius, getDistance} from 'geolib'
 import { Dialog, ALERT_TYPE } from 'react-native-alert-notification';
 import { GEOFENCING_RADIUS_IN_METRES } from "@core/constants";
 
 const TEXT_LENGTH = 60
 const TEXT_HEIGHT = 14
 
-function CaseItem({ caseDetails, userLoc }) {
+function CaseItem({ caseDetails, userLocPromise }) {
 
   let dispatch = useDispatch();
   const navigation = useNavigation()
@@ -31,33 +31,48 @@ function CaseItem({ caseDetails, userLoc }) {
     </View>
   )
 
+  const handlePress = async () => {
+    console.log('case item pressed')
+    console.log("userLocPromise:", userLocPromise);
+
+    let userLoc = await userLocPromise
+    if (!userLoc) {
+        console.error('Failed to fetch location');
+        return; // Handle fallback logic here
+    } else 
+    {console.log(userLoc)
+      console.log(caseDetails.coordinate)
+    }
+
+    console.log(getDistance({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
+      {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}))
+    
+    if(caseDetails && isPointWithinRadius({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
+       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}, GEOFENCING_RADIUS_IN_METRES)) {
+      navigation.navigate('CaseDetailsScreen', {
+        claimId : caseDetails.claimId,
+        investigatable: true
+      })
+    } else {
+      Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Geofencing alert',
+        textBody: 'You cannot investigate the case from here',
+        button: 'OK',          
+        onHide: () => { 
+          navigation.navigate('CaseDetailsScreen', {
+            claimId : caseDetails.claimId,
+            investigatable: false
+          })
+        }
+      })
+    }
+    
+   }
+
   let clientPhoto = caseDetails?.customerPhoto?.replace('image/*;base64','image/png;base64')
   return (
-    <Pressable onPress={()=> {
-      
-      if(caseDetails && isPointWithinRadius({latitude: userLoc.latitude, longitude: userLoc.longitude},
-         {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}, GEOFENCING_RADIUS_IN_METRES)) {
-        navigation.navigate('CaseDetailsScreen', {
-          claimId : caseDetails.claimId,
-          investigatable: true
-        })
-      } else {
-        console.log('Ander ja pehle')
-        Dialog.show({
-          type: ALERT_TYPE.WARNING,
-          title: 'Geofencing alert',
-          textBody: 'You cannot investigate the case from here',
-          button: 'OK',          
-          onHide: () => { 
-            navigation.navigate('CaseDetailsScreen', {
-              claimId : caseDetails.claimId,
-              investigatable: false
-            })
-          }
-        })
-      }
-      
-     }}> 
+    <Pressable onPress={() =>handlePress()}> 
       <View style={styles.caseItemContainer}> 
 
           {caseType}

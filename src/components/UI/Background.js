@@ -1,16 +1,20 @@
 import React from 'react';
-import { ImageBackground, StyleSheet, View, Dimensions } from 'react-native'
+import { ImageBackground, StyleSheet, View, Dimensions, Modal, Text } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { theme } from '@core/theme';
 import Toast from 'react-native-root-toast';
 import useNetworkInfo from '@hooks/useNetworkInfo';
+import useLocationStatus from '@hooks/useLocationStatus';
+
 
 
 export default function Background({children }) {
 
   const { width, height } = Dimensions.get('window');
   let [isNetworkConnected] = useNetworkInfo()
+  const { isLocationEnabled, isPermissionGranted, isChecking } = useLocationStatus(5000);
+
 
   
   return (
@@ -18,7 +22,18 @@ export default function Background({children }) {
       colors={[theme.colors.gradientA, theme.colors.gradientB, theme.colors.gradientB,theme.colors.gradientC]}
       style={styles.rootContainer}
     >
-     
+     <Modal
+        animationType="fade" // Options: 'slide', 'fade', or 'none'
+        transparent={true} // Set true to see through the background
+        visible={!isLocationEnabled} // Controls modal visibility
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.text}>Please turn on your location</Text>
+          </View>
+        </View>
+      </Modal>
+
     
         <Toast
             visible={!isNetworkConnected}
@@ -64,5 +79,24 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-  }
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dim background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#d76969',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: 'bold'
+  },
+
 })

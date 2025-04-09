@@ -107,7 +107,7 @@ const FormInitiator = ({selectedClaimId}) => {
     <Text style={styles.label1}>Duration of treatment</Text>
     <Text style={[{marginLeft: 10, fontWeight: 'bold',color: 'red'}]}>{DurationOfTreatmentString}</Text>
     <View style = {{borderColor: 'black', borderWidth: 1, marginHorizontal: 20, marginBottom: 20}}> 
-      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={1} step= {0.5} minimumTrackTintColor="#5a5757"
+      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={100} step= {50} minimumTrackTintColor="#5a5757"
         maximumTrackTintColor="#000000" value={periodOfTreatment} onValueChange = {setPeriodOfTreatment }/>
     </View>    
   </View>

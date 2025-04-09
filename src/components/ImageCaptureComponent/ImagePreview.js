@@ -82,12 +82,14 @@ const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimI
     const savePhoto = async () => {        
 
       console.log(`Beneficiary is ${isSmiling ? "": 'NOT'} smiling and has both eyes ${isBothEyeOpen ? 'OPEN' : 'CLOSED'}`)
+      console.log(docType.name)
       const documentDetailsForSubmission = {
         email : email,
         claimId: claimId,            
         Remarks:null,
         docType: docType.type,
-        capability: docType.name
+        capability: docType.name,
+        type: docType.name === 'House' ? 0 : 1
       }
       
       if(docType.type === UPLOAD_TYPE.PHOTO){

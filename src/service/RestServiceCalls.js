@@ -176,6 +176,7 @@ export const updateCaseDocument = async (body) => {
           ...body
         };
         console.log(url)
+        console.log(JSON.stringify(data))
         
         let response = await  Request.post({url, config, data});
         return response
