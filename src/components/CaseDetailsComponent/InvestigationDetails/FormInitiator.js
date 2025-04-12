@@ -107,7 +107,7 @@ const FormInitiator = ({selectedClaimId}) => {
     <Text style={styles.label1}>Duration of treatment</Text>
     <Text style={[{marginLeft: 10, fontWeight: 'bold',color: 'red'}]}>{DurationOfTreatmentString}</Text>
     <View style = {{borderColor: 'black', borderWidth: 1, marginHorizontal: 20, marginBottom: 20}}> 
-      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={100} step= {50} minimumTrackTintColor="#5a5757"
+      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={12} step= {6} minimumTrackTintColor="#5a5757"
         maximumTrackTintColor="#000000" value={periodOfTreatment} onValueChange = {setPeriodOfTreatment }/>
     </View>    
   </View>
@@ -147,15 +147,43 @@ const FormInitiator = ({selectedClaimId}) => {
 
   const onSavePressed = async (e) => {
 
+    const quest1 = () => {
+      if(selectedClaim?.policy.claimType !== "Death")
+        return metBeneficiary === true? propertyOwnership : 'PERSON UNREACHABLE'
+      else 
+        return metBeneficiary === true? isIllinessTimiingBeforePolicy : 'PERSON UNREACHABLE'
+    }
+
+    const quest2 = () => {
+      if(selectedClaim?.policy.claimType !== "Death")
+        return metBeneficiary === true? financialStatus : 'PERSON UNREACHABLE'
+      else 
+        return metBeneficiary === true? periodOfTreatment : 'PERSON UNREACHABLE'
+    }
+
+    const quest3 = () => {
+      if(selectedClaim?.policy.claimType !== "Death" )
+        return metNeighbor === true? personMet : 'PERSON UNREACHABLE'
+      else 
+        return metNeighbor === true? personMet : 'PERSON UNREACHABLE'
+    }
+
+    const quest4 = () => {
+      if(selectedClaim?.policy.claimType !== "Death" )
+        return metNeighbor === true? dateTime : 'PERSON UNREACHABLE'
+      else 
+        return metNeighbor === true? dateTime : 'PERSON UNREACHABLE'
+    }
+
     let payload = {
       claimId: selectedClaimId,
       formData : {         
         docType: UPLOAD_TYPE.FORM,
         capability: "FORM_TEMPLATE1",
-        question1 : metBeneficiary === true? propertyOwnership : 'PERSON UNREACHABLE',
-        question2 : metBeneficiary === true? financialStatus : 'PERSON UNREACHABLE',
-        question3 : metNeighbor === true? personMet : 'PERSON UNREACHABLE',
-        question4 : metNeighbor === true? dateTime : 'PERSON UNREACHABLE'
+        question1 : quest1(),
+        question2 : quest2(),
+        question3 : quest3(),
+        question4 : quest4()
       }
     }
     

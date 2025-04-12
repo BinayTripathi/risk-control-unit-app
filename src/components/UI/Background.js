@@ -13,7 +13,7 @@ export default function Background({children }) {
 
   const { width, height } = Dimensions.get('window');
   let [isNetworkConnected] = useNetworkInfo()
-  const { isLocationEnabled, isPermissionGranted, isChecking } = useLocationStatus(5000);
+  const { isLocationEnabled, isPermissionGranted, isChecking } = useLocationStatus(300*1000);
 
 
   

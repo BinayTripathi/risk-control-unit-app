@@ -20,8 +20,8 @@ export default function CaseListScreen() {
 
   useEffect(() => {
     
-    const getLocationPermission = async () => {
-      const user = await secureGet(SECURE_USER_KEY)
+    const getLocation = async () => {
+      const userPromise =  secureGet(SECURE_USER_KEY)
 
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -31,16 +31,14 @@ export default function CaseListScreen() {
 
       let locationPromise = Location.getLastKnownPositionAsync({});
       setUserLocation(locationPromise);
-      console.log('promise in parent:', userLocation)
-  
+      console.log('promise in parent:', userLocation)  
       setUserLocation(locationPromise);
-      //const corrd = {"accuracy": 60.065399169921875, "altitude": 110.80000305175781, "altitudeAccuracy": 11.02387523651123, "heading": 0, "latitude": -37.8263399, "longitude": 145.2238428, "speed": 0}
-      //setUserLocation(corrd)
 
+      const user = await userPromise
       console.log('Case List screen : ' + user)
       setUserId(user)
     };
-    getLocationPermission();
+    getLocation();
 
   }, []);
   

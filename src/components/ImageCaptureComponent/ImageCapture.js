@@ -17,6 +17,7 @@ import Svg, {Polyline} from "react-native-svg";
 
 import Paragraph from '@components/UI/Paragraph'
 import { DOC_TYPE } from '@core/constants';
+import _ from "lodash";
 
 let isFrameProcessed = false
 const cameraMarginTop = 70
@@ -76,6 +77,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
   const [type, setType] = useState('front');
   const device = useCameraDevice(type)
   let camera = useRef(null);
+  const frameCount = useRef(0);
 
   const faceDetectionOptions = useRef( {
     classificationMode: 'all',
@@ -92,10 +94,13 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
   const {height: screenHeight, width: screenWidth} = useWindowDimensions();  
   const [faceData, setFaceData] = React.useState(initialState);
   const [faces, setFaces] = React.useState([]);
-  const [faceDataForBounding, setFaceDataForBounding] = React.useState(initialState);
-  const [faceCont, setFaceCont] = useState()
+
   const rollAngles = useRef([])
   const [livelinessCheckDone, setLivelinessCheckDone] = useState(false)
+
+  const debouncedSetFaceData = _.debounce((newFaceData) => {
+    setFaceData(newFaceData);
+  }, 100); // 100ms delay
   
   if (hasPermission === null) {
     return <Text>Checking camera permission...</Text>;
@@ -113,19 +118,6 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
     })();
   }, [device]);
 
-  /*const requestCameraPermission = async () => {
-    const status = await Camera.getCameraPermissionStatus();
-    console.log('status',status);
-    
-    if (status === 'granted') {
-      setHasPermission(true);
-    } else if (status === 'notDetermined') {
-      const permission = await Camera.requestCameraPermission();
-      setHasPermission(permission === 'authorized');
-    } else {
-      setHasPermission(false);
-    }
-  };*/
 
   const requestCameraPermission = async () => {
     try {
@@ -163,16 +155,8 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
 
   const handleDetectedFaces = Worklets.createRunOnJS( (faces) => { 
 
-    setFaceDataForBounding(faces);
     if (faces.length === 1) {
       let face = faces[0]
-
-    let pathKey = Object.keys(face.contours.FACE)
-     let stringPth = ''
-     pathKey.forEach(key=> {
-      stringPth += `${Math.ceil( face.contours.FACE[key]['x'] * 200 )},${Math.ceil(face.contours.FACE[key]['y'] * 200)} `
-     })
-     setFaceCont(stringPth)
       
       let faceBoundary = {
         minY: face.contours.FACE['0']['y'],
@@ -180,15 +164,15 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
         width: face.bounds.width,
         height: face.bounds.height
       }
-      //console.log(faceBoundary)
+
       const edgeOffset = 10
       const faceRectSmaller = {
         width: faceBoundary.width + edgeOffset,
         height: faceBoundary.height + edgeOffset,
         //minY: faceBoundary.minY + edgeOffset ,
         //minX: faceBoundary.minX + edgeOffset 
-        minY: face.contours.FACE['0']['y'],
-        minX: face.contours.FACE['0']['x']
+        minY: face.contours.FACE['0']['y']-edgeOffset/2,
+        minX: face.contours.FACE['0']['x']-edgeOffset/2,
       }
   
       let previewContainsFace = true/*contains({
@@ -209,7 +193,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
           faceRectSmaller
 
         }
-        setFaceData(payload)
+        debouncedSetFaceData(payload)
       }
 
       //Camera is very far
@@ -222,7 +206,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
           faceBoundary,
           faceRectSmaller
         }
-        setFaceData(payload)
+        debouncedSetFaceData(payload)
       }
 
       
@@ -240,7 +224,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
           faceBoundary,
           faceRectSmaller
         }
-        setFaceData(payload)
+        debouncedSetFaceData(payload)
         handleUserActions(detectionAction,face)
         } else {
           let payload = {...faceData,
@@ -253,14 +237,14 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             faceBoundary,
             faceRectSmaller
           }
-          setFaceData(payload)
+          debouncedSetFaceData(payload)
           setLivelinessCheckDone(true)
         }
         
       }
       
     } else 
-      setFaceData(initialState)   
+    debouncedSetFaceData(initialState)   
   })
 
 
@@ -269,7 +253,11 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
     'worklet'
     if(!isFrameProcessed) {
       const faces = detectFaces(frame)
-      handleDetectedFaces(faces)
+      if (frameCount.current % 5 === 0) {
+        // Process only every 5th frame
+        handleDetectedFaces(faces);
+      }
+      frameCount.current++;
     } else {
       console.log("Skipping frame: Previous frame is still being processed");
     }
@@ -281,7 +269,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
   const handleUserActions = (detectionAction, face) => {
 
     if(faceData === undefined || faceData.length === undefined)
-    console.log(`${faceData.length} < ${docType.faceCount} && ${livelinessCheckDone}`)
+    console.log(`${JSON.stringify(faceData)} < ${docType.faceCount} && ${livelinessCheckDone}`)
     switch (detectionAction) {
       case "BLINK":
         const leftEyeClosed =
@@ -293,7 +281,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          setFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData)
           console.log('---------blinking called')
         }
         return
@@ -331,7 +319,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          setFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData)
           console.log('---------noded')
         }
         return
@@ -342,7 +330,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          setFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData)
           console.log('---------head turned left')
         }
         return
@@ -353,7 +341,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          setFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData)
           console.log('---------head turned right')
         }
         return
@@ -364,7 +352,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          setFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData)
           console.log('---------smiled')
         }
         return
