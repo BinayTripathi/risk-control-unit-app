@@ -18,6 +18,7 @@ import Svg, {Polyline} from "react-native-svg";
 import Paragraph from '@components/UI/Paragraph'
 import { DOC_TYPE } from '@core/constants';
 import _ from "lodash";
+import * as Speech from 'expo-speech';
 
 let isFrameProcessed = false
 const cameraMarginTop = 70
@@ -98,9 +99,18 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
   const rollAngles = useRef([])
   const [livelinessCheckDone, setLivelinessCheckDone] = useState(false)
 
-  const debouncedSetFaceData = _.debounce((newFaceData) => {
+  const [textToSpeak, setTestToSpeak] = useState("Position your face in the screen and hold still for liveliness check")
+  const debouncedSetFaceData = _.debounce((newFaceData, actionToPerform) => {
     setFaceData(newFaceData);
+    if(newFaceData.actionToPerform !== actionToPerform) {
+      if(newFaceData.actionToPerform === '')
+        setTestToSpeak(newFaceData.highLevelInstruction)
+      else
+        setTestToSpeak(newFaceData.actionToPerform)
+    }
   }, 100); // 100ms delay
+
+  
   
   if (hasPermission === null) {
     return <Text>Checking camera permission...</Text>;
@@ -117,6 +127,15 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
       await requestCameraPermission();
     })();
   }, [device]);
+
+  useEffect(() => {
+    if (textToSpeak) {
+      Speech.stop()
+      Speech.speak(textToSpeak);
+    }
+  },[textToSpeak])
+
+
 
 
   const requestCameraPermission = async () => {
@@ -193,7 +212,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
           faceRectSmaller
 
         }
-        debouncedSetFaceData(payload)
+        debouncedSetFaceData(payload, faceData.actionToPerform)
       }
 
       //Camera is very far
@@ -206,7 +225,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
           faceBoundary,
           faceRectSmaller
         }
-        debouncedSetFaceData(payload)
+        debouncedSetFaceData(payload, faceData.actionToPerform)
       }
 
       
@@ -224,7 +243,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
           faceBoundary,
           faceRectSmaller
         }
-        debouncedSetFaceData(payload)
+        debouncedSetFaceData(payload, faceData.actionToPerform)
         handleUserActions(detectionAction,face)
         } else {
           let payload = {...faceData,
@@ -237,14 +256,14 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             faceBoundary,
             faceRectSmaller
           }
-          debouncedSetFaceData(payload)
+          debouncedSetFaceData(payload, faceData.actionToPerform)
           setLivelinessCheckDone(true)
         }
         
       }
       
     } else 
-    debouncedSetFaceData(initialState)   
+    debouncedSetFaceData(initialState, faceData.actionToPerform)   
   })
 
 
@@ -268,8 +287,10 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
 
   const handleUserActions = (detectionAction, face) => {
 
-    if(faceData === undefined || faceData.length === undefined)
-    console.log(`${JSON.stringify(faceData)} < ${docType.faceCount} && ${livelinessCheckDone}`)
+    /*if(faceData === undefined || faceData.length === undefined)
+    console.log(`${JSON.stringify(faceData)} < ${docType.faceCount} && ${livelinessCheckDone}`)*/
+
+    console.log(`${faceData.highLevelInstruction} ~ ${faceData.actionToPerform}`)
     switch (detectionAction) {
       case "BLINK":
         const leftEyeClosed =
@@ -281,7 +302,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          debouncedSetFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData, faceData.actionToPerform)
           console.log('---------blinking called')
         }
         return
@@ -319,7 +340,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          debouncedSetFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData,  faceData.actionToPerform)
           console.log('---------noded')
         }
         return
@@ -330,7 +351,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          debouncedSetFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData, faceData.actionToPerform)
           console.log('---------head turned left')
         }
         return
@@ -341,7 +362,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          debouncedSetFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData, faceData.actionToPerform)
           console.log('---------head turned right')
         }
         return
@@ -352,7 +373,7 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
             currentDetectionIndex : faceData.currentDetectionIndex + 1
             //progressFill: newProgressFill
           } 
-          debouncedSetFaceData(newFaceData)
+          debouncedSetFaceData(newFaceData,  faceData.actionToPerform)
           console.log('---------smiled')
         }
         return

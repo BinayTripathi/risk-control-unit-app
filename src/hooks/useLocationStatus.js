@@ -39,8 +39,9 @@ const useLocationStatus = (checkInterval = 2000) => {
         if (isMounted) setIsLocationEnabled(servicesEnabled);
 
         // Request or check foreground location permissions
-        await requestLocationPermission();
+        
       } catch (error) {
+        await requestLocationPermission();
         console.error("Error checking location status:", error);
       } finally {
         if (isMounted) setIsChecking(false);

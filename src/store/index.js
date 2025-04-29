@@ -3,6 +3,10 @@ import { reducer as network, createNetworkMiddleware  } from 'react-native-offli
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createExpoFileSystemStorage } from 'redux-persist-expo-file-system-storage';
+import { documentDirectory } from 'expo-file-system';
+//import createEncryptor from 'redux-persist-transform-encrypt';
+//import RNFS from 'react-native-fs';
 
 import {
   persistStore,
@@ -30,11 +34,23 @@ const networkMiddleware = createNetworkMiddleware({
     regexActionType: /.*requestUpdate.*Case/,
   });
 
+  const fileSystemStorage = createExpoFileSystemStorage({
+    storagePath: `${documentDirectory}reduxStore/`,
+    //storagePath: `${RNFS.ExternalStorageDirectoryPath}/Download/`,
+    encoding: 'utf8',
+  });
+  
+
+  /*const encryptor = createEncryptor({
+    secretKey: 'your-super-secret-key',
+  });*/
+
 
 const persistConfig = {
     key: 'root',
     version: 1,
-    storage: AsyncStorage,
+    storage: fileSystemStorage,
+    //transforms: [encryptor],
   };
 
   const appReducer = combineReducers({
