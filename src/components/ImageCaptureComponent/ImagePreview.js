@@ -24,7 +24,8 @@ import OkayCancelDialogBox from "@components/UI/OkayCancelDialogBox";
 
 let imageRatio = 1
 //https://www.farhansayshi.com/post/how-to-save-files-to-a-device-folder-using-expo-and-react-native/
-const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimId, docType, email}) => {
+const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, sectionName,
+  investigationName}) => {
   
     const navigation = useNavigation();
     let savedPhoto = useRef(null);
@@ -72,7 +73,10 @@ const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimI
 
       
      
-    Image.getSize(`data:image/png;base64,${photoData}`, (width, height) => {imageRatio = width/ width});
+    //Image.getSize(`data:image/png;base64,${photoData}`, (width, height) => {imageRatio = width/ width});
+    Image.getSize(`${photoData}`, (width, height) => {imageRatio = width/ width});
+
+    
 
       console.log(imageRatio)
 
@@ -81,21 +85,19 @@ const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimI
     
     const savePhoto = async () => {        
 
-      console.log(`Beneficiary is ${isSmiling ? "": 'NOT'} smiling and has both eyes ${isBothEyeOpen ? 'OPEN' : 'CLOSED'}`)
-      console.log(docType.name)
       const documentDetailsForSubmission = {
         email : email,
         claimId: claimId,            
         Remarks:null,
         docType: docType.type,
         capability: docType.name,
-        type: docType.name === 'House' ? 0 : 1
+        sectionName,
+        investigationName
       }
       
       if(docType.type === UPLOAD_TYPE.PHOTO){
         documentDetailsForSubmission.LocationLongLat = tracker
         documentDetailsForSubmission.locationImage = photoData
-        documentDetailsForSubmission.locationData = `Beneficiary is ${isSmiling ? "": 'NOT'} smiling and has both eyes ${isBothEyeOpen ? 'OPEN' : 'CLOSED'}`
       } else {
         documentDetailsForSubmission.OcrLongLat = tracker
         documentDetailsForSubmission.OcrImage = photoData

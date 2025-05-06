@@ -113,21 +113,17 @@ export const DOC_TYPE = {
 }
 
 
-export const checkSuccess = (capabilityBox, caseUpdates) => {
-    return  capabilityBox.enabled == true  // Capability is enabled
-            && caseUpdates != undefined    // There is some update
-            && capabilityBox.name in caseUpdates  // updates contain something for this capability
-            &&  (caseUpdates[capabilityBox.name].locationImage !== ''  || // Has been uploaded successfully 
-                caseUpdates[capabilityBox.name].OcrImage !== ''
+export const checkSuccess = (investigationName, sectionName, caseUpdates) => {
+    return  caseUpdates?.[sectionName]?.[investigationName] != undefined    // There is some update for the investigation
+            &&  (caseUpdates[sectionName][investigationName].locationImage !== ''  || // Has been uploaded successfully 
+                caseUpdates[sectionName][investigationName].OcrImage !== ''
             )
 }
 
-export const checkLoading = (capabilityBox, caseUpdates) => {
-    return  capabilityBox.enabled == true  // Capability is enabled
-            && caseUpdates != undefined    // There is some update
-            && capabilityBox.name in caseUpdates  // updates contain something for this capability
-            && (caseUpdates[capabilityBox.name].locationImage === ''  // Has been uploaded successfully 
-            && caseUpdates[capabilityBox.name].OcrImage === '')  // Has been uploaded successfully 
+export const checkLoading = (investigationName, sectionName, caseUpdates) => {
+    return  caseUpdates?.[sectionName]?.[investigationName] != undefined   // updates contain something for this capability
+            && (caseUpdates[sectionName][investigationName].locationImage === ''  // Has been uploaded successfully 
+            && caseUpdates[sectionName][investigationName].OcrImage === '')  // Has been uploaded successfully 
 }
 
 export const SCREENS = {

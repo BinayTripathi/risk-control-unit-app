@@ -73,6 +73,25 @@ export const requestSubmitCaseAction = createAction(
   },
 );
 
+/*
+how caseUpdates would be stored
+{"casesUpdates":
+	{"claimId1":
+		{"Single FaceReader": {              
+					  email":"agent@verify.com",
+					  "claimId":"claimId1",
+					  "Remarks":null,
+					  "docType":"PHOTO",
+					  "capability":"Single FaceReader",
+					  "type":1,
+					  "LocationLongLat":"-37.8263221 / 145.2236966",
+					  "locationImage":"/9j/4AAQSkZJRgABAQEASABIAAD/4QKpRXhpZgAASUkqAAgAAAAMAAA"
+					  }
+		
+		}
+	}
+}
+*/
 
 const initialState = {
     casesUpdates: {},  // Stores case details for all. This needs to be cleared on Submit    

@@ -97,10 +97,7 @@ const speechHandler = (documentObj) => {
   })
 
   return (
-    <View style =  {styles.capabilityCardContainer}>         
-      <View style = {styles.descriptionContainer}>
-            <Text style = {[styles.textBase, styles.description ]}>DOCUMENT VERIFIER</Text>
-      </View>          
+    <View style =  {styles.capabilityCardContainer}>                
         {capabilities}
   </View>  
 )
@@ -109,7 +106,7 @@ const speechHandler = (documentObj) => {
 const styles = StyleSheet.create({
 
   capabilityCardContainer : {      
-    marginTop: 40,          
+    marginTop: 0,          
     alignContent: 'center',
     alignItems: 'center'       
     },   

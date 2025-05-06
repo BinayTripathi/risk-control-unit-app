@@ -1,4 +1,4 @@
-export const claimTemplate = {
+export default CLAIM_TEMPLATE = {
     "Id": 0,
     "Name": "CLAIM TEMPLATE",
     "ClientCompanyId": 1,

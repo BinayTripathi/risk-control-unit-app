@@ -16,12 +16,14 @@ const ImageCaptureScreen = ({ route }) => {
   const claimId = route.params?.claimId
   const docType = route.params?.docType
   const email = route.params?.email
+  const sectionName = route.params?.sectionFromTemplate
+  const investigationName = route.params?.investigationName
 
 
   const imageCaptureSceen =  (
     <Background>
         <View style={styles.container}>
-        { docType.type === "PHOTO" && <ImageCapture setPhotoData={setPhotoData} setBothEyeOpen={setBothEyeOpen} setSmiling={setSmiling} docType = {docType}/> }
+        { docType.type === "PHOTO" && <ImageCapture setPhotoData={setPhotoData} setBothEyeOpen={setBothEyeOpen} setSmiling={setSmiling} docType = {docType} /> }
         { docType.type === "DOCUMENT" && <DocumentScanner setPhotoData={setPhotoData} setBothEyeOpen={setBothEyeOpen} setSmiling={setSmiling} docType = {docType}/> }
         </View>  
         </Background>
@@ -31,7 +33,9 @@ const ImageCaptureScreen = ({ route }) => {
   const imagePreviewScreen =  (
     <Background>
       <View style={styles.container}>
-        <ImagePreview photoData= {photoData} setPhotoData={setPhotoData} isSmiling={smiling} isBothEyeOpen={bothEyeOpen} claimId = {claimId} docType = {docType} email = {email}/>
+        <ImagePreview photoData= {photoData} setPhotoData={setPhotoData} 
+          claimId = {claimId} docType = {docType} email = {email} 
+          sectionName = {sectionName} investigationName = {investigationName}/>
       </View>  
     </Background>
   )

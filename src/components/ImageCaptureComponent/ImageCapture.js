@@ -394,8 +394,9 @@ const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
       
       if (photo) {
         console.log(`file://${photo.path}`)
-        const base64 = await FileSystem.readAsStringAsync(`file://${photo.path}`, { encoding: 'base64' });
-        setPhotoData(base64.replaceAll(" ","+"));
+        //const base64 = await FileSystem.readAsStringAsync(`file://${photo.path}`, { encoding: 'base64' });
+        //setPhotoData(base64.replaceAll(" ","+"));
+        setPhotoData(`file://${photo.path}`)
       } else {
         console.error('Photo captured is undefined or empty.');
       }

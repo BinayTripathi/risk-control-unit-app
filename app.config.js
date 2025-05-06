@@ -24,7 +24,7 @@ module.exports = () => {
             },
           },
           extra: {
-            baseURL : 'https://canara-uat.azurewebsites.net/api'
+            baseURL : 'https://icheckify-demo.azurewebsites.net/api'
           }
       };
     } else {
@@ -51,7 +51,7 @@ module.exports = () => {
             },
           },
           extra: {
-            baseURL : 'https://canara-uat.azurewebsites.net/api'
+            baseURL : 'https://icheckify-demo.azurewebsites.net/api'
           },
       };
     }
