@@ -26,8 +26,8 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
             docType: DOC_TYPE.PHOTO_ID_SCANNER[0],
             claimId: selectedClaimId,
             email: userId,
-            sectionFromTemplate,
-            investigationName: faceId.reportName
+            sectionFromTemplate : sectionName,
+            investigationName: faceId.reportType
         })
     } 
 

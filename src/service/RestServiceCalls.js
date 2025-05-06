@@ -177,13 +177,13 @@ export const updateCaseFace = async ({email, claimId, sectionName, investigation
     
     
       //const email = "agent@verify.com";
-      const caseId = "1";
-      const locationName = "VERIFIER_ADDRESS";
-      const reportName = "AGENT_FACE";
+      //const caseId = "1";
+      //const locationName = "VERIFIER_ADDRESS";
+      //const reportName = "AGENT_FACE";
       //const locationLatLong = "-35/125";
 
     const API_URL = `${BASE_URL}/Agent/faceid`;    
-    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(locationName)}&ReportName=${encodeURIComponent(reportName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(claimId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
     //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
     console.log(urlWithParams)
     

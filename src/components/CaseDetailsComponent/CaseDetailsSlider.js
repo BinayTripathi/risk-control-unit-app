@@ -20,7 +20,7 @@ let CLAIM_TEMPLATE = [
     },
     "faceIds": [
       {
-        "reportType": "SINGLE_FACE",
+        "reportType": "BENEFICIARY_FACE",
         "has2Face": false,
         "reportName": "BENEFICIARY"
       }
@@ -189,7 +189,9 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
 
     
     const investigationsSections =  CLAIM_TEMPLATE.map((eachSection, index) => {
+      
       let newEachSection = _.cloneDeep(eachSection)
+      console.log(`CLAIM Id selected = ${newEachSection.locationName}`)
       if(newEachSection?.faceIds && newEachSection?.agent)   // if both agentid and faceid array present
         newEachSection.faceIds.unshift(newEachSection.agent)
       else if(newEachSection?.agent) {   // if only agentId
@@ -197,7 +199,7 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
       }
       console.log(JSON.stringify(newEachSection))
       return (<View style={{ width, height }} key={index}>
-                <InvestigationDetails selectedClaim = {selectedClaim} userId = {userId} sectionFromTemplate = {newEachSection}></InvestigationDetails>
+                <InvestigationDetails selectedClaimId = {selectedClaimId} userId = {userId} sectionFromTemplate = {newEachSection}></InvestigationDetails>
       </View>)
     }
       

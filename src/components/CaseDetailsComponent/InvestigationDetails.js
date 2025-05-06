@@ -16,6 +16,8 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
   let loading = useSelector((state) => state.casesUpdates.loading);
   let err = useSelector((state) => state.casesUpdates.error);
   const caseUpdates = allCaseUpdates[selectedClaimId]
+  
+ 
 
     return (   
 
