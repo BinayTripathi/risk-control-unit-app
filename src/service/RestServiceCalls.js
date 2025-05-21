@@ -5,6 +5,17 @@ import { Platform } from 'expo-modules-core';
 import { Image } from "react-native";
 import axios from 'axios';
 import curlirize from "axios-curlirize";
+import * as FileSystem from 'expo-file-system';
+
+const convertImageToBase64 = async (imageUri) => {
+  try {
+    const base64String = await FileSystem.readAsStringAsync(imageUri, { encoding: FileSystem.EncodingType.Base64 });
+    console.log(base64String);
+    return base64String;
+  } catch (error) {
+    console.error("Error converting image:", error);
+  }
+};
 //const BASE_URL = 'https://rcu.azurewebsites.net/api';
 //const BASE_URL = 'https://ccutest.free.beeceptor.com'
 //const BASE_URL = 'https://holosync.azurewebsites.net/api'
@@ -77,7 +88,7 @@ export const userRegisterPhoto = async (image, iosDeviceId) => {
     console.log(url)
     const config = {}
     const data = {
-      "image": image,
+      "image": await convertImageToBase64(image),
       "uid": deviceId,
       "verifyId": true
     }
@@ -151,39 +162,42 @@ export const getCaseDetails = async (email, claim) => {
 }
 
 
-
-
-
-export const updateCaseDocument = async (body) => {
-  console.log('Update case API being called')
+export const updateCaseDocument = async ({email, caseId, sectionName, investigationName, OcrLongLat, OcrImage}) => {
   try {
-      const url = `${BASE_URL}/agent/documentid`;
-      //const url = `https://ccutest.free.beeceptor.com/update`
-      const config = {}
-      const data = {
-        ...body
-      };
-      let response = await  Request.post({url, config, data});
-      return response
-    }  catch (error) {
-      console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
-      throw JSON.stringify(error.message);
-    }
-  };
+
+    const API_URL = `${BASE_URL}/Agent/documentid`;    
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(OcrLongLat)}`;
+    //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
+    console.log(urlWithParams)
+    
+    const formData = new FormData();
+    formData.append("Image", {
+      uri: OcrImage,
+      type: "image/jpeg",
+      name: 'image.jpg'
+    });
+
+    
+    const response = await axios({
+      method: "post",
+      url: urlWithParams,
+      data: formData,
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+
+    //console.log("Upload Success:", response.data);
+    return response;
+  } catch (error) {
+    console.error("Upload Failed:", error.response?.data || error.message);
+    throw error;
+  }
+};
 
 
-export const updateCaseFace = async ({email, claimId, sectionName, investigationName, LocationLongLat, locationImage}) => {
+export const updateCaseFace = async ({email, caseId, sectionName, investigationName, LocationLongLat, locationImage}) => {
   try {
-    
-    
-      //const email = "agent@verify.com";
-      //const caseId = "1";
-      //const locationName = "VERIFIER_ADDRESS";
-      //const reportName = "AGENT_FACE";
-      //const locationLatLong = "-35/125";
-
     const API_URL = `${BASE_URL}/Agent/faceid`;    
-    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(claimId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
     //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
     console.log(urlWithParams)
     
@@ -201,44 +215,43 @@ export const updateCaseFace = async ({email, claimId, sectionName, investigation
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
     })
-     /* .then(function (response) {
-        console.log("SUCCESS")
-        console.log(response);
-      })
-      .catch(function (response) {
-        console.log("FAILED")
-        console.log(response);
-      });*/
 
-
-
-    console.log("Upload Success:", response.data);
-    return response.data;
+    
+    return response;
   } catch (error) {
     console.error("Upload Failed:", error.response?.data || error.message);
     throw error;
   }
 };
 
-  export const updateCaseFace1 = async (body) => {
-    body.OcrData=""
-    console.log('Update case API being called')
-    
-    try {
-        const url = `${BASE_URL}/agent/faceid`;
-        //const url = `https://ccutest.free.beeceptor.com/update`
-        const config = {}
-        const data = {
-          ...body
-        };
-        console.log(url)
-        let response = await  Request.post({url, config, data});
-        return response
-      }  catch (error) {
-        console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
-        throw JSON.stringify(error.message);
-      }
-    };
+export const saveForm = async ({caseId, section, qna}) => {
+  //console.log(JSON.stringify(body))
+  try {
+      const API_URL = `${BASE_URL}/Agent/answers`;
+      //const urlWithParams = `${API_URL}?Email=agent@verify.com&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}`;
+      const urlWithParams = 'https://icheckify-demo.azurewebsites.net/api/Agent/answers?email=agent%40verify.com&LocationLatLong=-37%2F68&locationName=LA%20ADDRESS&caseId=1'
+      const config = {}
+      const data = {
+        ...qna
+      };
+      console.log(urlWithParams)
+      console.log(data)
+      
+      //let response = await  Request.post({urlWithParams, config, data});
+      const response = await axios({
+        method: "post",
+        url: urlWithParams,
+        data: qna,
+        headers: { "Content-Type": "application/json-patch+json" },
+      })
+      console.log(`SUBMIT FORM`+ response)
+      return response
+    }  catch (error) {
+      console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
+      throw JSON.stringify(error.message);
+    }
+  };
+
 
   export const submitCase = async (body) => {
     console.log(JSON.stringify(body))

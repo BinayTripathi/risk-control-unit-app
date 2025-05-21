@@ -11,8 +11,10 @@ export default {
     REQUEST_GET_CASES_OFFLINE: 'cases/REQUEST_GET_CASES_OFFLINE',
 
 
+    SAVE_CASE_TEMPLATE: 'casesUpdates/saveCaseTemplate',
     REQUEST_UPDATE_BENEFICIARY_PHOTO_CASE: 'casesUpdates/requestUpdateBeneficiaryPhotoCase',
     REQUEST_UPDATE_PAN_CASE: 'casesUpdates/requestUpdatePanCase',
+    REQUEST_SAVE_FORM: 'casesUpdates/requestSaveForm',
 
     SUCCESS_UPDATE_CASE: 'casesUpdates/successUpdateCase',
     FAILURE_UPDATE_CASE: 'casesUpdates/failureUpdateCase',
@@ -22,6 +24,6 @@ export default {
     FAILURE_SUBMIT_CASE: 'casesUpdates/failureSubmitCase',
 
 
-    REQUEST_SAVE_FORM: 'casesUpdates/requestSaveForm',
+    
     
   };

@@ -4,12 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Card from '@components/UI/Card';
 import { theme } from '@core/theme';
-import { SCREENS, DOC_TYPE, checkLoading, checkSuccess } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingPhoto, checkSuccessPhoto, faceIds } from '@core/constants';
 import * as Speech from 'expo-speech';
 
 
 
 const { width, height } = Dimensions.get('window');
+
 
 const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
@@ -17,7 +18,7 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
     const iconSize = 50;
 
     const isEnabled = (faceId) => {
-        return faceId?.enabled === undefined ||  faceId?.enabled === true ? true : false
+        return faceId?.enabled === undefined ||  faceId?.enabled === true ? true : false  //enabled not defined or true if define otherwise false
       }
 
     const onClickDigitalId = (sectionName, faceId) => {
@@ -42,7 +43,7 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
       let dataCapturePoints = sectionFromTemplate.faceIds.map((faceId, index) => {
        
         const investigationName = faceId?.reportName ?? "test"
-        let faceMatch = parseInt(caseUpdates?.[sectionName]?.[investigationName] ?? "0")
+        let faceMatch = parseInt(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName] ?? "0")
 
         return (
             <Card style = {[styles.card, !isEnabled(faceId)? styles.cardDisabled: {}]}  key={index}>
@@ -59,8 +60,8 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
                         <TouchableHighlight underlayColor="#ee5e33"  style={styles.touchable} disabled =  {!isEnabled(faceId)}
                             onPress={()=> onClickDigitalId(sectionName, faceId)}>
                                 <View style= {[styles.eachIconContainer,  isEnabled(isEnabled)? {} : styles.disabled]}>
-                                    {isEnabled(faceId) && checkLoading(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} />}
-                                    {isEnabled(faceId) && checkSuccess(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }
+                                    {isEnabled(faceId) && checkLoadingPhoto(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} />}
+                                    {isEnabled(faceId) && checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }
                                     <View style= {{position: 'absolute'}}>
                                         <Ionicons name="camera" size={iconSize} color="orange" />
                                     </View>
@@ -71,23 +72,23 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
 
                     <View style = {styles.verticalSeperator}></View>
 
-                    {isEnabled(faceId) && checkSuccess(faceId.reportName, sectionName, caseUpdates) &&
+                    {isEnabled(faceId) && checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) &&
                         <View style={styles.resultContainer}>
                             <View style={styles.resultImageContainer}>
                                 <Image style = {[styles.image,faceMatch === 0? {borderColor: 'red'} :{}]} 
-                                    source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][investigationName].locationImage}`}}/>               
+                                    source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][faceIds][investigationName].locationImage}`}}/>               
                             </View>
                             <View style= {styles.resultStatusContainer}>
-                                { checkSuccess(faceId.reportName, sectionName, caseUpdates) &&
+                                { checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) &&
                                 <Text style = {[styles.textBase , styles.resultStatusLabel, faceMatch === 0? styles.resultStatusLabelFail: {}]}>Face Match  </Text> }
-                                { checkSuccess(faceId.reportName, sectionName, caseUpdates) &&
+                                { checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) &&
                                 <Text style = {[styles.textBase , styles.resultStatusLabel,  faceMatch === 0? styles.resultStatusLabelFail: {}]}>{faceMatch === 0? 'FAIL' : 'PASS'}</Text> }
                             </View>
                         </View>
                     }
 
                     {(isEnabled(faceId) !== true || 
-                    (isEnabled(faceId) === true &&  !checkSuccess(faceId.reportName, sectionName, caseUpdates))) && 
+                    (isEnabled(faceId) === true &&  !checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates))) && 
                     <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
                         <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
                     </View> }

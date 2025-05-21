@@ -112,18 +112,48 @@ export const DOC_TYPE = {
 
 }
 
+export const faceIds = "faceIds"
+export const documentIds = 'documentIds'
+export const questionsSubSection = 'questions'
 
-export const checkSuccess = (investigationName, sectionName, caseUpdates) => {
-    return  caseUpdates?.[sectionName]?.[investigationName] != undefined    // There is some update for the investigation
-            &&  (caseUpdates[sectionName][investigationName].locationImage !== ''  || // Has been uploaded successfully 
-                caseUpdates[sectionName][investigationName].OcrImage !== ''
-            )
+export const checkSuccessPhoto = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]
+    let success =   exactLoc !== undefined    // There is some update for the investigation
+            &&  !(exactLoc.locationImage === undefined ||
+                exactLoc.locationImage === '')// Has been uploaded successfully 
+
+    //console.log(`${investigationName} ${faceIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
+
+    return success
 }
 
-export const checkLoading = (investigationName, sectionName, caseUpdates) => {
-    return  caseUpdates?.[sectionName]?.[investigationName] != undefined   // updates contain something for this capability
-            && (caseUpdates[sectionName][investigationName].locationImage === ''  // Has been uploaded successfully 
-            && caseUpdates[sectionName][investigationName].OcrImage === '')  // Has been uploaded successfully 
+export const checkSuccessDoc = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]
+    let success =   exactLoc !== undefined    // There is some update for the investigation
+            &&  !(exactLoc.OcrImage === undefined ||
+                exactLoc.OcrImage === '')// Has been uploaded successfully 
+
+    //console.log(`${investigationName} ${documentIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
+
+    return success
+}
+
+export const checkLoadingPhoto = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]
+    return  exactLoc !== undefined   // updates contain something for this capability
+            && exactLoc.locationImage === ''  // Has been uploaded successfully 
+            && exactLoc.OcrImage === ''  // Has been uploaded successfully 
+}
+
+export const checkLoadingDoc = (investigationName,  sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]
+    return  exactLoc !== undefined   // updates contain something for this capability
+            && exactLoc.locationImage === ''  // Has been uploaded successfully 
+            && exactLoc.OcrImage === ''  // Has been uploaded successfully 
 }
 
 export const SCREENS = {

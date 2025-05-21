@@ -23,8 +23,10 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
 
       <View style = {styles.container}>    
         <View style = {styles.descriptionContainer}>
-                <Text style = {[styles.textBase, styles.description ]}>{sectionFromTemplate.locationName} </Text>
-        </View> 
+                <Text style = {[styles.textBase, styles.description ]}>{sectionFromTemplate.locationName}
+                        {sectionFromTemplate.isRequired && ( <Text style={{ color: 'blue' }}>*</Text>)}
+                </Text>
+          </View> 
         
         <ScrollView style={styles.scrollView}>
 

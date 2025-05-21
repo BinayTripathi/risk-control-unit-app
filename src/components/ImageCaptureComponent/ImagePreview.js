@@ -87,7 +87,7 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
 
       const documentDetailsForSubmission = {
         email : email,
-        claimId: claimId,            
+        caseId: claimId,            
         Remarks:null,
         docType: docType.type,
         capability: docType.name,
@@ -104,8 +104,11 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
       } 
       
       const payloadToSave = {
-        claimId,
-        documentDetails : documentDetailsForSubmission,
+        caseId: claimId,
+        section : documentDetailsForSubmission.sectionName,
+        documentCategory: docType.type === UPLOAD_TYPE.PHOTO ? 'faceIds' : 'documentIds',
+        documentName: documentDetailsForSubmission.investigationName,
+        documentDetails :  documentDetailsForSubmission,
         id: Math.floor(1000 + Math.random() * 9000) * -1
       }
       setSavePayload(payloadToSave)
@@ -121,7 +124,7 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
                               <UserTracker photoData={photoData} displayMapHandler={displayMapHandler} shouldDisplayMap = {displayMap}/>
                              : ( <>
                                  <UserTracker photoData={false}/>
-                                 <Image source={{uri: `data:image/jpg;base64,${photoData}`}} style={styles.middlePhoto}  />
+                                 <Image source={{uri: photoData}} style={styles.middlePhoto}  />
                                    </> )
 
   const saveImageAlertBox = <OkayCancelDialogBox showDialog={showSaveDialog} 

@@ -3,102 +3,115 @@ import Card from '@components/UI/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@core/theme';
 import { useNavigation } from '@react-navigation/native';
-import { SCREENS, DOC_TYPE, checkLoading, checkSuccess } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingDoc, checkSuccessDoc, documentIds } from '@core/constants';
 import * as Speech from 'expo-speech';
 
 
 const { width, height } = Dimensions.get('window');
 const iconSize = 50;
-const DocumentScanner = ({selectedClaimId, userId, caseUpdates}) => {
+
+const DocumentScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
   const navigation = useNavigation();
 
-  const onClickDigitalId = (documentObj) => {
+  const isEnabled = (investigationDoc) => {
+    return investigationDoc?.enabled === undefined ||  investigationDoc?.enabled === true ? true : false
+  }
+
+  const onClickDigitalId = (sectionName,documentObj, documentScannerType) => {
 
     navigation.navigate(SCREENS.ImageCaptureScreen, {
-        docType: documentObj,
+        docType: documentScannerType,
         claimId: selectedClaimId,
-        email: userId})
+        email: userId,
+        sectionFromTemplate : sectionName,
+        investigationName: documentObj.reportType})
 }
 
 const speechHandler = (documentObj) => {
   Speech.speak(documentObj.speach);
 };
 
-  let capabilities = DOC_TYPE.DOCUMENT_SCANNER.map((documentType, index)=> {  
+const sectionName = sectionFromTemplate.locationName
 
-    let panValid = caseUpdates !== undefined && Object.keys(caseUpdates).includes(documentType.name) === true ? 
-    (caseUpdates[documentType.name].panValid === ''? false : caseUpdates[documentType.name].panValid ) : false
+let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocument, index)=> {  
 
-        return(
-            <Card style = {[styles.card, documentType?.enabled !== true? styles.cardDisabled: {}]}  key={index}>
+  const investigationName = investigationDocument?.reportName ?? "test"
 
-              <TouchableHighlight onPress={()=> speechHandler(documentType)}  style={styles.button} underlayColor="#a2a1a0">
-                  <View style = {styles.labelContainer}>
-                      <Text style = {[styles.textBase , styles.label]}>{documentType.name} </Text>                    
-                      <Ionicons name='volume-medium' size={iconSize-30} color="orange" /> 
-                  </View>                
-              </TouchableHighlight>  
+  const documentScannerType = DOC_TYPE.DOCUMENT_SCANNER.find(docScanner => docScanner.name === investigationName)  ??  DOC_TYPE.DOCUMENT_SCANNER.at(-1)
+  const captureIcon = documentScannerType.icon
 
-              <View style= {styles.allIconContainerRow} >            
+  let panValid = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]?.valid ?? true
 
-                  <View style={{alignContent: 'center', alignItems: 'center'}}>
-                  <TouchableHighlight underlayColor="#ee5e33"  style={styles.touchable}
-                      disabled =  {documentType?.enabled == true ? false: true}
-                      onPress={()=> onClickDigitalId(documentType)}>
-                          <View style= {[styles.eachIconContainer,  documentType?.enabled == true ? {} : styles.disabled]}>
+      return(
+          <Card style = {[styles.card, isEnabled(investigationDocument) !== true? styles.cardDisabled: {}]}  key={index}>
 
-                              { checkLoading(documentType, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
-                              { checkSuccess(documentType, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+            <TouchableHighlight onPress={()=> speechHandler(investigationName)}  style={styles.button} underlayColor="#a2a1a0">
+                <View style = {styles.labelContainer}>
+                    <Text style = {[styles.textBase , styles.label]}>{investigationName} </Text>                    
+                    <Ionicons name='volume-medium' size={iconSize-30} color="orange" /> 
+                </View>                
+            </TouchableHighlight>  
 
-                              <View style={styles.imageContainer} >
-                                <Image source={{uri:`${documentType.icon}`}} style={styles.iconImage} />
-                              </View>                              
-                          
-                          </View>
-                          
-                      </TouchableHighlight>   
-                      
-                  
-                  </View>     
+            <View style= {styles.allIconContainerRow} >            
 
-                  <View style={styles.verticalSeperator}>
-                  </View>
-                 
+                <View style={{alignContent: 'center', alignItems: 'center'}}>
+                <TouchableHighlight underlayColor="#ee5e33"  style={styles.touchable}
+                    disabled =  {isEnabled(investigationDocument) === true ? false: true}
+                    onPress={()=> onClickDigitalId(sectionName, investigationDocument, documentScannerType)}>
+                        <View style= {[styles.eachIconContainer,  isEnabled(investigationDocument) === true ? {} : styles.disabled]}>
 
-                  {documentType?.enabled === true && checkSuccess(documentType, caseUpdates) &&
-                    <View style={styles.resultContainer}>
-                        <View style={styles.resultImageContainer}>
-                            <Image style = {[styles.image,panValid === false? {borderColor: 'red'} :{}]} 
-                                source = {{uri:`data:image/jpeg;base64,${caseUpdates[documentType.name].OcrImage}`}}/>               
+                            {isEnabled(investigationDocument) && checkLoadingDoc(investigationName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
+                            {isEnabled(investigationDocument) && checkSuccessDoc(investigationName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+
+                            <View style={styles.imageContainer} >
+                              <Image source={{uri:`${captureIcon}`}} style={styles.iconImage} />
+                            </View>                              
+                        
                         </View>
-                        <View style= {styles.resultStatusContainer}>
-                            { checkSuccess(documentType, caseUpdates) &&
-                            <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{documentType.name} Check</Text> }
-                            { checkSuccess(documentType, caseUpdates) &&
-                            <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{panValid === false? 'FAIL' : 'PASS'}</Text> }
-                        </View>
-                        </View>
-                 }
-                  
+                        
+                    </TouchableHighlight>   
+                    
+                
+                </View>     
 
-                      {(documentType?.enabled !== true || 
-                      (documentType?.enabled === true &&  !checkSuccess(documentType, caseUpdates))) && 
-                      <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
-                          <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
-                      </View> }
-                      
+                <View style={styles.verticalSeperator}>
+                </View>
+                
+
+                {isEnabled(investigationDocument) === true && checkSuccessDoc(investigationName, sectionName, caseUpdates) &&
+                  <View style={styles.resultContainer}>
+                      <View style={styles.resultImageContainer}>
+                          <Image style = {[styles.image,panValid === false? {borderColor: 'red'} :{}]} 
+                              source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][documentIds][investigationName].OcrImage}`}}/>               
+                      </View>
+                      <View style= {styles.resultStatusContainer}>
+                          { checkSuccessDoc(investigationName, sectionName, caseUpdates) &&
+                          <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>Document Check</Text> }
+                          { checkSuccessDoc(investigationName, sectionName, caseUpdates) &&
+                          <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{panValid === false? 'FAIL' : 'PASS'}</Text> }
+                      </View>
+                      </View>
+                }
+                
+
+                    {(isEnabled(investigationDocument) !== true || 
+                    (isEnabled(investigationDocument) === true &&  !checkSuccessDoc(investigationName, sectionName, caseUpdates))) && 
+                    <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
+                        <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
+                    </View> }
+                    
 
 
-              </View>
-            </Card>
-      )
+            </View>
+          </Card>
+    )
    
   })
 
   return (
     <View style =  {styles.capabilityCardContainer}>                
-        {capabilities}
+        {dataCapturePoints}
   </View>  
 )
 }

@@ -1,9 +1,10 @@
-import { StyleSheet,View, Text , Dimensions, ScrollView, Button as RNButton} from 'react-native';
+import { StyleSheet,View, Text , Dimensions, ScrollView, Button as RNButton, TextInput, TouchableOpacity, Platform} from 'react-native';
 import Checkbox from 'expo-checkbox';
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { theme } from '@core/theme';
 import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
+import DateTimePicker from '@react-native-community/datetimepicker';
 import  CustomTextInput  from "@components/UI/TextInput";
 import RadioButtonGroup, { RadioButtonItem } from "expo-radio-button";
 import Slider from '@react-native-community/slider';
@@ -12,131 +13,112 @@ import Button from '@components/UI/Button'
 import { Ionicons } from '@expo/vector-icons';
 
 import {requestSaveFormAction} from '@store/ducks/case-submission-slice'
-import { UPLOAD_TYPE } from '@core/constants';
+import { UPLOAD_TYPE, questionsSubSection } from '@core/constants';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
 const { width, height } = Dimensions.get('window');
 
-const FormInitiator = ({selectedClaimId}) => {
+const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
-  const caseDetails = useSelector(state => state.casesDetails.selectedCaseDetails)
-  const selectedClaim = caseDetails[selectedClaimId]
+  console.log('within form : ' + JSON.stringify(caseUpdates?.[sectionFromTemplate.locationName]?.[questionsSubSection]))
+  const [answers, setAnswers] = useState(caseUpdates?.[sectionFromTemplate.locationName]?.[questionsSubSection] ?? {});
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const mandatoryQuestionsListRef = useRef(new Set());
+
+  const handleInputChange = (question, value) => {
+    question.answerText = value
+    setAnswers({ ...answers, [question.questionText]: question });
+
+    //const newMandatoryQuestionList = mandatoryQuestionsListRef.current.filter(quest => quest !== question.questionText);
+    mandatoryQuestionsListRef.current.delete(question.questionText)
+    
+  };
+
+  const openDatePicker = (question) => {
+    setCurrentQuestion(question);
+    setSelectedDate(new Date()); // Reset to default or previously selected value
+    setShowDatePicker(true);
+  };
+
+  const handleDateChange = (event, date) => {
+    if (date) {
+      handleInputChange(currentQuestion, date.toISOString());
+    }
+    setShowDatePicker(false);
+  };
 
   const dispatch = useDispatch()
-  const [metBeneficiary, setMetBeneficiary] = useState(false);
-  const [metNeighbor, setMetNeighbor] = useState(false);
-  const [wentToHospital, setWentToHospital] = useState(false);
-  const [wentToCremetary, setWentToCremetary] = useState(false);
 
-  const [propertyOwnership, setPropertyOwnership] = useState("owned");
-  const [financialStatus, setFinancialStatus] = useState(0.5)
+  let dataCapturePoints = sectionFromTemplate.questions.map((question, index)=> {     
 
-  const [isIllinessTimiingBeforePolicy, setIsIllinessTimiingBeforePolicy] = useState("no");
-  const [periodOfTreatment, setPeriodOfTreatment] = useState(0.5)
-  
-  const [personMet, setPersonMet] = useState('')
-  const [debouncedPersonMet] = useDebounce(personMet, 5000);
+    if(question.isRequired && !answers?.[question.questionText]) {
+      mandatoryQuestionsListRef.current.add(question.questionText)    }
+      
+    return( <View style={{ marginTop: 10, marginBottom: 20, paddingBottom: 10, marginHorizontal: 10, borderBottomColor: 'grey', borderBottomWidth: 3 }} key={index}>
+              <Text style={styles.label1}>{question.questionText} {question.isRequired && ( <Text style={{ color: 'blue' }}>*</Text>)}</Text>
 
-  const [dateTime, setDateTime] = useState('');
- 
+              {question.questionType === 'multiText' && (
+                    <View style={styles.inputContainer}>
+                                  <TextInput
+                                          placeholder="Enter investigation comments"
+                                          onChangeText={(val) => handleInputChange(question, val)}
+                                          multiline={true}
+                                          numberOfLines={50}
+                                          keyboardType={
+                                          Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
+                                          style={styles.input}  />
+                                </View>   
+              )}
 
-  let financialStatusString = financialStatus === 0 ? 'LOW' 
-  :  financialStatus === 0.5 ? 'MEDIUM' : 'HIGH'
-
-   let DurationOfTreatmentString = periodOfTreatment === 0 ? 'No treatment' 
-  :  financialStatus === 0.5 ? 'Treatment < 6 months' : 'Treatment > 6 months'
-
-
-  const BenifiaryFormPart = () => {      
-
-    return <View style={{ marginTop: 10, marginBottom: 20, paddingBottom: 10, marginHorizontal: 10, borderBottomColor: 'grey', borderBottomWidth: 3 }}>
-      <Text style={styles.label1}>Ownership of residence</Text>
-    <RadioButtonGroup containerStyle={{ marginBottom: 10 }}
-                      selected={propertyOwnership}
-                      onSelected={(value) => setPropertyOwnership(value)}
-                      radioBackground="green">
-      <RadioButtonItem value="owned" label="OWNED" />
-      <RadioButtonItem value="rented" label="RENTED" />
-    </RadioButtonGroup>
-
-   
-
-    <Text style={styles.label1}>Perceived financial status</Text>
-    <Text style={[{marginLeft: 10, fontWeight: 'bold',color: 'red'}]}>{financialStatusString}</Text>
-    <View style = {{borderColor: 'black', borderWidth: 1, marginHorizontal: 20, marginBottom: 20}}> 
-      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={1} step= {0.5} minimumTrackTintColor="#5a5757"
-        maximumTrackTintColor="#000000" value={financialStatus} onValueChange = {setFinancialStatus }/>
-    </View>    
-  </View>
-  }
-
-  const NeighbourFormPart = () => {
-
-    const handlePersonMet = (event) => {
-      const value = event.target.value;
-      setPersonMet(value);
-    };
-
-    return <View style= {{paddingBottom : 10}}>
-              <CustomTextInput onChangeText={setPersonMet} value={personMet} label="Name of the neighbour met" 
-                underlineColor='#6e6d6d' style= {styles.customInputBox}/>
+              {question.questionType === 'text' && (
+                    <TextInput style={{ borderBottomWidth: 1 }} value = {answers[question.questionText]?.answerText} onChangeText={(val) => handleInputChange(question, val)} />
+              )}
               
-              <Text style={styles.label1}> Time when met with Neighbour</Text>  
-              <CustomDateTimePicker dateTimeInParent={dateTime} setDateTimeInParent = {setDateTime} label={'Select Date And Time'}>
-                <RNButton color="#69696b" />
-              </CustomDateTimePicker>
-             
-            </View>
-  }
-
-
-  const HospitalFormPart = () => {      
-
-    return <View style={{ marginTop: 10, marginBottom: 20, paddingBottom: 10, marginHorizontal: 10, borderBottomColor: 'grey', borderBottomWidth: 3 }}>
-      <Text style={styles.label1}>Injury/Illness prior to commencement/revival</Text>
-    <RadioButtonGroup containerStyle={{ marginBottom: 10 }}
-                      selected={isIllinessTimiingBeforePolicy}
-                      onSelected={(value) => setIsIllinessTimiingBeforePolicy(value)}
+              {question.questionType === 'date' && (
+                    <TouchableOpacity onPress={() => openDatePicker(question)}>
+                      <Text style={{ color: 'blue' }}>{answers[question.questionText]?.answerText || 'Select Date'}</Text> 
+                    </TouchableOpacity>
+                  )}
+              {question.questionType === 'dropdown' && (
+                <RadioButtonGroup containerStyle={{ marginBottom: 10 }}
+                      selected={answers[question.questionText]?.answerText}
+                      onSelected={(value) => handleInputChange(question, value)}
                       radioBackground="green">
-      <RadioButtonItem value="yes" label="YES" />
-      <RadioButtonItem value="no" label="NO" />
-    </RadioButtonGroup>
-
-   
-
-    <Text style={styles.label1}>Duration of treatment</Text>
-    <Text style={[{marginLeft: 10, fontWeight: 'bold',color: 'red'}]}>{DurationOfTreatmentString}</Text>
-    <View style = {{borderColor: 'black', borderWidth: 1, marginHorizontal: 20, marginBottom: 20}}> 
-      <Slider style={{width: 200, height: 40}}  minimumValue={0} maximumValue={12} step= {6} minimumTrackTintColor="#5a5757"
-        maximumTrackTintColor="#000000" value={periodOfTreatment} onValueChange = {setPeriodOfTreatment }/>
-    </View>    
-  </View>
-  }
-
-  const CremetaryFormPart = () => {
-
-    const handlePersonMet = (event) => {
-      const value = event.target.value;
-      setPersonMet(value);
-    };
-
-    return <View style= {{paddingBottom : 10}}>
-              <CustomTextInput onChangeText={setPersonMet} value={personMet} label="Name of person met at the cemetery" 
-                underlineColor='#6e6d6d' style= {styles.customInputBox}/>
+                        {question.options.split(', ').map((option, i) => (
+                          <RadioButtonItem key={i} value={option} label={option} />
+                      ))}
               
-              <Text style={styles.label1}> Date and time of death</Text>  
-              <CustomDateTimePicker dateTimeInParent={dateTime} setDateTimeInParent = {setDateTime} label={'Select Date And Time'}>
-                <RNButton color="#69696b" />
-              </CustomDateTimePicker>
-             
-            </View>
-  }
+              </RadioButtonGroup>
+
+                )}
+
+              {question.questionType === 'checkbox' && (
+                <View style={{ flexDirection: 'column' }}>
+                  {question.options?.split(', ').map((option, i) => (
+                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Checkbox
+                        value={answers[question.questionText] !== undefined && answers[question.questionText].options.includes(option) ? true: false}
+                        onValueChange={(isChecked) => {
+                          let updatedValues = answers[question.questionText]?.answerText || []; 
+                          updatedValues = isChecked
+                            ? [...updatedValues, option]
+                            : updatedValues.filter((val) => val !== option);
+                          handleInputChange(question, updatedValues);
+                        }}
+                      />
+                      <Text>{option}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+      </View>)
+
+  })
 
 
-
-
-
-  const showAlert = () =>
+  const showSavedAlert = () =>
   Dialog.show({
     type: ALERT_TYPE.SUCCESS,
     title: 'Form Submission',
@@ -145,103 +127,71 @@ const FormInitiator = ({selectedClaimId}) => {
     onHide: () => { }
   })
 
+  const showIncompleteFormAlert = () =>
+    Dialog.show({
+      type: ALERT_TYPE.DANGER,
+      title: 'Form Submission',
+      textBody: 'Please complete the form before submitting',
+      button: 'OK',          
+      onHide: () => { }
+    })
+
   const onSavePressed = async (e) => {
 
-    const quest1 = () => {
-      if(selectedClaim?.policy.claimType !== "Death")
-        return metBeneficiary === true? propertyOwnership : 'PERSON UNREACHABLE'
-      else 
-        return metBeneficiary === true? isIllinessTimiingBeforePolicy : 'PERSON UNREACHABLE'
+    if(mandatoryQuestionsListRef.current.size !== 0){
+      showIncompleteFormAlert()
+      return
     }
 
-    const quest2 = () => {
-      if(selectedClaim?.policy.claimType !== "Death")
-        return metBeneficiary === true? financialStatus : 'PERSON UNREACHABLE'
-      else 
-        return metBeneficiary === true? periodOfTreatment : 'PERSON UNREACHABLE'
+    const formDetailsForSubmission = {
+      email : userId,
+      caseId: selectedClaimId,            
+      docType: UPLOAD_TYPE.FORM,
+      capability: "FORM_TEMPLATE1",
+      sectionName: sectionFromTemplate.locationName,
+      qna:  Object.entries(answers).map(([key, value]) => value)
+    }        
+
+    const formKey = formDetailsForSubmission.sectionName + '~' + formDetailsForSubmission.capability
+    const payloadToSave = {
+      caseId: selectedClaimId,
+      section:  sectionFromTemplate.locationName,
+      documentCategory : questionsSubSection,
+      documentDetails: formDetailsForSubmission,
+      id: Math.floor(1000 + Math.random() * 9000) * -1
     }
 
-    const quest3 = () => {
-      if(selectedClaim?.policy.claimType !== "Death" )
-        return metNeighbor === true? personMet : 'PERSON UNREACHABLE'
-      else 
-        return metNeighbor === true? personMet : 'PERSON UNREACHABLE'
-    }
-
-    const quest4 = () => {
-      if(selectedClaim?.policy.claimType !== "Death" )
-        return metNeighbor === true? dateTime : 'PERSON UNREACHABLE'
-      else 
-        return metNeighbor === true? dateTime : 'PERSON UNREACHABLE'
-    }
-
-    let payload = {
-      claimId: selectedClaimId,
-      formData : {         
-        docType: UPLOAD_TYPE.FORM,
-        capability: "FORM_TEMPLATE1",
-        question1 : quest1(),
-        question2 : quest2(),
-        question3 : quest3(),
-        question4 : quest4()
-      }
-    }
-    
-    dispatch(requestSaveFormAction(payload))
-    showAlert()
+    console.log(formDetailsForSubmission.qna)
+    dispatch(requestSaveFormAction(payloadToSave))
+    showSavedAlert()
   }
 
 
 
 
-  let benificaryForm = metBeneficiary === true ?<BenifiaryFormPart/> : ""
-  let neighbourForm = metNeighbor === true ? NeighbourFormPart() : ""
-
-  let hospitalForm = metBeneficiary === true ?<HospitalFormPart/> : ""
-  let cremetoryForm = metNeighbor === true ? CremetaryFormPart() : ""
-
     return (
 
       <View>
-
-      <View style = {styles.descriptionContainer}>
-            <Text style = {[styles.textBase, styles.description ]}>FORM TEMPLATE </Text>
-      </View> 
       
       <ScrollView style={styles.scrollView}>
           <View style={styles.questionaireContainer}>
-
-              <View style={[styles.checkboxContainer, { marginBottom: 0, marginTop: 10,}]}>
-                <Checkbox style={styles.checkbox} value={metBeneficiary} onValueChange={setMetBeneficiary} />
-                {selectedClaim?.policy.claimType !== "Death" ? 
-                   <Text style={styles.label}>Met beneficiary</Text>:
-                   <Text style={styles.label}>Visited Hospital</Text>
-                   }
-              </View>
-
-              
-                {selectedClaim?.policy.claimType !== "Death" ? benificaryForm : hospitalForm}
-
-
-
-              <View style={[styles.checkboxContainer, { marginBottom: 0, marginTop: 10,}]}>
-                <Checkbox style={styles.checkbox} value={metNeighbor} onValueChange={setMetNeighbor} />
-                
-                {selectedClaim?.policy.claimType !== "Death" ? 
-                   <Text style={styles.label}>Met Neighbour</Text>:
-                   <Text style={styles.label}>Visited Cremetory</Text>
-                   }
-              </View>
-
-              {selectedClaim?.policy.claimType !== "Death" ? neighbourForm : cremetoryForm}     
-
+            {dataCapturePoints}
           </View>
       </ScrollView>
 
       <Button mode="contained" onPress={onSavePressed} 
-          style={styles.button}>
+          style={[styles.button]}>
           <Ionicons name="save" size={24} color="white" /> SAVE
       </Button>
+
+      {showDatePicker && (
+
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <View style={{ backgroundColor: 'white' }}>
+                <DateTimePicker mode="date" value={selectedDate} onChange={handleDateChange} />
+            </View>
+          </View>
+      )}
     </View>
       
     )
@@ -339,6 +289,9 @@ const styles = StyleSheet.create({
     },
     button: {
       marginTop: 50
+    },
+    buttonDisabled: {
+      backgroundColor: 'grey'
     },
 })
 

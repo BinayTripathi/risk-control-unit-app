@@ -47,13 +47,13 @@ function CaseItem({ caseDetails, userLocPromise }) {
     console.log(getDistance({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}))
     
-    if(caseDetails && isPointWithinRadius({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
-       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}, GEOFENCING_RADIUS_IN_METRES)) {
+    /*if(caseDetails && isPointWithinRadius({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
+       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}, GEOFENCING_RADIUS_IN_METRES)) {*/
       navigation.navigate('CaseDetailsScreen', {
         claimId : caseDetails.claimId,
         investigatable: true
       })
-    } else {
+    /*} else {
       Dialog.show({
         type: ALERT_TYPE.WARNING,
         title: 'Geofencing alert',
@@ -66,7 +66,7 @@ function CaseItem({ caseDetails, userLocPromise }) {
           })
         }
       })
-    }
+    }*/
     
    }
 
