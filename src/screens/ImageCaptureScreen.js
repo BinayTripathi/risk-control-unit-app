@@ -10,21 +10,21 @@ import Background from "@components/UI/Background";
 const ImageCaptureScreen = ({ route }) => {
   
   const [photoData, setPhotoData] = useState(); 
-  const [bothEyeOpen, setBothEyeOpen] = useState(false)
-  const [smiling, setSmiling] = useState(false)
 
   const claimId = route.params?.claimId
   const docType = route.params?.docType
   const email = route.params?.email
   const sectionName = route.params?.sectionFromTemplate
   const investigationName = route.params?.investigationName
+  const isLastMandatory = route.params?.isLastMandatory
+  console.log(`is mandatory last : ${isLastMandatory}`)
 
 
   const imageCaptureSceen =  (
     <Background>
         <View style={styles.container}>
-        { docType.type === "PHOTO" && <ImageCapture setPhotoData={setPhotoData} setBothEyeOpen={setBothEyeOpen} setSmiling={setSmiling} docType = {docType} /> }
-        { docType.type === "DOCUMENT" && <DocumentScanner setPhotoData={setPhotoData} setBothEyeOpen={setBothEyeOpen} setSmiling={setSmiling} docType = {docType}/> }
+        { docType.type === "PHOTO" && <ImageCapture setPhotoData={setPhotoData}  docType = {docType} /> }
+        { docType.type === "DOCUMENT" && <DocumentScanner setPhotoData={setPhotoData}  docType = {docType} /> }
         </View>  
         </Background>
      
@@ -35,7 +35,8 @@ const ImageCaptureScreen = ({ route }) => {
       <View style={styles.container}>
         <ImagePreview photoData= {photoData} setPhotoData={setPhotoData} 
           claimId = {claimId} docType = {docType} email = {email} 
-          sectionName = {sectionName} investigationName = {investigationName}/>
+          sectionName = {sectionName} investigationName = {investigationName}
+          isLastMandatory = {isLastMandatory}/>
       </View>  
     </Background>
   )

@@ -113,7 +113,7 @@ export const requestUpdatePanCaseAction = createAction(
 );
 
 
-export const requestSaveFormAction = createAction(
+export const requestUpdateFormCaseAction = createAction(
   types.REQUEST_SAVE_FORM,
   function prepare({caseId, section, documentCategory, documentDetails, id}) {
     return {
@@ -134,17 +134,12 @@ export const requestSaveFormAction = createAction(
 
 export const requestSubmitCaseAction = createAction(
   types.REQUEST_SUBMIT_CASE,
-  function prepare({claimId, email, beneficiaryId, Remarks, Question1, Question2, Question3, Question4 }) {
+  function prepare({email, caseId, remarks }) {
     return {
       payload: {
-        claimId, 
         email,
-        beneficiaryId,
-        Remarks ,
-        Question1,
-        Question2,
-        Question3,
-        Question4  
+        caseId, 
+        remarks
       },
     };
   },
@@ -196,9 +191,10 @@ const initialState = {
             state.error = null        
           },
 
-          requestSaveForm : (state,action) => {
+          //requestSaveForm 
+          requestUpdateFormCase : (state) => {
                            
-            console.log('requestSaveForm called')
+            console.log('requestUpdateFormCase called')
             state.loading = true;     
             state.error = null   
           },
@@ -207,9 +203,9 @@ const initialState = {
               
               state.loading = false;   
               state.casesUpdates = mergeDeep(state.casesUpdates, action.payload)   
-              //console.log('SUCCESS--------------------------------------------------')
-              //console.log(JSON.stringify(action))
-              //console.log(JSON.stringify(state.casesUpdates))
+              console.log('SUCCESS--------------------------------------------------')
+              console.log(JSON.stringify(action))
+              console.log(JSON.stringify(state.casesUpdates))
           },
           failureUpdateCase: (state, action) => {
             state.loading = false;
@@ -238,7 +234,8 @@ const initialState = {
 
 
   export function* asyncPostCaseDocuments(action) {
-   //console.log('ACTION asyncPostCaseDocuments------>' + JSON.stringify(action))
+
+   console.log('ACTION asyncPostCaseDocuments------>' + JSON.stringify(action))
     try {              
       //ToDo : Do not fetch if case details available within TTL
       //documentDetails : {PAN : {}}
@@ -261,14 +258,8 @@ const initialState = {
         }
         yield put(successUpdateCase(successPayload));
       }      
-          
-
-        let readText = null
-        //if(action.payload.documentDetails.docType ===  UPLOAD_TYPE.DOCUMENT)
-        //  readText = yield call(callGoogleVisionAsync,action.payload.documentDetails.OcrImage)
 
         let postUpdatePayload = action.payload.documentDetails
-        //postUpdatePayload.OcrData = readText?.text
         console.log('triggering upload')
         let response = ''
         if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.DOCUMENT)
@@ -284,16 +275,24 @@ const initialState = {
         if (responseUserData) {     
 
           let successPayload = undefined
+          const caseNo = action.payload.caseId
+          const section = action.payload.section
+          const category = action.payload.documentCategory
+          const documentName = action.payload.documentName
+          console.log('checking is last mandatory' + JSON.stringify(postUpdatePayload))
           if(action.payload.documentDetails.docType === UPLOAD_TYPE.PHOTO) {
 
             successPayload = {
-              [action.payload.caseId] : {
-                [action.payload.section] : {
-                  [action.payload.documentCategory] : {
-                    [action.payload.documentName] : {
+              [caseNo] : {
+                [section] : {
+                  'completed' : {
+                      'faceIds' : postUpdatePayload.isLastMandatory,
+                    },
+                  [category] : {
+                    [documentName] : {
                       ...action.payload.documentDetails, 
                       id: action.payload.id,
-                      locationImage:  responseUserData.locationImage,                  
+                      locationImage:  'a',//responseUserData.locationImage,                  
                       facePercent: responseUserData.facePercent                      
                     } 
                   }
@@ -305,11 +304,14 @@ const initialState = {
             successPayload = {
               [action.payload.caseId] : {
                 [action.payload.section] : {
+                  'completed' : {
+                      'documentId' : postUpdatePayload.isLastMandatory,
+                    },
                   [action.payload.documentCategory] : {
                     [action.payload.documentName] : {
                       ...action.payload.documentDetails, 
                       id: action.payload.id,
-                      OcrImage: responseUserData.ocrImage,                    
+                      OcrImage: 'b',//responseUserData.ocrImage,                    
                       panValid: responseUserData.panValid                      
                     } 
                   }
@@ -324,6 +326,9 @@ const initialState = {
             successPayload = {
               [caseNo] : {
                 [section] : {
+                  'completed' : {
+                      'questions': true
+                    },
                   [category] : action.payload.documentDetails.qna.reduce((acc, item) => {
                     acc[item.questionText] = item;
                     return acc;
@@ -374,7 +379,7 @@ const initialState = {
     try {                    
         const {prevAction} = action.payload;
         if ( action.payload.prevAction.type === types.REQUEST_UPDATE_BENEFICIARY_PHOTO_CASE  || 
-           action.payload.prevAction.type === types.REQUEST_UPDATE_PAN_CASE) {
+           action.payload.prevAction.type === types.REQUEST_UPDATE_PAN_CASE ) {
           let successPayload = {
             [prevAction.payload.claimId] : {...prevAction.payload.documentDetails, locationImage: "", OcrImage: "",  id: prevAction.payload.id }
           }

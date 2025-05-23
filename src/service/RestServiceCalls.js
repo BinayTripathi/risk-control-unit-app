@@ -224,12 +224,12 @@ export const updateCaseFace = async ({email, caseId, sectionName, investigationN
   }
 };
 
-export const saveForm = async ({caseId, section, qna}) => {
+export const saveForm = async ({email, caseId, sectionName, qna}) => {
   //console.log(JSON.stringify(body))
   try {
       const API_URL = `${BASE_URL}/Agent/answers`;
-      //const urlWithParams = `${API_URL}?Email=agent@verify.com&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}`;
-      const urlWithParams = 'https://icheckify-demo.azurewebsites.net/api/Agent/answers?email=agent%40verify.com&LocationLatLong=-37%2F68&locationName=LA%20ADDRESS&caseId=1'
+      const urlWithParams = `${API_URL}?email=${encodeURIComponent(email)}&caseId=${encodeURIComponent(caseId)}&locationName=${encodeURIComponent(sectionName)}&LocationLatLong=-37%2F68`;
+      //const urlWithParams = 'https://icheckify-demo.azurewebsites.net/api/Agent/answers?email=agent%40verify.com&LocationLatLong=-37%2F68&locationName=LA%20ADDRESS&caseId=1'
       const config = {}
       const data = {
         ...qna

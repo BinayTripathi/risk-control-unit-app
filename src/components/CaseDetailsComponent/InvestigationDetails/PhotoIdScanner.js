@@ -1,4 +1,5 @@
 import { StyleSheet,View, Text , Dimensions, TouchableHighlight, Image} from 'react-native';
+import { useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,6 +16,7 @@ const { width, height } = Dimensions.get('window');
 const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
     const navigation = useNavigation();
+    const mandatoryFaceIdListRef = useRef(new Set());
     const iconSize = 50;
 
     const isEnabled = (faceId) => {
@@ -22,13 +24,16 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
       }
 
     const onClickDigitalId = (sectionName, faceId) => {
+        console.log('Mandatory photo list')
+        console.log(mandatoryFaceIdListRef.current)
         if(!isEnabled(faceId)) return
         navigation.navigate(SCREENS.ImageCaptureScreen, {
             docType: DOC_TYPE.PHOTO_ID_SCANNER[0],
             claimId: selectedClaimId,
             email: userId,
             sectionFromTemplate : sectionName,
-            investigationName: faceId.reportType
+            investigationName: faceId.reportType,
+            isLastMandatory: (mandatoryFaceIdListRef.current.size === 1 && mandatoryFaceIdListRef.current.has(faceId.reportType)) || mandatoryFaceIdListRef.current.size === 0
         })
     } 
 
@@ -41,16 +46,24 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
       const sectionName = sectionFromTemplate.locationName
       
       let dataCapturePoints = sectionFromTemplate.faceIds.map((faceId, index) => {
-       
+        
         const investigationName = faceId?.reportName ?? "test"
-        let faceMatch = parseInt(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName] ?? "0")
+        let isPhotoUploaded = isEnabled(faceId) && checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates)
+
+        if(faceId.isRequired && !isPhotoUploaded) {
+            mandatoryFaceIdListRef.current.add(investigationName)   
+         } else if(faceId.isRequired && isPhotoUploaded)
+            mandatoryFaceIdListRef.current.delete(investigationName)   
+       
+        
+        let faceMatch = parseInt(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]?.facePercent ?? "0")
 
         return (
             <Card style = {[styles.card, !isEnabled(faceId)? styles.cardDisabled: {}]}  key={index}>
 
                 <TouchableHighlight onPress={()=> speechHandler(faceId)}  style={styles.button} underlayColor="#a2a1a0">
                     <View style = {styles.labelContainer}>
-                        <Text style = {[styles.textBase , styles.label]}>{investigationName} </Text>                    
+                        <Text style = {[styles.textBase , styles.label]}>{investigationName} {faceId.isRequired && ( <Text style={{ color: 'red' }}>*</Text>)}</Text>                    
                         <Ionicons name='volume-medium' size={iconSize-30} color="orange" /> 
                     </View>                
                 </TouchableHighlight>  
@@ -61,7 +74,7 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
                             onPress={()=> onClickDigitalId(sectionName, faceId)}>
                                 <View style= {[styles.eachIconContainer,  isEnabled(isEnabled)? {} : styles.disabled]}>
                                     {isEnabled(faceId) && checkLoadingPhoto(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} />}
-                                    {isEnabled(faceId) && checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }
+                                    {isPhotoUploaded && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }
                                     <View style= {{position: 'absolute'}}>
                                         <Ionicons name="camera" size={iconSize} color="orange" />
                                     </View>
@@ -72,23 +85,22 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
 
                     <View style = {styles.verticalSeperator}></View>
 
-                    {isEnabled(faceId) && checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) &&
+                    {isPhotoUploaded &&
                         <View style={styles.resultContainer}>
                             <View style={styles.resultImageContainer}>
                                 <Image style = {[styles.image,faceMatch === 0? {borderColor: 'red'} :{}]} 
                                     source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][faceIds][investigationName].locationImage}`}}/>               
                             </View>
                             <View style= {styles.resultStatusContainer}>
-                                { checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) &&
+                                { isPhotoUploaded &&
                                 <Text style = {[styles.textBase , styles.resultStatusLabel, faceMatch === 0? styles.resultStatusLabelFail: {}]}>Face Match  </Text> }
-                                { checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) &&
+                                { isPhotoUploaded &&
                                 <Text style = {[styles.textBase , styles.resultStatusLabel,  faceMatch === 0? styles.resultStatusLabelFail: {}]}>{faceMatch === 0? 'FAIL' : 'PASS'}</Text> }
                             </View>
                         </View>
                     }
 
-                    {(isEnabled(faceId) !== true || 
-                    (isEnabled(faceId) === true &&  !checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates))) && 
+                    {(isEnabled(faceId) !== true || !isPhotoUploaded) && 
                     <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
                         <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
                     </View> }

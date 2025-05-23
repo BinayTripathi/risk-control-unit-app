@@ -69,7 +69,7 @@ const initialState = {
 }
   
 
-const ImageCapture = ({setPhotoData, docType, setBothEyeOpen, setSmiling}) => {
+const ImageCapture = ({setPhotoData, docType}) => {
  
 
   const { hasPermission, setHasPermission } = useCameraPermission();

@@ -25,7 +25,7 @@ import OkayCancelDialogBox from "@components/UI/OkayCancelDialogBox";
 let imageRatio = 1
 //https://www.farhansayshi.com/post/how-to-save-files-to-a-device-folder-using-expo-and-react-native/
 const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, sectionName,
-  investigationName}) => {
+  investigationName, isLastMandatory}) => {
   
     const navigation = useNavigation();
     let savedPhoto = useRef(null);
@@ -70,18 +70,10 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
         
       } 
     }, [data, error])
-
-      
+  
      
     //Image.getSize(`data:image/png;base64,${photoData}`, (width, height) => {imageRatio = width/ width});
-    Image.getSize(`${photoData}`, (width, height) => {imageRatio = width/ width});
-
-    
-
-      console.log(imageRatio)
-
-
-       
+    Image.getSize(`${photoData}`, (width, height) => {imageRatio = width/ width});       
     
     const savePhoto = async () => {        
 
@@ -92,7 +84,8 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
         docType: docType.type,
         capability: docType.name,
         sectionName,
-        investigationName
+        investigationName,
+        isLastMandatory
       }
       
       if(docType.type === UPLOAD_TYPE.PHOTO){

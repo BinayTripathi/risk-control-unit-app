@@ -12,7 +12,7 @@ import { useDebounce } from "use-debounce";
 import Button from '@components/UI/Button'
 import { Ionicons } from '@expo/vector-icons';
 
-import {requestSaveFormAction} from '@store/ducks/case-submission-slice'
+import {requestUpdateFormCaseAction} from '@store/ducks/case-submission-slice'
 import { UPLOAD_TYPE, questionsSubSection } from '@core/constants';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
@@ -20,7 +20,7 @@ const { width, height } = Dimensions.get('window');
 
 const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
-  console.log('within form : ' + JSON.stringify(caseUpdates?.[sectionFromTemplate.locationName]?.[questionsSubSection]))
+  //console.log('within form : ' + JSON.stringify(caseUpdates?.[sectionFromTemplate.locationName]?.[questionsSubSection]))
   const [answers, setAnswers] = useState(caseUpdates?.[sectionFromTemplate.locationName]?.[questionsSubSection] ?? {});
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -68,7 +68,8 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
                                           numberOfLines={50}
                                           keyboardType={
                                           Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
-                                          style={styles.input}  />
+                                          style={styles.input}  
+                                          value={answers[question.questionText]?.answerText}/>
                                 </View>   
               )}
 
@@ -152,7 +153,6 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
       qna:  Object.entries(answers).map(([key, value]) => value)
     }        
 
-    const formKey = formDetailsForSubmission.sectionName + '~' + formDetailsForSubmission.capability
     const payloadToSave = {
       caseId: selectedClaimId,
       section:  sectionFromTemplate.locationName,
@@ -161,8 +161,7 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
       id: Math.floor(1000 + Math.random() * 9000) * -1
     }
 
-    console.log(formDetailsForSubmission.qna)
-    dispatch(requestSaveFormAction(payloadToSave))
+    dispatch(requestUpdateFormCaseAction(payloadToSave))
     showSavedAlert()
   }
 

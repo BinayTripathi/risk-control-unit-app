@@ -1,4 +1,5 @@
 import { StyleSheet,View, Text , Dimensions, TouchableHighlight, Image} from 'react-native';
+import { useRef } from 'react';
 import Card from '@components/UI/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@core/theme';
@@ -13,19 +14,25 @@ const iconSize = 50;
 const DocumentScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
   const navigation = useNavigation();
+  const mandatoryDocumentListRef = useRef(new Set());
+
 
   const isEnabled = (investigationDoc) => {
     return investigationDoc?.enabled === undefined ||  investigationDoc?.enabled === true ? true : false
   }
 
   const onClickDigitalId = (sectionName,documentObj, documentScannerType) => {
-
+    console.log('Mandatory document list')
+    console.log(mandatoryDocumentListRef.current)
+    if(!isEnabled(documentObj)) return
     navigation.navigate(SCREENS.ImageCaptureScreen, {
         docType: documentScannerType,
         claimId: selectedClaimId,
         email: userId,
         sectionFromTemplate : sectionName,
-        investigationName: documentObj.reportType})
+        investigationName: documentObj.reportType,
+        isLastMandatory: (mandatoryDocumentListRef.current.size === 1 && mandatoryDocumentListRef.current.has(documentObj.reportType)) || mandatoryDocumentListRef.current.size === 0
+      })
 }
 
 const speechHandler = (documentObj) => {
@@ -42,6 +49,13 @@ let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocume
   const captureIcon = documentScannerType.icon
 
   let panValid = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]?.valid ?? true
+
+  let isDocumentUploaded = isEnabled(investigationDocument) === true && checkSuccessDoc(investigationName, sectionName, caseUpdates)
+
+  if(investigationDocument.isRequired && !isDocumentUploaded) {
+    mandatoryDocumentListRef.current.add(investigationName)   
+  } else if(investigationDocument.isRequired && isDocumentUploaded)
+    mandatoryDocumentListRef.current.delete(investigationName)  
 
       return(
           <Card style = {[styles.card, isEnabled(investigationDocument) !== true? styles.cardDisabled: {}]}  key={index}>
@@ -62,7 +76,7 @@ let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocume
                         <View style= {[styles.eachIconContainer,  isEnabled(investigationDocument) === true ? {} : styles.disabled]}>
 
                             {isEnabled(investigationDocument) && checkLoadingDoc(investigationName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
-                            {isEnabled(investigationDocument) && checkSuccessDoc(investigationName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+                            {isDocumentUploaded && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
 
                             <View style={styles.imageContainer} >
                               <Image source={{uri:`${captureIcon}`}} style={styles.iconImage} />
@@ -79,24 +93,23 @@ let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocume
                 </View>
                 
 
-                {isEnabled(investigationDocument) === true && checkSuccessDoc(investigationName, sectionName, caseUpdates) &&
+                {isDocumentUploaded &&
                   <View style={styles.resultContainer}>
                       <View style={styles.resultImageContainer}>
                           <Image style = {[styles.image,panValid === false? {borderColor: 'red'} :{}]} 
                               source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][documentIds][investigationName].OcrImage}`}}/>               
                       </View>
                       <View style= {styles.resultStatusContainer}>
-                          { checkSuccessDoc(investigationName, sectionName, caseUpdates) &&
+                          { isDocumentUploaded &&
                           <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>Document Check</Text> }
-                          { checkSuccessDoc(investigationName, sectionName, caseUpdates) &&
+                          { isDocumentUploaded &&
                           <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{panValid === false? 'FAIL' : 'PASS'}</Text> }
                       </View>
                       </View>
                 }
                 
 
-                    {(isEnabled(investigationDocument) !== true || 
-                    (isEnabled(investigationDocument) === true &&  !checkSuccessDoc(investigationName, sectionName, caseUpdates))) && 
+                    {(isEnabled(investigationDocument) !== true || isDocumentUploaded) && 
                     <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
                         <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
                     </View> }

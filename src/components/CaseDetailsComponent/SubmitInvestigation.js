@@ -26,6 +26,8 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
   let loading = useSelector((state) => state.casesUpdates.loading);
   let error = useSelector((state) => state.casesUpdates.error);
   const caseUpdates = allCaseUpdates[selectedClaimId]
+
+  //console.log('Updates in sbmit' + JSON.stringify(caseUpdates))
   
     const [remark, setRemark] = useState(null);
     const [isTermsAccepted, setTermsAccepted] = useState(false);
@@ -72,36 +74,30 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
     },[loading, error, submitRequestDispatched])
 
 
-    let docTypeList = [...DOC_TYPE.PHOTO_ID_SCANNER, ... DOC_TYPE.DOCUMENT_SCANNER, ...DOC_TYPE.FORM]
+    let checkList = Object.entries(caseUpdates).map(([key, value]) => {
+          let checkedTask = value.isRequired && value.completed.faceIds  && value.completed.documentId && value.completed.questions 
+          if(checkedTask === false && value.isRequired === true ) 
+            completeCheckList = false
 
-    let checkList = docTypeList.filter(dt => ('enabled' in dt) && dt['enabled'] === true)
-                          .map(capability => {
-                            let checkedTask = caseUpdates !== undefined && Object.keys(caseUpdates).includes(capability.name)
-                            if(checkedTask === false) 
-                              completeCheckList = false
-                            return (
-                              <View style={styles.checklistCheckboxContainer} key={capability.name}>
-                                <Checkbox style={styles.checkbox} value={checkedTask}  />
-                                <Text style={styles.label1}>{capability.name === 'FORM_TEMPLATE1' ? "Form Template" : capability.name}</Text>
-                              </View>
-                            )
-                          } )
+          console.log(`Submit : ${key} ${value.isRequired} ${value.completed.faceIds} ${value.completed.documentId} ${value.completed.questions}`)
+      
+          return (
+            <View style={styles.checklistCheckboxContainer} key={key}>
+              <Checkbox style={styles.checkbox} value={checkedTask}  />
+              <Text style={styles.label1}>{key}</Text>
+            </View>
+          )
+        } )
 
     const submitAlertBox = <OkayCancelDialogBox showDialog={showSubmitDialog} 
                                 setShowDialog={setShowSubmitDialog}
                                 title={'Submit Case'} 
                                 content={(`Are you submitting the case now?.`)} 
-                                okayHandler={ () => {
-                                  let dataAvailable = caseUpdates !== undefined && caseUpdates['FORM_TEMPLATE1'] !== undefined                                  
+                                okayHandler={ () => {                                
                                   const payload = {
-                                      claimId: selectedClaimId,  
                                       email: userId,
-                                      beneficiaryId: selectedClaim.beneficiary.beneficiaryId,
-                                      Question1:  dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question1 : '',
-                                      Question2: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question2: '',
-                                      Question3: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question3 : '',
-                                      Question4: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question4 : '',
-                                      Remarks: remark
+                                      caseId: selectedClaimId, 
+                                      remarks: remark
                                   }
                                   dispatch(requestSubmitCaseAction(payload))
                                   setTimeout(() => {
