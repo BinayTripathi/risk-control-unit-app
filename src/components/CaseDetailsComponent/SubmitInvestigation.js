@@ -79,7 +79,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
           if(checkedTask === false && value.isRequired === true ) 
             completeCheckList = false
 
-          console.log(`Submit : ${key} ${value.isRequired} ${value.completed.faceIds} ${value.completed.documentId} ${value.completed.questions}`)
+          //console.log(`Submit : ${key} ${value.isRequired} ${value.completed.faceIds} ${value.completed.documentId} ${value.completed.questions}`)
       
           return (
             <View style={styles.checklistCheckboxContainer} key={key}>

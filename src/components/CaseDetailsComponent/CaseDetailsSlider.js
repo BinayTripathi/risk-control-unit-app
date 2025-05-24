@@ -24,62 +24,16 @@ let UNDERWRITING_TEMPLATE = [
       {
         "mediaType": 0,
         "mediaExtension": "mp3",
-        "locationTemplateId": null,
-        "locationTemplate": null,
         "id": 0,
         "selected": true,
-        "reportName": "Audio",
-        "idName": null,
-        "idImage": null,
-        "idOriginalImage": null,
-        "idImageExtension": null,
-        "idImageData": "No Location Info...",
-        "idImageLocationUrl": null,
-        "distance": null,
-        "distanceInMetres": null,
-        "duration": null,
-        "durationInSeconds": null,
-        "idImageLocationAddress": "No Address data",
-        "idImageLongLat": null,
-        "idImageLongLatTime": null,
-        "validationExecuted": false,
-        "idImageValid": false,
-        "isRequired": false,
-        "created": "2025-05-23T13:49:05.8532921+00:00",
-        "isUpdated": true,
-        "updated": null,
-        "createdUser": "--",
-        "updatedBy": "--"
+        "reportName": "Audio"
       },
       {
         "mediaType": 1,
         "mediaExtension": "mp3",
-        "locationTemplateId": null,
-        "locationTemplate": null,
         "id": 0,
         "selected": true,
         "reportName": "Video",
-        "idName": null,
-        "idImage": null,
-        "idOriginalImage": null,
-        "idImageExtension": null,
-        "idImageData": "No Location Info...",
-        "idImageLocationUrl": null,
-        "distance": null,
-        "distanceInMetres": null,
-        "duration": null,
-        "durationInSeconds": null,
-        "idImageLocationAddress": "No Address data",
-        "idImageLongLat": null,
-        "idImageLongLatTime": null,
-        "validationExecuted": false,
-        "idImageValid": false,
-        "isRequired": false,
-        "created": "2025-05-23T13:49:05.8532939+00:00",
-        "isUpdated": true,
-        "updated": null,
-        "createdUser": "--",
-        "updatedBy": "--"
       }
     ],
     "faceIds": [
@@ -714,6 +668,9 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
       
       let investigationDetails =  template.map((eachSection, index) => {
 
+        if(eachSection.locationName === 'LA ADDRESS')
+          console.log(eachSection)
+
         localTemplate[eachSection.locationName] = {
           completed : {
             'faceIds' : false,
@@ -761,6 +718,15 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
             }
           });
           localTemplate[eachSection.locationName]['questions']= localQuestions
+
+
+          let localMediaId = {}
+          newEachSection.mediaReports.forEach(element => {
+            localMediaId[element.reportType] = {
+              isRequired : element.isRequired
+            }
+          });
+          localTemplate[eachSection.locationName]['mediaReports'] = localDocId
         }
        
     
@@ -779,6 +745,7 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
         caseId: selectedClaimId,
         caseTemplate: localTemplate
       }))
+
       return investigationDetails
     };
     

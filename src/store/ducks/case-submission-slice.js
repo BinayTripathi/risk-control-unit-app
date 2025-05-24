@@ -1,6 +1,6 @@
 import {createAction, createSlice} from '@reduxjs/toolkit';
 import {call, put, select} from 'redux-saga/effects';
-import {updateCaseDocument, updateCaseFace, saveForm, submitCase} from '@services/RestServiceCalls'
+import {updateCaseDocument, updateCaseFace, saveForm, submitCase, updateCaseMedia} from '@services/RestServiceCalls'
 import types from '../types';
 
 import { deleteCaseFromListAfterSubmission } from './cases-slice'
@@ -8,9 +8,8 @@ import { deleteCaseDetailsAfterSubmission } from './case-details-slice'
 import { UPLOAD_TYPE, UPLOAD_SUCCESS_INDICATOR } from '@core/constants';
 import * as FileSystem from 'expo-file-system';
 
-function deleteFile(postUpdatePayload) {
-
-  let filePath = postUpdatePayload.OcrImage !== undefined ? postUpdatePayload.OcrImage : postUpdatePayload.locationImage
+function deleteFile(filePath) {
+console.log(`Attempting to delete file : ${filePath}`)
   FileSystem.getInfoAsync(filePath).then((fileInfo) => {
     if (fileInfo.exists) {
       FileSystem.deleteAsync(filePath)
@@ -131,6 +130,24 @@ export const requestUpdateFormCaseAction = createAction(
   },
 );
 
+export const requestUpdateAudioVideoCaseAction = createAction(
+  types.REQUEST_UPDATE_AUDIO_VIDEO_CASE,
+  function prepare({caseId, section, documentCategory, documentName, documentDetails, id}) {
+    return {
+      payload: {
+        caseId,
+        section,
+        documentCategory,
+        documentName,
+        documentDetails,    
+        id   
+      },
+      meta: {
+        retry: true
+      }
+    };
+  },
+);
 
 export const requestSubmitCaseAction = createAction(
   types.REQUEST_SUBMIT_CASE,
@@ -195,6 +212,13 @@ const initialState = {
           requestUpdateFormCase : (state) => {
                            
             console.log('requestUpdateFormCase called')
+            state.loading = true;     
+            state.error = null   
+          },
+
+          requestUpdateAudioVideoCase : (state) => {
+                           
+            console.log('requestUpdateAudioVideoCase called')
             state.loading = true;     
             state.error = null   
           },
@@ -267,7 +291,10 @@ const initialState = {
         else if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.PHOTO)
           response = yield call(updateCaseFace,postUpdatePayload);  
         else if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.FORM)
-          response = yield call(saveForm,postUpdatePayload);    
+          response = yield call(saveForm,postUpdatePayload); 
+        else if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.AUDIO || action.payload.documentDetails.docType ===  UPLOAD_TYPE.VIDEO)
+          response = yield call(updateCaseMedia,postUpdatePayload);   
+        updateCaseMedia 
         const responseUserData = response.data        
         //console.log("received claim details" + JSON.stringify(responseUserData))
         
@@ -279,9 +306,10 @@ const initialState = {
           const section = action.payload.section
           const category = action.payload.documentCategory
           const documentName = action.payload.documentName
+          let fileToDelete = undefined
           console.log('checking is last mandatory' + JSON.stringify(postUpdatePayload))
           if(action.payload.documentDetails.docType === UPLOAD_TYPE.PHOTO) {
-
+            fileToDelete = postUpdatePayload.locationImage
             successPayload = {
               [caseNo] : {
                 [section] : {
@@ -301,6 +329,7 @@ const initialState = {
             } 
 
           } else if (action.payload.documentDetails.docType === UPLOAD_TYPE.DOCUMENT) {
+            fileToDelete = postUpdatePayload.OcrImage
             successPayload = {
               [action.payload.caseId] : {
                 [action.payload.section] : {
@@ -337,12 +366,30 @@ const initialState = {
                 }
               }        
             }
+          } else if (action.payload.documentDetails.docType === UPLOAD_TYPE.AUDIO || action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO) {
+            fileToDelete = action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO? "file://"+postUpdatePayload.mediaPath : postUpdatePayload.mediaPath.replace(/^file:\/\/\/\//, "file://")
+            successPayload = {
+              [caseNo] : {
+                [section] : {
+                  'completed' : {
+                      'mediaReport' : postUpdatePayload.isLastMandatory,
+                    },
+                  [category] : {
+                    [documentName] : {
+                      ...action.payload.documentDetails, 
+                      id: action.payload.id,                      
+                    } 
+                  }
+                }
+              }        
+            } 
+
           }
                   
             
           yield put(successUpdateCase(successPayload)); 
-          if(action.payload.documentDetails.docType === UPLOAD_TYPE.PHOTO || action.payload.documentDetails.docType === UPLOAD_TYPE.DOCUMENT)
-            yield call(deleteFile,postUpdatePayload)
+          if(fileToDelete !== undefined)
+            yield call(deleteFile,fileToDelete)
         } else {    // TODO  :  retry on error
           yield put(failureUpdateCase());
         }

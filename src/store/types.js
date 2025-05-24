@@ -15,6 +15,7 @@ export default {
     REQUEST_UPDATE_BENEFICIARY_PHOTO_CASE: 'casesUpdates/requestUpdateBeneficiaryPhotoCase',
     REQUEST_UPDATE_PAN_CASE: 'casesUpdates/requestUpdatePanCase',
     REQUEST_SAVE_FORM: 'casesUpdates/requestUpdateFormCase',
+    REQUEST_UPDATE_AUDIO_VIDEO_CASE: 'casesUpdates/requestUpdateAudioVideoCase',
 
     SUCCESS_UPDATE_CASE: 'casesUpdates/successUpdateCase',
     FAILURE_UPDATE_CASE: 'casesUpdates/failureUpdateCase',

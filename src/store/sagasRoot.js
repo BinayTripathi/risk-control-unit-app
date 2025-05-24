@@ -22,6 +22,7 @@ export default function* root() {
     takeLatest(TYPES.REQUEST_UPDATE_BENEFICIARY_PHOTO_CASE, asyncPostCaseDocuments),
     takeLatest(TYPES.REQUEST_UPDATE_PAN_CASE, asyncPostCaseDocuments),
     takeLatest(TYPES.REQUEST_SAVE_FORM, asyncPostCaseDocuments),
+    takeLatest(TYPES.REQUEST_UPDATE_AUDIO_VIDEO_CASE, asyncPostCaseDocuments),
     takeLatest(TYPES.REQUEST_SUBMIT_CASE, asyncSubmitCaseDocuments),
     takeEvery(offlineActionTypes.FETCH_OFFLINE_MODE, asyncOfflineUpdateOrSubmitCase),
     fork(networkSaga, {pingServerUrl:'https://www.google.com/'}),

@@ -10,11 +10,11 @@ xcopy "gradle.properties" ".\android\gradle.properties" /Y
 copy ".\assets\*.*"  ".\android\app\src\main\res\drawable"
 xcopy "release-key.keystore" ".\android" /Y
 cd android
-del /f /q .gradle/ && gradlew clean
+rmdir /s /q .gradle && gradlew clean
 
 npm run android
 
-set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=AIzaSyAprINTY_E5slgC2DIb-ZXF8k9I2p
+set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=
 
 cd android
 gradlew bundleRelease 

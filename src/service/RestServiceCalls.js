@@ -253,6 +253,39 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
   };
 
 
+
+  export const updateCaseMedia = async ({email, caseId, sectionName, investigationName, LocationLongLat, mediaPath}) => {
+  try {
+    const API_URL = `${BASE_URL}/Agent/media`;    
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
+    //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
+    console.log(urlWithParams)
+    
+    const isVideo = mediaPath.split('.').pop() === "mov" 
+
+    const formData = new FormData();
+    formData.append("Image", {
+      uri: isVideo? `file:///${mediaPath}`: mediaPath,
+      type: isVideo ? 'video/quicktime' : 'audio/mpeg',
+      name: isVideo ? 'video.mov' : 'audio.aac'
+    });
+
+    
+    const response = await axios({
+      method: "post",
+      url: urlWithParams,
+      data: formData,
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+
+    
+    return response;
+  } catch (error) {
+    console.error("Upload Failed:", JSON.stringify(error));
+    throw error;
+  }
+};
+
   export const submitCase = async (body) => {
     console.log(JSON.stringify(body))
     try {

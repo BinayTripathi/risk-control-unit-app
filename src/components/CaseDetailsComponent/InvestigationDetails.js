@@ -6,6 +6,7 @@ import CollapsibleSection from '@components/UI/CollapsableSection'
 import PhotoIdScanner from './InvestigationDetails/PhotoIdScanner'
 import DocumentScanner from './InvestigationDetails/DocumentScanner'
 import FormInitiator from './InvestigationDetails/FormInitiator'
+import AudioVideoCapturer from './InvestigationDetails/AudioVideoCapturer';
 
 
 const { width, height } = Dimensions.get('window');
@@ -16,8 +17,7 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
   let loading = useSelector((state) => state.casesUpdates.loading);
   let err = useSelector((state) => state.casesUpdates.error);
   const caseUpdates = allCaseUpdates[selectedClaimId]
-  
- 
+
 
     return (   
 
@@ -47,6 +47,12 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
               <FormInitiator selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
               </View>
             </CollapsibleSection>
+
+            {sectionFromTemplate['mediaReports'] !== undefined && <CollapsibleSection title="Media Report">
+              <View style={styles.collapsableSectionContainer}>
+              <AudioVideoCapturer selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
+              </View>
+            </CollapsibleSection>}
 
             
         </ScrollView>
