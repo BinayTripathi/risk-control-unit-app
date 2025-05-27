@@ -243,6 +243,22 @@ let CLAIM_TEMPLATE = [
         "isRequired": false,
         "answerText": null
       }
+    ],
+    "mediaReports": [
+      {
+        "mediaType": 0,
+        "mediaExtension": "mp3",
+        "id": 0,
+        "selected": true,
+        "reportName": "Audio"
+      },
+      {
+        "mediaType": 1,
+        "mediaExtension": "mp3",
+        "id": 0,
+        "selected": true,
+        "reportName": "Video",
+      }
     ]
   },
   {
@@ -721,12 +737,12 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
 
 
           let localMediaId = {}
-          newEachSection.mediaReports.forEach(element => {
+          newEachSection.mediaReports?.forEach(element => {
             localMediaId[element.reportType] = {
               isRequired : element.isRequired
             }
           });
-          localTemplate[eachSection.locationName]['mediaReports'] = localDocId
+          localTemplate[eachSection.locationName]['mediaReports'] = localMediaId
         }
        
     

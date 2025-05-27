@@ -28,11 +28,14 @@ const AudioVideoCapturer = ({selectedClaimId, userId, sectionFromTemplate}) => {
     return (
         <ElevatedSurface style={styles.surface}>   
             <RoundButton style={styles.button} onPressHandler = {() => onClickDigitalId(sectionFromTemplate.mediaReports[0], documentScannerType(sectionFromTemplate.mediaReports[0].reportName))}>
-                <Entypo name="video-camera" size={50} color="#083596" />
+                {sectionFromTemplate.mediaReports[0].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#22c970" />}
+                {sectionFromTemplate.mediaReports[0].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#083596" />}
             </RoundButton>
 
             <RoundButton style={styles.button} onPressHandler = {() => onClickDigitalId(sectionFromTemplate.mediaReports[1], documentScannerType(sectionFromTemplate.mediaReports[1].reportName))}>
-              <FontAwesome name="microphone" size={50} color="#22c970" /></RoundButton>
+              {sectionFromTemplate.mediaReports[1].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#22c970" />}
+              {sectionFromTemplate.mediaReports[1].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#083596" />}
+            </RoundButton>
         </ElevatedSurface>
         )
   

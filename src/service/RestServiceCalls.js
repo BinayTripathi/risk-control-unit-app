@@ -261,13 +261,13 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
     //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
     console.log(urlWithParams)
     
-    const isVideo = mediaPath.split('.').pop() === "mov" 
+    const isVideo = mediaPath.split('.').pop() === "mp4" 
 
     const formData = new FormData();
     formData.append("Image", {
       uri: isVideo? `file:///${mediaPath}`: mediaPath,
-      type: isVideo ? 'video/quicktime' : 'audio/mpeg',
-      name: isVideo ? 'video.mov' : 'audio.aac'
+      type: isVideo ? 'video/mp4' : 'audio/mpeg',
+      name: isVideo ? 'video.mp4' : 'audio.aac'
     });
 
     

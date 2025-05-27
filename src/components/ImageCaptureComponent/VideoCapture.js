@@ -73,12 +73,19 @@ export const VideoCapture = ({setPhotoData}) => {
        
             setRecording(true)
             await camera.current.startRecording({
-            onRecordingFinished: (video) => {
-              console.log('Video saved at:', video.path)
-              setPhotoData(video.path);
-            },
-            onRecordingError: (error) => console.error('Recording error:', error),
-            }); 
+              fileType: 'mp4', 
+              onRecordingFinished: (video) => {
+                console.log('Video saved at:', video.path)
+                setPhotoData(video.path);
+              },
+              onRecordingError: (error) => console.error('Recording error:', error),
+              }); 
+
+       // Automatically stop recording after 5 seconds
+        setTimeout(async () => {
+          await stopVideo();
+          console.log('Recording stopped after 5 seconds');
+        }, 5000);
     
       }
 

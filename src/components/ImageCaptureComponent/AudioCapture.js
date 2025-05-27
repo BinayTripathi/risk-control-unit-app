@@ -99,6 +99,13 @@ const path = `${dirs.CacheDir}/${timestamp}.aac`
     console.log(`uriPath: ${uriPath}`);
     setAudioUri(uriPath)
     console.log(`uri: ${audioUri}`);
+
+    // Automatically stop recording after 5 seconds
+    setTimeout(async () => {
+      await onStopRecord();
+      console.log('Recording stopped after 5 seconds');
+    }, 5000);
+
   };
 
   const onPauseRecord = async () => {
@@ -134,9 +141,7 @@ const path = `${dirs.CacheDir}/${timestamp}.aac`
         <View style={styles.viewRecorder}>
           <View style={styles.recordBtnWrapper}>
             <Button style={styles.btn} onPress={onStartRecord} title="Record"> Record </Button>
-            <Button style={[styles.btn, { marginLeft: 12}]}  onPress={onPauseRecord} textStyle={styles.txt} title= "PAUSE"> Pause </Button>
-            <Button style={[styles.btn, { marginLeft: 12}]}  onPress={onResumeRecord} textStyle={styles.txt} title="Resume"> Resume </Button>
-            <Button style={[styles.btn, { marginLeft: 12}]}  onPress={onStopRecord}   textStyle={styles.txt} title = "Stop"> Stop    </Button>
+            <Button style={[styles.btn, { marginLeft: 30}]}  onPress={onStopRecord}   textStyle={styles.txt} title = "Stop"> Stop    </Button>
           </View>
         </View>
 
@@ -151,10 +156,11 @@ export default AudioCapture;
 const styles = StyleSheet.create({
   container: {
     height: 300,
-      marginTop: 100,
+    marginTop: 100,
     backgroundColor: '#455A64',
     flexDirection: 'column',
     alignItems: 'center',
+    width: screenWidth*.95,
   },
   titleTxt: {
     marginTop: 100,
@@ -168,6 +174,8 @@ const styles = StyleSheet.create({
   },
   recordBtnWrapper: {
     flexDirection: 'row',
+    width: '60%',
+    justifyContent: 'space-between'
   },
   btn: {
     borderColor: 'white',

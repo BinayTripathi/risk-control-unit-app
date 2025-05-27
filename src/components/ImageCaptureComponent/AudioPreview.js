@@ -165,6 +165,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#455A64',
       flexDirection: 'column',
       alignItems: 'center',
+      width: screenWidth*.95,
     },
     viewPlayer: {
         marginTop: 60,
@@ -193,6 +194,8 @@ const styles = StyleSheet.create({
       playBtnWrapper: {
         flexDirection: 'row',
         marginTop: 40,
+        width: '70%',
+    justifyContent: 'space-between'
       },
       btn: {
         borderColor: 'white',

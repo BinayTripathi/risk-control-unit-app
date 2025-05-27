@@ -1,7 +1,7 @@
 import { StyleSheet,View, Text , Dimensions, ScrollView, Button as RNButton, TextInput, TouchableOpacity, Platform} from 'react-native';
 import Checkbox from 'expo-checkbox';
 import { useState, useRef } from "react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { theme } from '@core/theme';
 import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -26,6 +26,11 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const mandatoryQuestionsListRef = useRef(new Set());
+
+
+ 
+    
+
 
   const handleInputChange = (question, value) => {
     question.answerText = value
@@ -53,7 +58,7 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
 
   let dataCapturePoints = sectionFromTemplate.questions.map((question, index)=> {     
 
-    if(question.isRequired && !answers?.[question.questionText]) {
+    if(question.isRequired && !answers?.[question.questionText]?.answerText) {
       mandatoryQuestionsListRef.current.add(question.questionText)    }
       
     return( <View style={{ marginTop: 10, marginBottom: 20, paddingBottom: 10, marginHorizontal: 10, borderBottomColor: 'grey', borderBottomWidth: 3 }} key={index}>
@@ -82,7 +87,7 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
                       <Text style={{ color: 'blue' }}>{answers[question.questionText]?.answerText || 'Select Date'}</Text> 
                     </TouchableOpacity>
                   )}
-              {question.questionType === 'dropdown' && (
+              {(question.questionType === 'dropdown' || question.questionType === 'radio') && (
                 <RadioButtonGroup containerStyle={{ marginBottom: 10 }}
                       selected={answers[question.questionText]?.answerText}
                       onSelected={(value) => handleInputChange(question, value)}
@@ -119,14 +124,16 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
   })
 
 
-  const showSavedAlert = () =>
-  Dialog.show({
+  const showSavedAlert = () => {
+    Dialog.show({
     type: ALERT_TYPE.SUCCESS,
     title: 'Form Submission',
     textBody: 'Form Submitted Successfully',
     button: 'OK',          
     onHide: () => { }
   })
+  }
+  
 
   const showIncompleteFormAlert = () =>
     Dialog.show({
