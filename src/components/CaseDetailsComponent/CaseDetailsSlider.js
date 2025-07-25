@@ -684,9 +684,6 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
       
       let investigationDetails =  template.map((eachSection, index) => {
 
-        if(eachSection.locationName === 'LA ADDRESS')
-          console.log(eachSection)
-
         localTemplate[eachSection.locationName] = {
           completed : {
             'faceIds' : false,

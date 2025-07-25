@@ -2,7 +2,7 @@ module.exports = () => {
     if (process.env.MY_ENVIRONMENT === 'production') {
       return {
         /* your production config */
-        "name": "icheckify",
+        "name": "icheckifyCH",
         "android": {
             "adaptiveIcon": {
               "foregroundImage": "./assets/icheckifyIcon.png",
@@ -16,7 +16,7 @@ module.exports = () => {
               "RECEIVE_SMS",
               "READ_SMS"
             ],
-            "package": "com.binaytripathi.icheckify",
+            "package": "com.binaytripathi.icheckifyCanhsbc",
             "config": {
               "googleMaps": {
                 "apiKey": process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY
@@ -24,7 +24,7 @@ module.exports = () => {
             },
           },
           extra: {
-            baseURL : 'https://icheckify-demo.azurewebsites.net/api'
+            baseURL : 'https://canara.azurewebsites.net/api'
           }
       };
     } else {
