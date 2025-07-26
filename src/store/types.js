@@ -24,6 +24,9 @@ export default {
     SUCCESS_SUBMIT_CASE: 'casesUpdates/successDeleteCaseUpdateDetailsAfterSubmission',
     FAILURE_SUBMIT_CASE: 'casesUpdates/failureSubmitCase',
 
+    UPDTATE_PHOTO_DOCUMENT_UPLOAD_STATUS_ON_RETRY: 'casesUpdates/retryPhotoOrDocStatusUpdate',
+
+
 
     
     

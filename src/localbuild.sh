@@ -9,6 +9,8 @@ xcopy "build.gradle" ".\android\build.gradle" /Y
 xcopy "gradle.properties" ".\android\gradle.properties" /Y
 copy ".\assets\*.*"  ".\android\app\src\main\res\drawable"
 xcopy "release-key.keystore" ".\android" /Y
+
+comment line 17  in app/build.gradle  enableBundleCompression = (findProperty('android.enableBundleCompression') ?: false).toBoolean()
 cd android
 rmdir /s /q .gradle && gradlew clean
 

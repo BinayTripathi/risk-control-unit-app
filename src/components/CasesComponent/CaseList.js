@@ -71,7 +71,7 @@ export default function CaseList({userLocPromise,userId}) {
 
   function renderClaimItem(itemData) {
     return(     
-          <CaseItem caseDetails = {itemData.item} userLocPromise = {userLocPromise}/>    
+          <CaseItem caseDetails = {itemData.item} userLocPromise = {userLocPromise} caseIndex = {itemData.index}/>    
     )
   }
 
@@ -89,7 +89,7 @@ export default function CaseList({userLocPromise,userId}) {
     caseMarkers = mergeByClaimId(caseMarkers,cases) 
     console.log(`Markers Length - ${caseMarkers.length}`)
     //return cases !== undefined ?cases.filter(searchCasesByName).reverse() : null;
-    var caseM = caseMarkers !== undefined ?caseMarkers.filter(searchCasesByName).reverse() : null;
+    var caseM = caseMarkers !== undefined ?caseMarkers.filter(searchCasesByName).reverse().slice(0,5) : null;
     console.log(`CASEM Length - ${caseM.length}`)
     return caseM
   }

@@ -4,8 +4,12 @@ import Card from '@components/UI/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@core/theme';
 import { useNavigation } from '@react-navigation/native';
-import { SCREENS, DOC_TYPE, checkLoadingDoc, checkSuccessDoc, documentIds } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingDoc, checkSuccessDoc, checkFailureDoc, documentIds } from '@core/constants';
 import * as Speech from 'expo-speech';
+import Button from '@components/UI/Button'
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import {updatePhotoOrDocumentUploadStatusAction, requestUpdatePanCaseAction} from '@store/ducks/case-submission-slice'
+import { useDispatch} from 'react-redux'
 
 
 const { width, height } = Dimensions.get('window');
@@ -15,6 +19,7 @@ const DocumentScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempl
 
   const navigation = useNavigation();
   const mandatoryDocumentListRef = useRef(new Set());
+  const dispatch = useDispatch()
 
 
   const isEnabled = (investigationDoc) => {
@@ -22,8 +27,7 @@ const DocumentScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempl
   }
 
   const onClickDigitalId = (sectionName,documentObj, documentScannerType) => {
-    console.log('Mandatory document list')
-    console.log(mandatoryDocumentListRef.current)
+    console.log('Mandatory document list' + Array.from(mandatoryDocumentListRef.current))
     if(!isEnabled(documentObj)) return
     navigation.navigate(SCREENS.ImageCaptureScreen, {
         docType: documentScannerType,
@@ -39,6 +43,28 @@ const speechHandler = (documentObj) => {
   Speech.speak(documentObj.speach);
 };
 
+   const retryFailedUpload = (sectionName, investigationName) => {
+        //console.log('Retrying - Mandatory document list' + Array.from(mandatoryDocumentListRef.current))
+        const retryStatusChangePayload = {
+            caseId: selectedClaimId,
+            section:sectionName,
+            documentCategory: documentIds,
+            documentName: investigationName
+        }
+        
+        let manualRetryPayload = JSON.parse(JSON.stringify(caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]?.manualRetryPayload || {}));
+
+        // Modify safely without mutating state
+        manualRetryPayload.documentDetails = {
+            ...manualRetryPayload.documentDetails,
+            isLastMandatory: (mandatoryDocumentListRef.current.size === 1 && mandatoryDocumentListRef.current.has(investigationName))
+             || mandatoryDocumentListRef.current.size === 0
+        };
+        //console.log(`RETRYING : ${JSON.stringify(manualRetryPayload)}`)
+        dispatch(updatePhotoOrDocumentUploadStatusAction(retryStatusChangePayload))
+        dispatch(requestUpdatePanCaseAction(manualRetryPayload))
+    } 
+
 const sectionName = sectionFromTemplate.locationName
 
 let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocument, index)=> {  
@@ -52,10 +78,17 @@ let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocume
 
   let isDocumentUploaded = isEnabled(investigationDocument) === true && checkSuccessDoc(investigationName, sectionName, caseUpdates)
 
-  if(investigationDocument.isRequired && !isDocumentUploaded) {
+  let isDocumentSubmitted = isEnabled(investigationDocument) === true && (checkSuccessDoc(investigationName, sectionName, caseUpdates) || checkLoadingDoc(investigationName, sectionName, caseUpdates))
+
+  let isDocumetSubmitFailed = isEnabled(investigationDocument) && checkFailureDoc(investigationName, sectionName, caseUpdates) 
+
+  //console.log(`${investigationName} Submitted: ${isDocumentSubmitted} Uploaded: ${isDocumentUploaded} Failed: ${isDocumetSubmitFailed}`)
+
+  if(investigationDocument.isRequired && !isDocumentSubmitted) { // Not loading or not successful, means not sent or possiblely failed
     mandatoryDocumentListRef.current.add(investigationName)   
-  } else if(investigationDocument.isRequired && isDocumentUploaded)
+  } else if(investigationDocument.isRequired && isDocumentSubmitted) //Either submited(loadin or success) - if failure happens - its gets added back
     mandatoryDocumentListRef.current.delete(investigationName)  
+ 
 
       return(
           <Card style = {[styles.card, isEnabled(investigationDocument) !== true? styles.cardDisabled: {}]}  key={index}>
@@ -77,6 +110,8 @@ let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocume
 
                             {isEnabled(investigationDocument) && checkLoadingDoc(investigationName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
                             {isDocumentUploaded && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+                            {isDocumetSubmitFailed && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} />}
+                                                                
 
                             <View style={styles.imageContainer} >
                               <Image source={{uri:`${captureIcon}`}} style={styles.iconImage} />
@@ -109,9 +144,19 @@ let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocume
                 }
                 
 
-                    {(isEnabled(investigationDocument) !== true || isDocumentUploaded) && 
+                    {(isEnabled(investigationDocument) === false || (!isDocumentUploaded && !isDocumetSubmitFailed)) && 
                     <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
                         <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
+                    </View> }
+
+                    {isDocumetSubmitFailed  && 
+                    <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
+                        <Button mode="contained" disabled= {false}
+                              
+                                onPress = { () => retryFailedUpload(sectionName, investigationName) }
+                                style={[styles.retryButton]}>
+                            <Icon name="redo" size={16} color="#fff" style={styles.retryIcon} /> RETRY
+                            </Button>
                     </View> }
                     
 
@@ -280,7 +325,15 @@ resultStatusLabel : {
 },
 resultStatusLabelFail : {
   color: 'red'
-}
+},
+retryButton: {
+    backgroundColor: '#FF9800',
+    width: '80%',
+    elevation: 3,
+  },
+  retryIcon: {
+    marginTop: 1,
+  },
 })
 
   export default DocumentScanner;

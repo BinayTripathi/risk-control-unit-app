@@ -132,13 +132,14 @@ export const DOC_TYPE = {
 export const faceIds = "faceIds"
 export const documentIds = 'documentIds'
 export const questionsSubSection = 'questions'
+export const mediaSubsection = 'mediaReports'
 
 export const checkSuccessPhoto = (investigationName, sectionName, caseUpdates) => {
 
     const exactLoc = caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]
     let success =   exactLoc !== undefined    // There is some update for the investigation
-            &&  !(exactLoc.locationImage === undefined ||
-                exactLoc.locationImage === '')// Has been uploaded successfully 
+                            &&
+                (exactLoc?.uploadStatus === '1' || (exactLoc?.locationImage ?? "" !== ""))// Has been uploaded successfully 
 
     //console.log(`${investigationName} ${faceIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
 
@@ -149,8 +150,31 @@ export const checkSuccessDoc = (investigationName, sectionName, caseUpdates) => 
 
     const exactLoc = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]
     let success =   exactLoc !== undefined    // There is some update for the investigation
-            &&  !(exactLoc.OcrImage === undefined ||
-                exactLoc.OcrImage === '')// Has been uploaded successfully 
+                    && (exactLoc?.uploadStatus === '1'  || (exactLoc?.OcrImage ?? "" !== ''))// Has been uploaded successfully 
+
+    //console.log(`${investigationName} ${documentIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
+
+    return success
+}
+
+
+export const checkFailurePhoto = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]
+    let success =   exactLoc !== undefined    // There is some update for the investigation
+                    && exactLoc?.uploadStatus === '0' // Has not been uploaded successfully 
+
+    //console.log(`${investigationName} ${faceIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
+
+    return success
+}
+
+export const checkFailureDoc = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]
+    console.log(exactLoc)
+    let success =   exactLoc !== undefined    // There is some update for the investigation
+                        &&  exactLoc?.uploadStatus === '0'// Has not been uploaded successfully 
 
     //console.log(`${investigationName} ${documentIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
 
@@ -161,16 +185,44 @@ export const checkLoadingPhoto = (investigationName, sectionName, caseUpdates) =
 
     const exactLoc = caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]
     return  exactLoc !== undefined   // updates contain something for this capability
-            && exactLoc.locationImage === ''  // Has been uploaded successfully 
-            && exactLoc.OcrImage === ''  // Has been uploaded successfully 
+            && (exactLoc?.uploadStatus === '' || (exactLoc?.uploadStatus === undefined &&exactLoc?.locationImage === "")) // Has been uploaded successfully 
 }
 
 export const checkLoadingDoc = (investigationName,  sectionName, caseUpdates) => {
 
     const exactLoc = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]
     return  exactLoc !== undefined   // updates contain something for this capability
-            && exactLoc.locationImage === ''  // Has been uploaded successfully 
-            && exactLoc.OcrImage === ''  // Has been uploaded successfully 
+            && (exactLoc?.uploadStatus === '' ||  (exactLoc?.uploadStatus === undefined && exactLoc?.OcrImage === '')) // Has been uploaded successfully 
+}
+
+
+export const checkSuccessMedia = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[mediaSubsection]?.[investigationName]
+    let success =   exactLoc !== undefined    // There is some update for the investigation
+            &&  exactLoc.mediaStatus === "1"// Has been uploaded successfully 
+
+    //console.log(`${investigationName} ${documentIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
+
+    return success
+}
+
+export const checkFailureMedia = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[mediaSubsection]?.[investigationName]
+    let success =   exactLoc !== undefined    // There is some update for the investigation
+            &&  exactLoc.mediaStatus === "0"
+
+    //console.log(`${investigationName} ${documentIds} ${sectionName} ${exactLoc?.OcrImage === ''}`)
+
+    return success
+}
+
+export const checkLoadingMedia = (investigationName, sectionName, caseUpdates) => {
+
+    const exactLoc = caseUpdates?.[sectionName]?.[mediaSubsection]?.[investigationName]
+    return  exactLoc !== undefined   // updates contain something for this capability
+            && exactLoc.mediaStatus === ''  
 }
 
 export const SCREENS = {

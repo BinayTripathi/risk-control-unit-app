@@ -12,7 +12,7 @@ import { GEOFENCING_RADIUS_IN_METRES } from "@core/constants";
 const TEXT_LENGTH = 60
 const TEXT_HEIGHT = 14
 
-function CaseItem({ caseDetails, userLocPromise }) {
+function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
 
   let dispatch = useDispatch();
   const navigation = useNavigation()

@@ -14,9 +14,13 @@ import {en, registerTranslation } from 'react-native-paper-dates'
 import {secureGet} from '@helpers/SecureStore'
 import {SECURE_REGISTRATION_COMPLETE} from '@core/constants'
 import { AlertNotificationRoot} from 'react-native-alert-notification';
+import { monitorNetworkQuality } from './src/helpers/customNetworkWatcher';
 
 export default function App() {
 
+  /*useEffect(() => {
+    monitorNetworkQuality();
+  }, []);*/
 
   registerTranslation('en', {
     save: 'Save',

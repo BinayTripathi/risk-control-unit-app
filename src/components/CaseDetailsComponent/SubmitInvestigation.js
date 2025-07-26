@@ -74,8 +74,8 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
     },[loading, error, submitRequestDispatched])
 
 
-    let checkList = Object.entries(caseUpdates).map(([key, value]) => {
-          let checkedTask = value.isRequired && value.completed.faceIds  && value.completed.documentId && value.completed.questions 
+    let checkList = caseUpdates !== undefined ? Object.entries(caseUpdates).map(([key, value]) => {
+          let checkedTask = value.completed.faceIds  && value.completed.documentId && value.completed.questions 
           if(checkedTask === false && value.isRequired === true ) 
             completeCheckList = false
 
@@ -84,10 +84,10 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
           return (
             <View style={styles.checklistCheckboxContainer} key={key}>
               <Checkbox style={styles.checkbox} value={checkedTask}  />
-              <Text style={styles.label1}>{key}</Text>
+              <Text style={styles.label1}>{key }{value.isRequired && <Text style={styles.label1}>*</Text>}</Text>
             </View>
           )
-        } )
+        } ) : false
 
     const submitAlertBox = <OkayCancelDialogBox showDialog={showSubmitDialog} 
                                 setShowDialog={setShowSubmitDialog}
@@ -147,7 +147,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
                   <Button mode="elevated" style={[styles.button,!remark  || !isTermsAccepted || !isOnline || !completeCheckList? 
                   {backgroundColor: theme.colors.disabledSubmitButton} : {backgroundColor: theme.colors.submitButton}]} 
                               disabled={remark === null} onPress={() => {
-                                  if (!remark  || !isTermsAccepted || !isOnline || !completeCheckList) 
+                                  if (!remark  || !isTermsAccepted || !isOnline) 
                                     return
                                   
                                     setShowSubmitDialog(true)

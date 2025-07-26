@@ -51,7 +51,7 @@ module.exports = () => {
             },
           },
           extra: {
-            baseURL : 'https://icheckify-demo.azurewebsites.net/api'
+            baseURL : 'https://canara.azurewebsites.net/api'
           },
       };
     }

@@ -17,9 +17,10 @@ export default function CaseDetails({claimId, userId, investigatable}) {
     let allCaseUpdates = useSelector((state) => state.casesUpdates.casesUpdates);
     const isTemplateUpdated = allCaseUpdates[claimId] !== undefined
 
-        return  <LoadingModalWrapper shouldModalBeVisible = {isLoading && caseDetails[claimId] == undefined}> 
+        return  ( allCaseUpdates && caseDetails &&
+        (<LoadingModalWrapper shouldModalBeVisible = {isLoading && caseDetails[claimId] == undefined}> 
                      <CaseDetailsSlider selectedClaim = {caseDetails[claimId]} selectedClaimId = {claimId} userId = {userId} investigatable = {investigatable} isTemplateUpdated = {isTemplateUpdated}/>
-                </LoadingModalWrapper>  
+                </LoadingModalWrapper>)  )
    
 }
 

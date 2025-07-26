@@ -6,6 +6,14 @@ import { Image } from "react-native";
 import axios from 'axios';
 import curlirize from "axios-curlirize";
 import * as FileSystem from 'expo-file-system';
+import axiosRetry from "axios-retry";
+
+axiosRetry(axios, {
+  retries: 5, // Number of retry attempts
+  retryDelay: (retryCount) => retryCount * 2000, // Exponential backoff
+  retryCondition: (error) => !error.response || error.response.status >= 500, // Retry on network errors or server failures
+});
+
 
 const convertImageToBase64 = async (imageUri) => {
   try {
@@ -184,6 +192,10 @@ export const updateCaseDocument = async ({email, caseId, sectionName, investigat
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
     })
+   /*const response = await axios.post(urlWithParams, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });*/
+
 
     //console.log("Upload Success:", response.data);
     return response;

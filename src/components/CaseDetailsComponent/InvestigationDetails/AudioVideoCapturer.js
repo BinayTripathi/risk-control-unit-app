@@ -1,14 +1,15 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { actuatedNormalize, actuatedNormalizeVertical} from "@core/PixelScaling";
 import ElevatedSurface from '@components/UI/ElevatedSurface'
 import RoundButton from '@components/UI/RoundButton'
 import { Entypo , FontAwesome} from '@expo/vector-icons';
-import {DOC_TYPE, SCREENS } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingMedia, checkSuccessMedia, checkFailureMedia } from '@core/constants';
 
-const AudioVideoCapturer = ({selectedClaimId, userId, sectionFromTemplate}) => {
+const AudioVideoCapturer = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
     const navigation = useNavigation();
+    const sectionName = sectionFromTemplate.locationName
 
     const documentScannerType = (investigationName) => DOC_TYPE.MEDIA_SCANNER.find(docScanner => docScanner.name === investigationName)  ??  DOC_TYPE.MEDIA_SCANNER.at(-1)
   
@@ -28,13 +29,20 @@ const AudioVideoCapturer = ({selectedClaimId, userId, sectionFromTemplate}) => {
     return (
         <ElevatedSurface style={styles.surface}>   
             <RoundButton style={styles.button} onPressHandler = {() => onClickDigitalId(sectionFromTemplate.mediaReports[0], documentScannerType(sectionFromTemplate.mediaReports[0].reportName))}>
-                {sectionFromTemplate.mediaReports[0].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#22c970" />}
-                {sectionFromTemplate.mediaReports[0].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#083596" />}
+                {sectionFromTemplate.mediaReports[0].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#8c0de0" style={styles.icons} />}
+                {sectionFromTemplate.mediaReports[0].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#8c0de0" style={styles.icons}/>}
+                {checkLoadingMedia(sectionFromTemplate.mediaReports[0].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
+                {checkSuccessMedia(sectionFromTemplate.mediaReports[0].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }          
+                {checkFailureMedia(sectionFromTemplate.mediaReports[0].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} /> }                        
+                          
             </RoundButton>
 
             <RoundButton style={styles.button} onPressHandler = {() => onClickDigitalId(sectionFromTemplate.mediaReports[1], documentScannerType(sectionFromTemplate.mediaReports[1].reportName))}>
-              {sectionFromTemplate.mediaReports[1].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#22c970" />}
-              {sectionFromTemplate.mediaReports[1].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#083596" />}
+              {sectionFromTemplate.mediaReports[1].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#8c0de0" style={styles.icons}/>}
+              {sectionFromTemplate.mediaReports[1].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#8c0de0" style={styles.icons}/>}
+              {checkLoadingMedia(sectionFromTemplate.mediaReports[1].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
+              {checkSuccessMedia(sectionFromTemplate.mediaReports[1].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+              {checkFailureMedia(sectionFromTemplate.mediaReports[1].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} /> }                        
             </RoundButton>
         </ElevatedSurface>
         )
@@ -54,5 +62,18 @@ const styles = StyleSheet.create({
     height:  actuatedNormalizeVertical(80),
     width: actuatedNormalize(70),
     borderRadius: actuatedNormalize(40),
+     justifyContent: 'center',
+    alignItems: 'center', 
+  },
+  icons: { 
+    position: 'relative', 
+    top: 10 
+  },
+   statusImage : {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    resizeMode: 'contain',
+    transform: [{ translateX: 30 }, { translateY: -45 }],
   },
 });

@@ -5,8 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Card from '@components/UI/Card';
 import { theme } from '@core/theme';
-import { SCREENS, DOC_TYPE, checkLoadingPhoto, checkSuccessPhoto, faceIds } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingPhoto, checkSuccessPhoto, checkFailurePhoto, faceIds } from '@core/constants';
 import * as Speech from 'expo-speech';
+import Button from '@components/UI/Button'
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import {updatePhotoOrDocumentUploadStatusAction,requestUpdateBeneficiaryPhotoCaseAction} from '@store/ducks/case-submission-slice'
+import { useDispatch} from 'react-redux'
 
 
 
@@ -18,14 +22,14 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
     const navigation = useNavigation();
     const mandatoryFaceIdListRef = useRef(new Set());
     const iconSize = 50;
+    const dispatch = useDispatch()
 
     const isEnabled = (faceId) => {
         return faceId?.enabled === undefined ||  faceId?.enabled === true ? true : false  //enabled not defined or true if define otherwise false
       }
 
     const onClickDigitalId = (sectionName, faceId) => {
-        console.log('Mandatory photo list')
-        console.log(mandatoryFaceIdListRef.current)
+        console.log(faceId.reportType + ' Mandatory document list ' + Array.from(mandatoryFaceIdListRef.current))
         if(!isEnabled(faceId)) return
         navigation.navigate(SCREENS.ImageCaptureScreen, {
             docType: DOC_TYPE.PHOTO_ID_SCANNER[0],
@@ -41,7 +45,27 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
         Speech.speak(faceId.speach ?? faceId.reportName);
       };
 
-      
+    const retryFailedUpload = (sectionName, investigationName) => {
+        //console.log(investigationName + ' Retrying - Mandatory document list ' + Array.from(mandatoryFaceIdListRef.current))
+        const retryStatusChangePayload = {
+            caseId: selectedClaimId,
+            section:sectionName,
+            documentCategory: faceIds,
+            documentName: investigationName
+        }
+        
+        let manualRetryPayload = JSON.parse(JSON.stringify(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]?.manualRetryPayload || {}));
+
+        // Modify safely without mutating state
+        manualRetryPayload.documentDetails = {
+            ...manualRetryPayload.documentDetails,
+            isLastMandatory: (mandatoryFaceIdListRef.current.size === 1 && mandatoryFaceIdListRef.current.has(investigationName))
+             || mandatoryFaceIdListRef.current.size === 0
+        };
+
+        dispatch(updatePhotoOrDocumentUploadStatusAction(retryStatusChangePayload))
+        dispatch(requestUpdateBeneficiaryPhotoCaseAction(manualRetryPayload))
+    } 
 
       const sectionName = sectionFromTemplate.locationName
       
@@ -49,12 +73,16 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
         
         const investigationName = faceId?.reportName ?? "test"
         let isPhotoUploaded = isEnabled(faceId) && checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates)
+        let isPhotoSubmittedForUpload = isEnabled(faceId) && ( checkSuccessPhoto(faceId.reportName, sectionName, caseUpdates) || checkLoadingPhoto(faceId.reportName, sectionName, caseUpdates))
+        let isUploadFailed = isEnabled(faceId) && checkFailurePhoto(faceId.reportName, sectionName, caseUpdates)
 
-        if(faceId.isRequired && !isPhotoUploaded) {
+        if(faceId.isRequired && !isPhotoSubmittedForUpload) {
             mandatoryFaceIdListRef.current.add(investigationName)   
-         } else if(faceId.isRequired && isPhotoUploaded)
+         } else if(faceId.isRequired && isPhotoSubmittedForUpload)
             mandatoryFaceIdListRef.current.delete(investigationName)   
-       
+
+       //console.log(`${investigationName} Submitted: ${isPhotoSubmittedForUpload} Uploaded: ${isPhotoUploaded} Failed: ${isUploadFailed}`)
+
         
         let faceMatch = parseInt(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]?.facePercent ?? "0")
 
@@ -75,6 +103,8 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
                                 <View style= {[styles.eachIconContainer,  isEnabled(isEnabled)? {} : styles.disabled]}>
                                     {isEnabled(faceId) && checkLoadingPhoto(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} />}
                                     {isPhotoUploaded && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }
+                                    {isUploadFailed && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} />}
+
                                     <View style= {{position: 'absolute'}}>
                                         <Ionicons name="camera" size={iconSize} color="orange" />
                                     </View>
@@ -100,10 +130,20 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
                         </View>
                     }
 
-                    {(isEnabled(faceId) !== true || !isPhotoUploaded) && 
+                    {(isEnabled(faceId) !== true || (!isPhotoUploaded && !isUploadFailed)) && 
                     <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
                         <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
                     </View> }
+
+                    {isUploadFailed  && 
+                                        <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
+                                            <Button mode="contained" disabled= {false}
+                                                  
+                                                    onPress = {() => retryFailedUpload(sectionName, investigationName) }
+                                                    style={[styles.retryButton]}>
+                                                <Icon name="redo" size={16} color="#fff" style={styles.retryIcon} /> RETRY
+                                                </Button>
+                                        </View> }
 
                 </View>
 
@@ -262,7 +302,15 @@ const styles = StyleSheet.create({
     },
     resultStatusLabelFail : {
         color: 'red'
-    }
+    },
+retryButton: {
+    backgroundColor: '#FF9800',
+    width: '80%',
+    elevation: 3,
+  },
+  retryIcon: {
+    marginTop: 1,
+  },
   })
 
   export default PhotoIdScanner;

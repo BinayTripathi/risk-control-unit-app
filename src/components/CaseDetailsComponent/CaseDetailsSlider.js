@@ -1,5 +1,5 @@
 
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import { StyleSheet, View, ScrollView, Dimensions, PixelRatio}  from 'react-native';
 import { useSelector, useDispatch} from 'react-redux'
 
@@ -655,6 +655,7 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
     const dispatch = useDispatch()
     //const [sliderState, setSliderState] = useState({ currentPage: 0 });
     const [sliderState, setSliderState] = useState(() => ({ currentPage: 0 }));
+    const [localTemplateState, setLocalTemplateState] = useState(null)
 
     const setSliderPage = (event) => {
       const indexOfNextScreen = Math.floor(event.nativeEvent.contentOffset.x / width);
@@ -676,6 +677,15 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
     };*/
   
     const { currentPage: pageIndex } = sliderState;
+
+
+    useEffect(() => {
+      console.log(`useEffect in slider ${isTemplateUpdated}  ${localTemplateState}`)
+    if(!isTemplateUpdated && localTemplateState !== null){
+      console.log(`saving local template for case ${selectedClaimId}`)
+        dispatch(saveCaseTemplate(localTemplateState))
+    } 
+  }, [isTemplateUpdated, localTemplateState]);
 
     
     const investigationSections = (template, selectedClaimId, userId, width, height) => {
@@ -754,10 +764,16 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
         );
       });
 
-      if(!isTemplateUpdated) dispatch(saveCaseTemplate({
+      /*if(!isTemplateUpdated) dispatch(saveCaseTemplate({
         caseId: selectedClaimId,
         caseTemplate: localTemplate
-      }))
+      }))*/
+
+     if(!isTemplateUpdated && localTemplateState === null)
+        setLocalTemplateState({
+        caseId: selectedClaimId,
+        caseTemplate: localTemplate
+      })
 
       return investigationDetails
     };

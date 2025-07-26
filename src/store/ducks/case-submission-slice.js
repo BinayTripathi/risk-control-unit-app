@@ -162,6 +162,20 @@ export const requestSubmitCaseAction = createAction(
   },
 );
 
+export const updatePhotoOrDocumentUploadStatusAction = createAction(
+  types.UPDTATE_PHOTO_DOCUMENT_UPLOAD_STATUS_ON_RETRY,
+  function prepare({caseId, section, documentCategory, documentName }) {
+    return {
+      payload: {
+        caseId,
+        section, 
+        documentCategory,
+        documentName
+      },
+    };
+  },
+);
+
 /*
 how caseUpdates would be stored
 {"casesUpdates":
@@ -234,6 +248,12 @@ const initialState = {
           failureUpdateCase: (state, action) => {
             state.loading = false;
             state.error = action.payload
+            console.log(`failure event ${JSON.stringify(action.payload)}`)
+            if (action.payload.docType === UPLOAD_TYPE.AUDIO || action.payload.docType === UPLOAD_TYPE.VIDEO
+              || action.payload.docType === UPLOAD_TYPE.DOCUMENT || action.payload.docType === UPLOAD_TYPE.PHOTO ) {
+              state.casesUpdates = mergeDeep(state.casesUpdates, action.payload) 
+              console.log(`failure event state ${JSON.stringify(state.casesUpdates)}`)
+            }
           },
 
           requestSubmitCase :  (state) => {        
@@ -251,6 +271,23 @@ const initialState = {
             state.loading = false;     
             state.error = action.error 
           },
+          retryPhotoOrDocStatusUpdate: (state, action) => {
+            state.loading = true;  
+            console.log('retrying')
+            const { caseId, section, documentCategory, documentName } = action.payload;
+
+            if (
+              state.casesUpdates[caseId] &&
+              state.casesUpdates[caseId][section] &&
+              state.casesUpdates[caseId][section][documentCategory] &&
+              state.casesUpdates[caseId][section][documentCategory][documentName]
+            ) {
+              state.casesUpdates[caseId][section][documentCategory][documentName] = {
+                ...state.casesUpdates[caseId][section][documentCategory][documentName],
+                uploadStatus: ""
+              };
+            }
+          }
 
     }
   })
@@ -274,6 +311,7 @@ const initialState = {
                   ...action.payload.documentDetails, 
                   locationImage: '',
                   OcrImage: '',
+                  uploadStatus : '',
                   id: action.payload.id
                 } 
               }
@@ -281,7 +319,23 @@ const initialState = {
           }       
         }
         yield put(successUpdateCase(successPayload));
-      }      
+      } else if(action.payload.documentDetails.docType === UPLOAD_TYPE.AUDIO || action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO)
+      {
+        let successPayload = {
+          [action.payload.caseId] : {
+            [action.payload.section] : {
+              [action.payload.documentCategory] : {
+                [action.payload.documentName] : {
+                  ...action.payload.documentDetails, 
+                  mediaStatus: '',
+                  id: action.payload.id
+                } 
+              }
+            }
+          }       
+        }
+        yield put(successUpdateCase(successPayload));
+      } 
 
         let postUpdatePayload = action.payload.documentDetails
         console.log('triggering upload')
@@ -321,7 +375,9 @@ const initialState = {
                       ...action.payload.documentDetails, 
                       id: action.payload.id,
                       locationImage:  'a',//responseUserData.locationImage,                  
-                      facePercent: responseUserData.facePercent                      
+                      facePercent: responseUserData.facePercent,
+                      uploadStatus : "1",          
+                      manualRetryPayload: {}        
                     } 
                   }
                 }
@@ -341,7 +397,9 @@ const initialState = {
                       ...action.payload.documentDetails, 
                       id: action.payload.id,
                       OcrImage: 'b',//responseUserData.ocrImage,                    
-                      panValid: responseUserData.panValid                      
+                      panValid: responseUserData.panValid ,
+                      uploadStatus : "1", 
+                      manualRetryPayload: {}                    
                     } 
                   }
                 }
@@ -377,7 +435,8 @@ const initialState = {
                   [category] : {
                     [documentName] : {
                       ...action.payload.documentDetails, 
-                      id: action.payload.id,                      
+                      id: action.payload.id,    
+                      mediaStatus: "1"                  
                     } 
                   }
                 }
@@ -395,8 +454,55 @@ const initialState = {
         }
         return;
       } catch (err) {
-          console.log(err);
-          yield put(failureUpdateCase(err));
+          console.log(`Error within redux ${err}`);
+          if(action.payload.documentDetails.docType === UPLOAD_TYPE.PHOTO || action.payload.documentDetails.docType === UPLOAD_TYPE.DOCUMENT)
+          {
+            console.log(`Error within redux in  ${action.payload.documentDetails.docType}`);
+            let failurePayload = {
+              docType: action.payload.documentDetails.docType,
+              [action.payload.caseId] : {
+                [action.payload.section] : {
+                  'completed' : {
+                    ...(action.payload.documentDetails.docType === UPLOAD_TYPE.DOCUMENT && {documentId: false }),
+                    ...(action.payload.documentDetails.docType === UPLOAD_TYPE.PHOTO && {faceIds: false }),
+                    },
+                  [action.payload.documentCategory] : {
+                    [action.payload.documentName] : {
+                      ...action.payload.documentDetails, 
+                      locationImage: '',
+                      OcrImage: '',
+                      uploadStatus : '0',
+                      id: action.payload.id,
+                      manualRetryPayload: action.payload 
+                    } 
+                  }
+                }
+              }
+            }    
+            yield put(failureUpdateCase(failurePayload));        
+          } else if(action.payload.documentDetails.docType === UPLOAD_TYPE.AUDIO || action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO)
+          {
+            let failurePayload = {
+              docType: action.payload.documentDetails.docType,
+              [action.payload.caseId] : {
+                [action.payload.section] : {
+                  'completed' : {
+                      'audio' : false,
+                    },
+                  [action.payload.documentCategory] : {
+                    [action.payload.documentName] : {
+                      ...action.payload.documentDetails, 
+                      mediaStatus: '0',
+                      id: action.payload.id,
+                      manualRetryPayload: action.payload 
+                    } 
+                  }
+                }
+              }      
+            }
+            yield put(failureUpdateCase(failurePayload));
+          } else
+            yield put(failureUpdateCase(err));
       }
   }
 
@@ -442,6 +548,6 @@ const initialState = {
 
 
   export const { saveCaseTemplate,  successUpdateCase,  failureUpdateCase,  
-    successDeleteCaseUpdateDetailsAfterSubmission, failureSubmitCase} = casesUpdateSlice.actions;
+    successDeleteCaseUpdateDetailsAfterSubmission, failureSubmitCase, retryPhotoOrDocStatusUpdate} = casesUpdateSlice.actions;
 
 export default casesUpdateSlice.reducer

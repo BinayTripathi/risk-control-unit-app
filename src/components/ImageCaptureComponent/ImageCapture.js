@@ -51,7 +51,6 @@ const detectionsList = [
   "BLINK",
   "TURN_HEAD_LEFT",
   "TURN_HEAD_RIGHT",
-  "SMILE",
   "NOD",
   
 ]

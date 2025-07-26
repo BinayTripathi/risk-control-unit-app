@@ -28,34 +28,34 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
                 </Text>
           </View> 
         
-        <ScrollView style={styles.scrollView}>
+        {caseUpdates !== undefined && <ScrollView style={styles.scrollView}>
 
-            <CollapsibleSection title="Face ID">
+            <CollapsibleSection title="Face ID" sectionComplete = {caseUpdates[sectionFromTemplate.locationName]?.['completed']?.['faceIds']}>
               <View style={styles.collapsableSectionContainer}>
                 <PhotoIdScanner selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
               </View>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Document ID">
+            <CollapsibleSection title="Document ID" sectionComplete = {caseUpdates[sectionFromTemplate.locationName]?.['completed']?.['documentId']}>
               <View style={styles.collapsableSectionContainer}>
                   <DocumentScanner selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
               </View>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Questionnaire">
+            <CollapsibleSection title="Questionnaire"  sectionComplete = {caseUpdates[sectionFromTemplate.locationName]?.['completed']?.['questions']}>
               <View style={styles.collapsableSectionContainer}>
               <FormInitiator selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
               </View>
             </CollapsibleSection>
 
-            {sectionFromTemplate['mediaReports'] !== undefined && <CollapsibleSection title="Media Report">
+            {sectionFromTemplate['mediaReports'] !== undefined && <CollapsibleSection title="Media Report" sectionComplete = {caseUpdates[sectionFromTemplate.locationName]?.['completed']?.['mediaReports']}>
               <View style={styles.collapsableSectionContainer}>
               <AudioVideoCapturer selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
               </View>
             </CollapsibleSection>}
 
             
-        </ScrollView>
+        </ScrollView>}
       </View>      
 
  
