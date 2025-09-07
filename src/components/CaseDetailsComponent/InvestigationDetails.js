@@ -48,7 +48,7 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
               </View>
             </CollapsibleSection>
 
-            {sectionFromTemplate['mediaReports'] !== undefined && <CollapsibleSection title="Media Report" sectionComplete = {caseUpdates[sectionFromTemplate.locationName]?.['completed']?.['mediaReports']}>
+            {sectionFromTemplate['mediaReports'] !== undefined && sectionFromTemplate['mediaReports'].length > 0 && <CollapsibleSection title="Media Report" sectionComplete = {caseUpdates[sectionFromTemplate.locationName]?.['completed']?.['mediaReports']}>
               <View style={styles.collapsableSectionContainer}>
               <AudioVideoCapturer selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
               </View>

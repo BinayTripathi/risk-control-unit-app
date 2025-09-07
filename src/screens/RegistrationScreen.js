@@ -190,13 +190,14 @@ export default function RegistrationScreen({ route, navigation }) {
     }*/
   };
 
-  const registerUser = async () => {
+  const registerUser = async (isRetry) => {
  
     if (Platform.OS === 'android') {
       console.log(Application.getAndroidId())
       const dataToSendForReg = {
         phoneNo: countryCode+registeredPhoneNumber.replace(/\s/g, ''),
         deviceId: Application.getAndroidId(),
+        sendSMSForRetry: isRetry,
         step: 1
       }
       dispatch(requestRegisterUser(dataToSendForReg))
@@ -308,7 +309,7 @@ export default function RegistrationScreen({ route, navigation }) {
                 //disabled = {pin.toString().length < CELL_COUNT  && emailValidator(email.value) === ''}
                 disabled = {registeredPhoneNumber === '' || cameraPermissionGranted === false}
                 style={[Styles.button, registeredPhoneNumber === '' ? Styles.buttonDisabled : '']}
-                onPress={registerUser }
+                onPress={() => registerUser(false) }
                 onLongPress={() => {
                   dispatch({ type: "DESTROY_SESSION" });
                  }}>
@@ -346,6 +347,14 @@ export default function RegistrationScreen({ route, navigation }) {
                   }} >                
                 Verify OTP
               </Button>
+
+          <Button
+            mode="outlined"
+            style={[Styles.button, {marginTop: 10}]}
+            onPress={() => registerUser(true)}
+            >
+            Resend PIN
+          </Button>
         </>  }
                 
               {step ===  2 && <RegistrationImageScanner/>}

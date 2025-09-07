@@ -12,8 +12,186 @@ import {saveCaseTemplate} from '@store/ducks/case-submission-slice'
 import _ from "lodash";
 
 let UNDERWRITING_TEMPLATE = [
+	{
+		"locationName": "LA ADDRESS",
+		"isRequired": true,
+		"agent": {
+			"isRequired": true,
+			"reportType": "Agent Face",
+			"reportName": "Agent Face"
+		},
+		"mediaReports": [
+			{
+				"mediaType": 0,
+				"mediaExtension": "mp3",
+				"id": 0,
+				"selected": true,
+				"reportName": "Audio"
+			},
+			{
+				"mediaType": 1,
+				"mediaExtension": "mp3",
+				"id": 0,
+				"selected": true,
+				"reportName": "Video"
+			}
+		],
+		"faceIds": [
+			{
+				"isRequired": true,
+				"reportType": "Customer Face",
+				"has2Face": false,
+				"reportName": "Customer Face"
+			},
+			{
+				"isRequired": false,
+				"reportType": "Beneficiary Face",
+				"has2Face": false,
+				"reportName": "Beneficiary Face"
+			}
+		],
+		"documentIds": [
+			{
+				"isRequired": true,
+				"reportType": "PAN Card",
+				"reportName": "PAN Card",
+				"idImageBack": null
+			}
+		],
+		"questions": [
+			{
+				"questionText": "Name Of Person Met (Name & Mobile No.)",
+				"questionType": "text",
+				"options": null,
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Met Person Relation With LA",
+				"questionType": "dropdown",
+				"options": "BROTHER, RELATIVE, COUSIN, FRIEND, UNKNOWN, SELF",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "LA Date of Birth",
+				"questionType": "date",
+				"options": null,
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Tobacco/ Alcohol or Smoking / swimming /\r\ndiving",
+				"questionType": "dropdown",
+				"options": "SMOKER, OCCASIONAL DRINKER, DRUG-USER, UNKNOWN",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "In case LA not healthy –Name of disease/\r\nduration/Place of treatment (hospital and Doctor\r\nname)",
+				"questionType": "text",
+				"options": null,
+				"isRequired": false,
+				"answerText": null
+			},
+			{
+				"questionText": "History of medical investigation, surgery or\r\ntreatment in past or planned in near future (even\r\nif it was a minor or major))",
+				"questionType": "text",
+				"options": null,
+				"isRequired": false,
+				"answerText": null
+			},
+			{
+				"questionText": "Policy Details Other Than Canara HSBC and\r\ntotal life coverage",
+				"questionType": "text",
+				"options": null,
+				"isRequired": false,
+				"answerText": null
+			},
+			{
+				"questionText": "Residence Locality and type",
+				"questionType": "text",
+				"options": null,
+				"isRequired": false,
+				"answerText": null
+			},
+			{
+				"questionText": "Residence Ownership",
+				"questionType": "dropdown",
+				"options": "RENTED, OWNED, UNKNOWN",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Date since living at Current Residence",
+				"questionType": "date",
+				"options": null,
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Financial Status of Life Assured (Please mention\r\nyour observation basis life style etc.)",
+				"questionType": "dropdown",
+				"options": "LOWER CLASS,LOWER- MIDDLE CLASS,MIDDLE CLASS, UPPER CLASS, UNKNOWN",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "No. Of Family Members and their details",
+				"questionType": "text",
+				"options": null,
+				"isRequired": false,
+				"answerText": null
+			},
+			{
+				"questionText": "LA’s Education Qualification",
+				"questionType": "dropdown",
+				"options": "PRIMARY SCHOOLING, MATRICULATION, GRADE 12  PASS, GRADUATE, UNKNOWN",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Employment Category (Salaried /Self employed\r\netc.)",
+				"questionType": "dropdown",
+				"options": "SALARIED, SELF-EMPLOYED, CASUAL-CONTRACTOR, GOVT-EMPLOYED, UNKNOWN",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Annual Income",
+				"questionType": "dropdown",
+				"options": "Rs. 0 - 10000, Rs. 10000 - 100000, Rs. 100000 +, UNKNOWN",
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Nominee Name and relationship with LA",
+				"questionType": "text",
+				"options": null,
+				"isRequired": false,
+				"answerText": null
+			},
+			{
+				"questionText": "Vicinity Check Details – met person Name /\r\nMobile number and details confirmed",
+				"questionType": "text",
+				"options": null,
+				"isRequired": true,
+				"answerText": null
+			},
+			{
+				"questionText": "Date and time met with Person",
+				"questionType": "date",
+				"options": null,
+				"isRequired": true,
+				"answerText": null
+			}
+		]
+	}
+]
+
+let CLAIM_TEMPLATE = [
   {
-    "locationName": "LA ADDRESS",
+    "locationName": "BENEFICIARY ADDRESS",
     "isRequired": true,
     "agent": {
       "isRequired": true,
@@ -21,183 +199,21 @@ let UNDERWRITING_TEMPLATE = [
       "reportName": "Agent Face"
     },
     "mediaReports": [
-      {
-        "mediaType": 0,
-        "mediaExtension": "mp3",
-        "id": 0,
-        "selected": true,
-        "reportName": "Audio"
-      },
-      {
-        "mediaType": 1,
-        "mediaExtension": "mp3",
-        "id": 0,
-        "selected": true,
-        "reportName": "Video",
-      }
-    ],
-    "faceIds": [
-      {
-        "isRequired": true,
-        "reportType": "Customer Face",
-        "has2Face": false,
-        "reportName": "Customer Face"
-      },
-      {
-        "isRequired": false,
-        "reportType": "Beneficiary Face",
-        "has2Face": false,
-        "reportName": "Beneficiary Face"
-      }
-    ],
-    "documentIds": [
-      {
-        "isRequired": true,
-        "reportType": "PAN Card",
-        "reportName": "PAN Card",
-        "idImageBack": null
-      }
-    ],
-    "questions": [
-      {
-        "questionText": "Name Of Person Met (Name & Mobile No.)",
-        "questionType": "text",
-        "options": null,
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Met Person Relation With LA",
-        "questionType": "dropdown",
-        "options": "BORTHER, RELATIVE, COUSIN, FRIEND, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "LA Date of Birth",
-        "questionType": "date",
-        "options": null,
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Tobacco/ Alcohol or Smoking / swimming /\r\ndiving",
-        "questionType": "dropdown",
-        "options": "SMOKER, OCCASIONAL DRINKER, DRUG-USER, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "In case LA not healthy –Name of disease/\r\nduration/Place of treatment (hospital and Doctor\r\nname)",
-        "questionType": "text",
-        "options": null,
-        "isRequired": false,
-        "answerText": null
-      },
-      {
-        "questionText": "History of medical investigation, surgery or\r\ntreatment in past or planned in near future (even\r\nif it was a minor or major))",
-        "questionType": "text",
-        "options": null,
-        "isRequired": false,
-        "answerText": null
-      },
-      {
-        "questionText": "Policy Details Other Than Canara HSBC and\r\ntotal life coverage",
-        "questionType": "text",
-        "options": null,
-        "isRequired": false,
-        "answerText": null
-      },
-      {
-        "questionText": "Residence Locality and type",
-        "questionType": "text",
-        "options": null,
-        "isRequired": false,
-        "answerText": null
-      },
-      {
-        "questionText": "Residence Ownership",
-        "questionType": "dropdown",
-        "options": "RENTED, OWNED, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "No of Year at Current Residence",
-        "questionType": "date",
-        "options": null,
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Financial Status of Life Assured (Please mention\r\nyour observation basis life style etc.)",
-        "questionType": "dropdown",
-        "options": "LOWER CLASS,LOWER- MIDDLE CLASS,MIDDLE CLASS, UPPER CLASS, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "No. Of Family Members and their details",
-        "questionType": "text",
-        "options": null,
-        "isRequired": false,
-        "answerText": null
-      },
-      {
-        "questionText": "LA’s Education Qualification",
-        "questionType": "dropdown",
-        "options": "PRIMARY SCHOOLING, MATRICULATION, GRADE 12  PASS, GRADUATE, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Employment Category (Salaried /Self employed\r\netc.)",
-        "questionType": "dropdown",
-        "options": "SALARIED, SELF-EMPLOYED, CASUAL-CONTRACTOR, GOVT-EMPLOYED, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Annual Income",
-        "questionType": "dropdown",
-        "options": "Rs. 0 - 10000, Rs. 10000 - 100000, Rs. 100000 +, UNKNOWN",
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Nominee Name and relationship with LA",
-        "questionType": "text",
-        "options": null,
-        "isRequired": false,
-        "answerText": null
-      },
-      {
-        "questionText": "Vicinity Check Details – met person Name /\r\nMobile number and details confirmed",
-        "questionType": "text",
-        "options": null,
-        "isRequired": true,
-        "answerText": null
-      },
-      {
-        "questionText": "Date and time met with Person",
-        "questionType": "date",
-        "options": null,
-        "isRequired": true,
-        "answerText": null
-      }
-    ]
-  }
-]
-
-let CLAIM_TEMPLATE = [
-  {
-    "locationName": "LA ADDRESS",
-    "isRequired": true,
-    "agent": {
-      "isRequired": true,
-      "reportType": "Agent Face",
-      "reportName": "Agent Face"
-    },
+			{
+				"mediaType": 0,
+				"mediaExtension": "mp3",
+				"id": 0,
+				"selected": true,
+				"reportName": "Audio"
+			},
+			{
+				"mediaType": 1,
+				"mediaExtension": "mp3",
+				"id": 0,
+				"selected": true,
+				"reportName": "Video"
+			}
+		],
     "faceIds": [
       {
         "isRequired": true,
@@ -242,22 +258,6 @@ let CLAIM_TEMPLATE = [
         "options": null,
         "isRequired": false,
         "answerText": null
-      }
-    ],
-    "mediaReports": [
-      {
-        "mediaType": 0,
-        "mediaExtension": "mp3",
-        "id": 0,
-        "selected": true,
-        "reportName": "Audio"
-      },
-      {
-        "mediaType": 1,
-        "mediaExtension": "mp3",
-        "id": 0,
-        "selected": true,
-        "reportName": "Video",
       }
     ]
   },
@@ -435,6 +435,7 @@ let CLAIM_TEMPLATE = [
       "reportType": "Agent Face",
       "reportName": "Agent Face"
     },
+    "mediaReports": [],
     "faceIds": [],
     "documentIds": [
       {
@@ -483,6 +484,7 @@ let CLAIM_TEMPLATE = [
       "reportType": "Agent Face",
       "reportName": "Agent Face"
     },
+    "mediaReports": [],
     "faceIds": [],
     "documentIds": [
       {
@@ -552,6 +554,7 @@ let CLAIM_TEMPLATE = [
       "reportType": "Agent Face",
       "reportName": "Agent Face"
     },
+    "mediaReports": [],
     "faceIds": [],
     "documentIds": [
       {

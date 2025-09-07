@@ -39,7 +39,7 @@ export const VideoPreview = ({photoData, setPhotoData, claimId, docType, email, 
                  investigationName,
                  isLastMandatory,
                  mediaPath: photoData,
-                 LocationLongLat : '-45/128'
+                 LocationLongLat : tracker
                }
                
                const payloadToSave = {

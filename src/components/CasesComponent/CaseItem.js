@@ -70,7 +70,7 @@ function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
     
    }
 
-  let clientPhoto = caseDetails?.customerPhoto?.replace('image/*;base64','image/png;base64')
+  let clientPhoto = 'data:image/*;base64,' + caseDetails?.customerPhoto
   return (
     <Pressable onPress={() =>handlePress()}> 
       <View style={styles.caseItemContainer}> 

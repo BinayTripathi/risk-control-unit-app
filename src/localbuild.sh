@@ -53,3 +53,6 @@ Run the Project: Finally, launch your project from Android Studio.
 
 adb devices
 adb logcat -v time > log.txt
+
+Log on app in device
+adb logcat *:S ReactNative:V ReactNativeJS:V

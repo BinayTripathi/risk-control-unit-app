@@ -63,7 +63,7 @@ const verifyLogin =  async (emailId) => {
     let resp = await Request.get({url});
 }
 
-export const userRegister = async (phoneNo, deviceId) => {
+export const userRegister = async (phoneNo, deviceId, sendSMSForRetry) => {
   try {  
     const url = `${BASE_URL}/Agent/VerifyMobile`
     console.log(url)
@@ -72,7 +72,7 @@ export const userRegister = async (phoneNo, deviceId) => {
       "mobile" : phoneNo,
       "uid" : deviceId,
       "checkUid" : true,
-      "sendSMS": true
+      "sendSMSForRetry": sendSMSForRetry
     };
     console.log("-----------"+JSON.stringify(data))
     let response = await  Request.post({url, config, data});    

@@ -20,6 +20,7 @@ import AudioRecorderPlayer, {
   import { useDispatch} from 'react-redux'
   import {requestUpdateAudioVideoCaseAction} from '@store/ducks/case-submission-slice'
   import { useNavigation } from "@react-navigation/native";
+  import useLocationTracker from "@hooks/useLocationTracker";
 
   const screenWidth = Dimensions.get('screen').width;
   const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -34,6 +35,7 @@ const AudioPreview = ({path, audioLength, claimId, docType, email, sectionName,
     
     const dispatch = useDispatch()
     const navigation = useNavigation();
+    const tracker = useLocationTracker()
 
     let playWidth =
           (currentPositionSec / currentDurationSec) *  (screenWidth - 56);
@@ -113,7 +115,7 @@ const AudioPreview = ({path, audioLength, claimId, docType, email, sectionName,
         investigationName,
         isLastMandatory,
         mediaPath: path,
-        LocationLongLat : '-45/128'
+        LocationLongLat : tracker
       }
       
       const payloadToSave = {

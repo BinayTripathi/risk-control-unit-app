@@ -23,7 +23,7 @@ const ImageCaptureScreen = ({ route }) => {
   const sectionName = route.params?.sectionFromTemplate
   const investigationName = route.params?.investigationName
   const isLastMandatory = route.params?.isLastMandatory
-  console.log(`is mandatory last : ${isLastMandatory}`)
+  console.log(`PhotoData : ${photoData}`)
 
 
   const imageCaptureSceen =  (
@@ -67,7 +67,7 @@ const ImageCaptureScreen = ({ route }) => {
     </Background>
   )
 
- if(!photoData)    
+ if(!photoData || photoData.length === 0)    
     return imageCaptureSceen
    else
     return imagePreviewScreen
