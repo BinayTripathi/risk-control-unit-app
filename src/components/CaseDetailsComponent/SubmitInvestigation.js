@@ -45,7 +45,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
       setRemark(remark => remark !== null ?  remark +". " + heardText : heardText)
     }
 
-    useEffect(()=>{
+    /*useEffect(()=>{
       if (submitRequestDispatched) {
         if(error) {
           Dialog.show({
@@ -71,7 +71,40 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
           })          
         }        
       }
-    },[loading, error, submitRequestDispatched])
+    },[loading, error, submitRequestDispatched])*/
+
+    useEffect(() => {
+      // Only run this after a submission was triggered
+      if (!submitRequestDispatched) return;
+
+      // When loading is done
+      if (!loading) {
+        if (error) {
+          Dialog.show({
+            type: ALERT_TYPE.WARNING,
+            title: 'Submission Failed',
+            textBody: 'Please try again',
+            button: 'OK',
+            onHide: () => {
+              setSubmitRequestDispatched(false);
+              navigation.navigate(SCREENS.CaseList);
+            }
+          });
+        } else {
+          Dialog.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: 'Case Submission',
+            textBody: 'Congratulations! Case submission successful.',
+            button: 'OK',
+            onHide: () => {
+              setSubmitRequestDispatched(false);
+              navigation.navigate(SCREENS.CaseList);
+            }
+          });
+        }
+      }
+    }, [loading, error, submitRequestDispatched]);
+
 
 
     let checkList = caseUpdates !== undefined ? Object.entries(caseUpdates).map(([key, value]) => {
@@ -100,11 +133,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
                                       remarks: remark
                                   }
                                   dispatch(requestSubmitCaseAction(payload))
-                                  setTimeout(() => {
-                                    setSubmitRequestDispatched(true)
-                                  }, 500);                         
-                                  
-
+                                  setSubmitRequestDispatched(true)
                                 }} 
                                 cancelHandler={ () => {} }/>
 

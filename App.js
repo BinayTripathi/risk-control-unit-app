@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View} from 'react-native';
@@ -8,7 +7,6 @@ import { PersistGate } from 'redux-persist/lib/integration/react';
 import store, {persistor} from '@store'
 import { RootSiblingParent } from 'react-native-root-siblings';
 
-
 import AppNavigator from './src/components/NavigationComponent/AppNavigator';
 import {en, registerTranslation } from 'react-native-paper-dates'
 import {secureGet} from '@helpers/SecureStore'
@@ -16,7 +14,9 @@ import {SECURE_REGISTRATION_COMPLETE} from '@core/constants'
 import { AlertNotificationRoot} from 'react-native-alert-notification';
 import { monitorNetworkQuality } from './src/helpers/customNetworkWatcher';
 
+
 export default function App() {
+
 
   /*useEffect(() => {
     monitorNetworkQuality();
@@ -41,6 +41,7 @@ export default function App() {
     close: 'Close',
   })
 
+  
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor} loading={null}>

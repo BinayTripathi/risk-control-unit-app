@@ -7,6 +7,8 @@ import axios from 'axios';
 import curlirize from "axios-curlirize";
 import * as FileSystem from 'expo-file-system';
 import axiosRetry from "axios-retry";
+import { secureGet } from '@helpers/SecureStore'
+import { SECURE_BEARER_TOKEN } from '@core/constants'
 
 axiosRetry(axios, {
   retries: 5, // Number of retry attempts
@@ -40,6 +42,38 @@ const apiClient = axios.create({
     "Content-Type": "multipart/form-data"
   }
 });
+
+const addAuthHeader = async (config = {}) => {
+  try {
+    // use cached token if present
+    if (cachedBearerToken) {
+      config.headers = {
+        ...(config.headers || {}),
+        //Authorization: `Bearer ${cachedBearerToken}`,
+      }
+      return config
+    }
+
+    const token = await secureGet(SECURE_BEARER_TOKEN)
+    if (token) {
+      cachedBearerToken = token
+      config.headers = {
+        ...(config.headers || {}),
+        Authorization: `Bearer ${token}`,
+      }
+    }
+  } catch (err) {
+    console.log('addAuthHeader error:', err?.message || err)
+  }
+  return config
+}
+
+// in-memory cache for bearer token to avoid repeated secure storage reads
+let cachedBearerToken = null
+
+export const setCachedBearerToken = (token) => {
+  cachedBearerToken = token
+}
 
 
 // Add request interceptor to log request before it goes
@@ -91,7 +125,7 @@ export const userRegisterPhoto = async (image, iosDeviceId) => {
   let deviceId = ''
   if (Platform.OS === 'android') 
     deviceId = Application.getAndroidId()
-  try {  
+    try {  
     const url = `${BASE_URL}/Agent/VerifyId`
     console.log(url)
     const config = {}
@@ -115,7 +149,8 @@ export const userLogin = async (emailId) => {
   try {   
       const url = `${BASE_URL}/agent/agent?email=${emailId}`
       console.log(url)
-      let response = await Request.get({url});
+      const config = await addAuthHeader({})
+      let response = await Request.get({url, config});
       return response
    
   } catch (error) {
@@ -132,7 +167,8 @@ export const getAllCases = async (email) => {
     //const url = 'https://ccutest.free.beeceptor.com/agents'
     //const url = 'https://rcu.azurewebsites.net/api/agent/agent?email=agent@agency1.com'
     console.log(url)
-    let response = await Request.get({url});
+    const config = await addAuthHeader({})
+    let response = await Request.get({url, config});
     //console.log(response)
     return response
   } catch (error) {
@@ -147,7 +183,8 @@ export const getAllCaseCoordinates = async (email) => {
   try {
     const url = `${BASE_URL}/agent/agent-map?email=${email}`
     console.log(url)
-    let response = await Request.get({url});
+    const config = await addAuthHeader({})
+    let response = await Request.get({url, config});
     return response
   } catch (error) {
     console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
@@ -161,7 +198,8 @@ export const getCaseDetails = async (email, claim) => {
   //const url = 'https://rcu.azurewebsites.net/api/agent/get?email=agent@agency1.com&claimid=1da83e41-12e5-4827-87c1-0d7a0fc7ab38'
   //const url = 'https://ccutest.free.beeceptor.com/details'
   console.log(url)
-  let response = await  Request.get({url}); 
+  const config = await addAuthHeader({})
+  let response = await  Request.get({url, config}); 
   return response
   }  catch (error) {
     console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
@@ -190,7 +228,10 @@ export const updateCaseDocument = async ({email, caseId, sectionName, investigat
       method: "post",
       url: urlWithParams,
       data: formData,
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(await addAuthHeader({}).then(c => c.headers || {})),
+      },
     })
    /*const response = await axios.post(urlWithParams, formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -225,7 +266,10 @@ export const updateCaseFace = async ({email, caseId, sectionName, investigationN
       method: "post",
       url: urlWithParams,
       data: formData,
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(await addAuthHeader({}).then(c => c.headers || {})),
+      },
     })
 
     
@@ -254,7 +298,10 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
         method: "post",
         url: urlWithParams,
         data: qna,
-        headers: { "Content-Type": "application/json-patch+json" },
+        headers: {
+          "Content-Type": "application/json-patch+json",
+          ...(await addAuthHeader({}).then(c => c.headers || {})),
+        },
       })
       console.log(`SUBMIT FORM`+ response)
       return response
@@ -287,7 +334,10 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
       method: "post",
       url: urlWithParams,
       data: formData,
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(await addAuthHeader({}).then(c => c.headers || {})),
+      },
     })
 
     
@@ -303,7 +353,7 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
     try {
         const url = `${BASE_URL}/agent/submit`;
         //const url = `https://my-json-server.typicode.com/BinayTripathi/demo/authenticate`  
-        const config = {}
+        const config = await addAuthHeader({})
         const data = {
           ...body
         };
@@ -317,4 +367,19 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
         throw JSON.stringify(error.message);
       }
     };
-  
+
+export const fetchJWTToken = async () => {
+  try {
+    const url = `${BASE_URL}/Secure/test-2-get-jwt-token?username=user`
+    console.log('Fetching JWT Token from:', url)
+    const response = await axios.get(url, { timeout: 20000 })
+    if (response.data && response.data.token) {
+      console.log('JWT Token received successfully')
+      return response.data.token
+    }
+    return null
+  } catch (error) {
+    console.log('Error fetching JWT token:', error.message)
+    throw error
+  }
+};

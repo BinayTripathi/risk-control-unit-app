@@ -9,6 +9,7 @@ export const UPLOAD_SUCCESS_INDICATOR = 1
 export const SECURE_USER_KEY = "userId"
 export const SECURE_USER_PIN = "pin"
 export const SECURE_REGISTRATION_COMPLETE = "reg_complete"
+export const SECURE_BEARER_TOKEN = "bearer_token"
 
 export const GEOFENCING_RADIUS_IN_METRES = 500
 export const VIDEO_FORMAT = "mp4"

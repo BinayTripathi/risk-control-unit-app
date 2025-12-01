@@ -190,14 +190,13 @@ export default function RegistrationScreen({ route, navigation }) {
     }*/
   };
 
-  const registerUser = async (isRetry) => {
+  const registerUser = async () => {
  
     if (Platform.OS === 'android') {
       console.log(Application.getAndroidId())
       const dataToSendForReg = {
         phoneNo: countryCode+registeredPhoneNumber.replace(/\s/g, ''),
         deviceId: Application.getAndroidId(),
-        sendSMSForRetry: isRetry,
         step: 1
       }
       dispatch(requestRegisterUser(dataToSendForReg))
@@ -309,7 +308,7 @@ export default function RegistrationScreen({ route, navigation }) {
                 //disabled = {pin.toString().length < CELL_COUNT  && emailValidator(email.value) === ''}
                 disabled = {registeredPhoneNumber === '' || cameraPermissionGranted === false}
                 style={[Styles.button, registeredPhoneNumber === '' ? Styles.buttonDisabled : '']}
-                onPress={() => registerUser(false) }
+                onPress={registerUser }
                 onLongPress={() => {
                   dispatch({ type: "DESTROY_SESSION" });
                  }}>
@@ -351,7 +350,7 @@ export default function RegistrationScreen({ route, navigation }) {
           <Button
             mode="outlined"
             style={[Styles.button, {marginTop: 10}]}
-            onPress={() => registerUser(true)}
+            onPress={registerUser}
             >
             Resend PIN
           </Button>
