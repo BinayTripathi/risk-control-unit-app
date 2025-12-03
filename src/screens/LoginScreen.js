@@ -110,7 +110,7 @@ export default function LoginScreen({navigation}) {
       // Check internet and fetch JWT token during PIN login
       try {
         if (isConnected) {
-          const token = await fetchJWTToken()
+          const token = await fetchJWTToken(email)
           if (token) {
             await secureSave(SECURE_BEARER_TOKEN, token)
             // populate in-memory cache as well

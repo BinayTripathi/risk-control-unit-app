@@ -21,7 +21,7 @@ const LocalAuthComponent = ({setBiometicCancelled}) => {
     const checkInternetAndFetchToken = async () => {
         try {
             if (isConnected) {
-                const token = await fetchJWTToken()
+                const token = await fetchJWTToken(user)
                 if (token) {
                     await secureSave(SECURE_BEARER_TOKEN, token)
                     // populate in-memory cache to avoid future secure storage reads

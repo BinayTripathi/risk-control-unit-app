@@ -49,7 +49,7 @@ const addAuthHeader = async (config = {}) => {
     if (cachedBearerToken) {
       config.headers = {
         ...(config.headers || {}),
-        //Authorization: `Bearer ${cachedBearerToken}`,
+        Authorization: ` Bearer ${cachedBearerToken}`,
       }
       return config
     }
@@ -368,9 +368,9 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
       }
     };
 
-export const fetchJWTToken = async () => {
+export const fetchJWTToken = async (userName) => {
   try {
-    const url = `${BASE_URL}/Secure/test-2-get-jwt-token?username=user`
+    const url = `${BASE_URL}/Secure/test-2-get-jwt-token?username=${encodeURIComponent(userName)}`
     console.log('Fetching JWT Token from:', url)
     const response = await axios.get(url, { timeout: 20000 })
     if (response.data && response.data.token) {
