@@ -49,14 +49,10 @@ export default function Background({children }) {
         style={styles.rootContainer}
         imageStyle={styles.background}
       >
-
-          <View style={[styles.container, { width, height }]} accessible={true}>          
-              {children}          
-          </View>
-
-        
-         
-        
+        <View style={styles.overlay} />
+        <View style={[styles.container, { width, height }]} accessible={true}>          
+            {children}          
+        </View>
       </ImageBackground>
       </LinearGradient>
   )
@@ -64,7 +60,11 @@ export default function Background({children }) {
 
 const styles = StyleSheet.create({
   background: {
-    opacity: 0.08,
+    opacity: 0.12, // Slightly more visible background image
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Subtle white overlay for better contrast
   },
   rootContainer: {
     flex: 1,
@@ -72,6 +72,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   container: {    
     flex: 1,
@@ -82,21 +87,30 @@ const styles = StyleSheet.create({
   },
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dim background
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker dim background
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: '#d76969',
-    borderRadius: 10,
+    width: 320,
+    padding: 25,
+    backgroundColor: '#fff',
+    borderRadius: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: '#FF9933', // Saffron border for theme
   },
   text: {
-    fontSize: 18,
+    fontSize: 20,
     marginBottom: 20,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
   },
 
 })

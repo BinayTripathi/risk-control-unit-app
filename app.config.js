@@ -1,4 +1,16 @@
 module.exports = () => {
+    const APP_OWNER = process.env.APP_OWNER || 'policyIntel';
+    
+    const getBaseURL = (appOwner) => {
+      switch(appOwner) {
+        case 'icheckify':
+          return 'https://icheckify-demo.azurewebsites.net/api';
+        case 'policyIntel':
+        default:
+          return 'https://policy-intel.azurewebsites.net/api';
+      }
+    };
+
     if (process.env.MY_ENVIRONMENT === 'production') {
       return {
         /* your production config */
@@ -24,7 +36,8 @@ module.exports = () => {
             },
           },
           extra: {
-            baseURL : 'https://icheckify-demo.azurewebsites.net/api'
+            APP_OWNER: APP_OWNER,
+            baseURL: getBaseURL(APP_OWNER)
           }
       };
     } else {
@@ -51,7 +64,8 @@ module.exports = () => {
             },
           },
           extra: {
-            baseURL : 'https://icheckify-demo.azurewebsites.net/api' 
+            APP_OWNER: APP_OWNER,
+            baseURL: getBaseURL(APP_OWNER)
           },
       };
     }

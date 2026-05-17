@@ -3,6 +3,7 @@ import { StyleSheet,Text,TouchableOpacity, View, Image, Alert, Dimensions} from 
 import { useDispatch} from 'react-redux'
 import { useNavigation } from "@react-navigation/native";
 import { PaperProvider } from 'react-native-paper';
+import * as FileSystem from 'expo-file-system';
 
 import {userRegisterPhoto} from '@services/RestServiceCalls'
 import useApi from '@hooks/useApi'
@@ -47,8 +48,24 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
           title: 'Welcome Onboard',
           textBody: 'Continue to login...',
           button: 'OK',          
-          onHide:() => {
-            //secureSave(SECURE_REGISTRATION_COMPLETE,"true")
+          onHide: async () => {
+            // Save photo to device
+            try {
+              let base64Data;
+              if (photoData.startsWith('data:')) {
+                base64Data = photoData.replace(/^data:image\/[a-z]+;base64,/, '');
+              } else if (photoData.startsWith('file://')) {
+                base64Data = await FileSystem.readAsStringAsync(photoData, { encoding: FileSystem.EncodingType.Base64 });
+              } else {
+                throw new Error('Unsupported photo data format');
+              }
+              const filePath = FileSystem.documentDirectory + 'profile.jpg';
+              await FileSystem.writeAsStringAsync(filePath, base64Data, { encoding: FileSystem.EncodingType.Base64 });
+              console.log('Photo saved to:', filePath);
+            } catch (error) {
+              console.error('Error saving photo:', error);
+            }
+            // Then proceed
             const dataToSendForReg = {
               step: 3
             }

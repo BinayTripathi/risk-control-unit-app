@@ -14,7 +14,13 @@ comment line 17  in app/build.gradle  enableBundleCompression = (findProperty('a
 cd android
 rmdir /s /q .gradle && gradlew clean
 
-npm run android
+npm run android 
+
+OR
+
+yarn start --reset-cache
+yarn react-native run-android
+
 
 set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=
 

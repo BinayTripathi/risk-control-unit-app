@@ -4,6 +4,8 @@ import { NavigationContainer,  } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux'
 import Logout from '@components/AuthComponent/LogoutComponent';
+import HeaderHamburger from '@components/NavigationComponent/HeaderHamburger';
+import Drawer from '@components/NavigationComponent/Drawer';
 import {navigationRef} from '@services/NavigationService'
 
 import { SCREENS } from '@core/constants';
@@ -22,68 +24,76 @@ export default function AppNavigator() {
    
   let registrationStepComplete = useSelector((state) => state.user.isRegistered);
   const [navState, setNavState] = useState()
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   const [panResponder] = useInactivityMonitor(navState)
+
+  const toggleDrawer = () => {
+    setDrawerVisible(!drawerVisible);
+  };
+
   
   return (
-    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-      <NavigationContainer  ref={navigationRef}>
-              <Stack.Navigator 
-                screenOptions={{
-                  headerShown: true,
-                  animation: 'fade',
-                  headerTransparent: true,
-                  headerTintColor: '#fff',
-                  headerTitleStyle: {
-                    fontWeight: 'bold',
-                  },
-                }}
-                screenListeners={{
-                  state: (e) => {
-                    setNavState(e.data)
-                    //console.log('state changed', e.data);
-                  },
-                }}
-                >      
-              
+    <NavigationContainer  ref={navigationRef}>
+      <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        <Stack.Navigator 
+          screenOptions={{
+            headerShown: true,
+            animation: 'fade',
+            headerTransparent: true,
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+          screenListeners={{
+            state: (e) => {
+              setNavState(e.data)
+              setDrawerVisible(false); // Close drawer on navigation
+              //console.log('state changed', e.data);
+            },
+          }}
+          >      
+        
 
-                {registrationStepComplete < 3 && <Stack.Screen name={SCREENS.RegistrationScreen} component={RegistrationScreen}  options={{headerShown: false}}/>}
-                 <Stack.Screen name={SCREENS.Login} component={LoginScreen} />
-                <Stack.Screen name={SCREENS.CaseList} component={CaseListScreen} options={
-                  {title: 'Your Case List',
-                  headerRight : () => (
-                    <Logout/>
-                  ),
-                  headerStyle: {
-                    backgroundColor: 'transparent',
-                  },
-                  
-                }
-                } /> 
-                  <Stack.Screen name={SCREENS.CaseDetailsScreen} component={CaseDetailsScreen} options={
-                  {title: 'Case Details',
-                  headerRight : () => (
-                    <Logout/>
-                  ),
-                  headerStyle: {
-                    backgroundColor: 'transparent'//theme.colors.gradientALight,
-                  },
-                  headerTintColor: '#fff',
-                  headerTitleStyle: {
-                    fontWeight: 'bold',
-                  },
-                }
-                } /> 
-                <Stack.Screen name={SCREENS.ImageCaptureScreen} component={ImageCaptureScreen} options={
-                  {
-                    title: 'Capture Image',
-                    headerRight : () => (
-                      <Logout/>
-                    ),
-                }}/>                         
-                </Stack.Navigator>
-            </NavigationContainer>
-          </View>
+          {registrationStepComplete < 3 && <Stack.Screen name={SCREENS.RegistrationScreen} component={RegistrationScreen}  options={{headerShown: false}}/>}
+           <Stack.Screen name={SCREENS.Login} component={LoginScreen} />
+          <Stack.Screen name={SCREENS.CaseList} component={CaseListScreen} options={
+            {title: 'Your Case List',
+            headerRight : () => (
+              <HeaderHamburger onPress={toggleDrawer}/>
+            ),
+            headerStyle: {
+              backgroundColor: 'transparent',
+            },
+            
+          }
+          } /> 
+            <Stack.Screen name={SCREENS.CaseDetailsScreen} component={CaseDetailsScreen} options={
+            {title: 'Case Details',
+            headerRight : () => (
+              <HeaderHamburger onPress={toggleDrawer}/>
+            ),
+            headerStyle: {
+              backgroundColor: 'transparent'//theme.colors.gradientALight,
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }
+          } /> 
+          <Stack.Screen name={SCREENS.ImageCaptureScreen} component={ImageCaptureScreen} options={
+            {
+              title: 'Capture Image',
+              headerRight : () => (
+                <HeaderHamburger onPress={toggleDrawer}/>
+              ),
+          }}/>                         
+          </Stack.Navigator>
+          <Drawer visible={drawerVisible} onClose={toggleDrawer} />
+        </View>
+      </NavigationContainer>
   )
 
 }
