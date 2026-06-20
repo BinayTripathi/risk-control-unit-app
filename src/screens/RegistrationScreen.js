@@ -412,10 +412,12 @@ export default function RegistrationScreen({ route, navigation }) {
     },
     placeholderStyle: {
       fontSize: 16,
+      color: theme.colors.text,
     },
     selectedTextStyle: {
       fontSize: 16,
-      fontWeight: '900'
+      fontWeight: '900',
+      color: theme.colors.text,
     },
     iconStyle: {
       width: 20,
@@ -424,17 +426,19 @@ export default function RegistrationScreen({ route, navigation }) {
     inputSearchStyle: {
       height: 40,
       fontSize: 16,
+      color: theme.colors.text,
     },
     phoneNoTextboxContainer: {
       width: '80%',
       marginVertical: 12,
       fontSize: 20,
       marginHorizontal: 1
-      
+
     },
     phoneNoTextbox : {
       fontWeight: '900',
-      fontSize: 20
+      fontSize: 20,
+      color: theme.colors.text,
     }
     
   });

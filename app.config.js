@@ -11,10 +11,20 @@ module.exports = () => {
       }
     };
 
+    const getAppName = (appOwner) => {
+      switch(appOwner) {
+        case 'icheckify':
+          return 'iCheckify';
+        case 'policyIntel':
+        default:
+          return 'PolicyIntel';
+      }
+    };
+
     if (process.env.MY_ENVIRONMENT === 'production') {
       return {
         /* your production config */
-        "name": "icheckifyCH",
+        "name": getAppName(APP_OWNER),
         "android": {
             "adaptiveIcon": {
               "foregroundImage": "./assets/icheckifyIcon.png",
@@ -42,7 +52,7 @@ module.exports = () => {
       };
     } else {
       return {
-        "name": "icheckify",
+        "name": getAppName(APP_OWNER),
         "android": {
             "adaptiveIcon": {
               "foregroundImage": "./assets/icheckifyIcon.png",
