@@ -20,7 +20,15 @@ const initialState = {
         state.error = null        
       },      
       successCaseDetails:  (state, action) => {      
-          state.loading = false;            
+          state.loading = false;         
+          /*let casesIdsTillNow = Object.keys(state.casesDetails)  
+          console.log(`All Keys ${casesIdsTillNow}`)
+          if (casesIdsTillNow.length > 2) {
+            const firstKey = casesIdsTillNow[0]; // Get the first key
+            console.log(`purging key ${firstKey}`)
+            delete state.casesDetails[firstKey]; // Remove the first key
+          }*/
+
           state.casesDetails = { ... state.casesDetails, ...action.payload }
           state.selectedCaseDetails = action.payload
       },

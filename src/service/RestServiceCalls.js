@@ -2,7 +2,30 @@ import Constanst from 'expo-constants'
 import * as Request from '../helpers/serviceApi'
 import * as Application from 'expo-application';
 import { Platform } from 'expo-modules-core';
+import { Image } from "react-native";
+import axios from 'axios';
+import curlirize from "axios-curlirize";
+import * as FileSystem from 'expo-file-system';
+import axiosRetry from "axios-retry";
+import { secureGet } from '@helpers/SecureStore'
+import { SECURE_BEARER_TOKEN } from '@core/constants'
 
+axiosRetry(axios, {
+  retries: 5, // Number of retry attempts
+  retryDelay: (retryCount) => retryCount * 2000, // Exponential backoff
+  retryCondition: (error) => !error.response || error.response.status >= 500, // Retry on network errors or server failures
+});
+
+
+const convertImageToBase64 = async (imageUri) => {
+  try {
+    const base64String = await FileSystem.readAsStringAsync(imageUri, { encoding: FileSystem.EncodingType.Base64 });
+    console.log(base64String);
+    return base64String;
+  } catch (error) {
+    console.error("Error converting image:", error);
+  }
+};
 //const BASE_URL = 'https://rcu.azurewebsites.net/api';
 //const BASE_URL = 'https://ccutest.free.beeceptor.com'
 //const BASE_URL = 'https://holosync.azurewebsites.net/api'
@@ -10,7 +33,62 @@ import { Platform } from 'expo-modules-core';
 //let  BASE_URL =  'https://icheckify.azurewebsites.net/api'
 //const BASE_URL =  'https://chek.azurewebsites.net/api'
 const BASE_URL = Constanst?.expoConfig?.extra?.baseURL
+curlirize(axios);
 
+const apiClient = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    Accept: "*/*",
+    "Content-Type": "multipart/form-data"
+  }
+});
+
+const addAuthHeader = async (config = {}) => {
+  try {
+    // use cached token if present
+    if (cachedBearerToken) {
+      config.headers = {
+        ...(config.headers || {}),
+        Authorization: ` Bearer ${cachedBearerToken}`,
+      }
+      return config
+    }
+
+    const token = await secureGet(SECURE_BEARER_TOKEN)
+    if (token) {
+      cachedBearerToken = token
+      config.headers = {
+        ...(config.headers || {}),
+        Authorization: `Bearer ${token}`,
+      }
+    }
+  } catch (err) {
+    console.log('addAuthHeader error:', err?.message || err)
+  }
+  return config
+}
+
+// in-memory cache for bearer token to avoid repeated secure storage reads
+let cachedBearerToken = null
+
+export const setCachedBearerToken = (token) => {
+  cachedBearerToken = token
+}
+
+
+// Add request interceptor to log request before it goes
+apiClient.interceptors.request.use((config) => {
+  console.log("Request Sent:", {
+    url: config.url,
+    method: config.method,
+    headers: config.headers,
+    data: config.data // Logs FormData if included
+  });
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
+  return config;
+});
 
 const verifyLogin =  async (emailId) => {
    
@@ -19,7 +97,7 @@ const verifyLogin =  async (emailId) => {
     let resp = await Request.get({url});
 }
 
-export const userRegister = async (phoneNo, deviceId) => {
+export const userRegister = async (phoneNo, deviceId, sendSMSForRetry) => {
   try {  
     const url = `${BASE_URL}/Agent/VerifyMobile`
     console.log(url)
@@ -28,7 +106,7 @@ export const userRegister = async (phoneNo, deviceId) => {
       "mobile" : phoneNo,
       "uid" : deviceId,
       "checkUid" : true,
-      "sendSMS": true
+      "sendSMSForRetry": sendSMSForRetry
     };
     console.log("-----------"+JSON.stringify(data))
     let response = await  Request.post({url, config, data});    
@@ -47,12 +125,12 @@ export const userRegisterPhoto = async (image, iosDeviceId) => {
   let deviceId = ''
   if (Platform.OS === 'android') 
     deviceId = Application.getAndroidId()
-  try {  
+    try {  
     const url = `${BASE_URL}/Agent/VerifyId`
     console.log(url)
     const config = {}
     const data = {
-      "image": image,
+      "image": await convertImageToBase64(image),
       "uid": deviceId,
       "verifyId": true
     }
@@ -71,7 +149,8 @@ export const userLogin = async (emailId) => {
   try {   
       const url = `${BASE_URL}/agent/agent?email=${emailId}`
       console.log(url)
-      let response = await Request.get({url});
+      const config = await addAuthHeader({})
+      let response = await Request.get({url, config});
       return response
    
   } catch (error) {
@@ -88,7 +167,8 @@ export const getAllCases = async (email) => {
     //const url = 'https://ccutest.free.beeceptor.com/agents'
     //const url = 'https://rcu.azurewebsites.net/api/agent/agent?email=agent@agency1.com'
     console.log(url)
-    let response = await Request.get({url});
+    const config = await addAuthHeader({})
+    let response = await Request.get({url, config});
     //console.log(response)
     return response
   } catch (error) {
@@ -103,7 +183,8 @@ export const getAllCaseCoordinates = async (email) => {
   try {
     const url = `${BASE_URL}/agent/agent-map?email=${email}`
     console.log(url)
-    let response = await Request.get({url});
+    const config = await addAuthHeader({})
+    let response = await Request.get({url, config});
     return response
   } catch (error) {
     console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
@@ -113,11 +194,12 @@ export const getAllCaseCoordinates = async (email) => {
 
 export const getCaseDetails = async (email, claim) => {
   try {
-  const url = `${BASE_URL}/agent/get?email=${email}&claimid=${claim}`
+  const url = `${BASE_URL}/agent/get?email=${email}&caseId=${claim}`
   //const url = 'https://rcu.azurewebsites.net/api/agent/get?email=agent@agency1.com&claimid=1da83e41-12e5-4827-87c1-0d7a0fc7ab38'
   //const url = 'https://ccutest.free.beeceptor.com/details'
   console.log(url)
-  let response = await  Request.get({url}); 
+  const config = await addAuthHeader({})
+  let response = await  Request.get({url, config}); 
   return response
   }  catch (error) {
     console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
@@ -126,19 +208,102 @@ export const getCaseDetails = async (email, claim) => {
 }
 
 
-
-
-
-export const updateCaseDocument = async (body) => {
-  console.log('Update case API being called')
+export const updateCaseDocument = async ({email, caseId, sectionName, investigationName, OcrLongLat, OcrImage}) => {
   try {
-      const url = `${BASE_URL}/agent/documentid`;
-      //const url = `https://ccutest.free.beeceptor.com/update`
+
+    const API_URL = `${BASE_URL}/Agent/documentid`;    
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(OcrLongLat)}`;
+    //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
+    console.log(urlWithParams)
+    
+    const formData = new FormData();
+    formData.append("Image", {
+      uri: OcrImage,
+      type: "image/jpeg",
+      name: 'image.jpg'
+    });
+
+    
+    const response = await axios({
+      method: "post",
+      url: urlWithParams,
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(await addAuthHeader({}).then(c => c.headers || {})),
+      },
+    })
+   /*const response = await axios.post(urlWithParams, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });*/
+
+
+    //console.log("Upload Success:", response.data);
+    return response;
+  } catch (error) {
+    console.error("Upload Failed:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
+export const updateCaseFace = async ({email, caseId, sectionName, investigationName, LocationLongLat, locationImage}) => {
+  try {
+    const API_URL = `${BASE_URL}/Agent/faceid`;    
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
+    //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
+    console.log(urlWithParams)
+    
+    const formData = new FormData();
+    formData.append("Image", {
+      uri: locationImage,
+      type: "image/jpeg",
+      name: 'image.jpg'
+    });
+
+    
+    const response = await axios({
+      method: "post",
+      url: urlWithParams,
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(await addAuthHeader({}).then(c => c.headers || {})),
+      },
+    })
+
+    
+    return response;
+  } catch (error) {
+    console.error("Upload Failed:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const saveForm = async ({email, caseId, sectionName, qna}) => {
+  //console.log(JSON.stringify(body))
+  try {
+      const API_URL = `${BASE_URL}/Agent/answers`;
+      const urlWithParams = `${API_URL}?email=${encodeURIComponent(email)}&caseId=${encodeURIComponent(caseId)}&locationName=${encodeURIComponent(sectionName)}&LocationLatLong=-37%2F68`;
+      //const urlWithParams = 'https://icheckify-demo.azurewebsites.net/api/Agent/answers?email=agent%40verify.com&LocationLatLong=-37%2F68&locationName=LA%20ADDRESS&caseId=1'
       const config = {}
       const data = {
-        ...body
+        ...qna
       };
-      let response = await  Request.post({url, config, data});
+      console.log(urlWithParams)
+      console.log(data)
+      
+      //let response = await  Request.post({urlWithParams, config, data});
+      const response = await axios({
+        method: "post",
+        url: urlWithParams,
+        data: qna,
+        headers: {
+          "Content-Type": "application/json-patch+json",
+          ...(await addAuthHeader({}).then(c => c.headers || {})),
+        },
+      })
+      console.log(`SUBMIT FORM`+ response)
       return response
     }  catch (error) {
       console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
@@ -146,32 +311,49 @@ export const updateCaseDocument = async (body) => {
     }
   };
 
-  export const updateCaseFace = async (body) => {
-    body.OcrData=""
-    console.log('Update case API being called')
+
+
+  export const updateCaseMedia = async ({email, caseId, sectionName, investigationName, LocationLongLat, mediaPath}) => {
+  try {
+    const API_URL = `${BASE_URL}/Agent/media`;    
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(LocationLongLat)}`;
+    //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
+    console.log(urlWithParams)
     
-    try {
-        const url = `${BASE_URL}/agent/faceid`;
-        //const url = `https://ccutest.free.beeceptor.com/update`
-        const config = {}
-        const data = {
-          ...body
-        };
-        console.log(url)
-        let response = await  Request.post({url, config, data});
-        return response
-      }  catch (error) {
-        console.log(JSON.stringify(error.message)); // this is the main part. Use the response property from the error object
-        throw JSON.stringify(error.message);
-      }
-    };
+    const isVideo = mediaPath.split('.').pop() === "mp4" 
+
+    const formData = new FormData();
+    formData.append("Image", {
+      uri: isVideo? `file:///${mediaPath}`: mediaPath,
+      type: isVideo ? 'video/mp4' : 'audio/mpeg',
+      name: isVideo ? 'video.mp4' : 'audio.aac'
+    });
+
+    
+    const response = await axios({
+      method: "post",
+      url: urlWithParams,
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(await addAuthHeader({}).then(c => c.headers || {})),
+      },
+    })
+
+    
+    return response;
+  } catch (error) {
+    console.error("Upload Failed:", JSON.stringify(error));
+    throw error;
+  }
+};
 
   export const submitCase = async (body) => {
     console.log(JSON.stringify(body))
     try {
         const url = `${BASE_URL}/agent/submit`;
         //const url = `https://my-json-server.typicode.com/BinayTripathi/demo/authenticate`  
-        const config = {}
+        const config = await addAuthHeader({})
         const data = {
           ...body
         };
@@ -185,4 +367,19 @@ export const updateCaseDocument = async (body) => {
         throw JSON.stringify(error.message);
       }
     };
-  
+
+export const fetchJWTToken = async (userName) => {
+  try {
+    const url = `${BASE_URL}/Secure/test-2-get-jwt-token?username=${encodeURIComponent(userName)}`
+    console.log('Fetching JWT Token from:', url)
+    const response = await axios.get(url, { timeout: 20000 })
+    if (response.data && response.data.token) {
+      console.log('JWT Token received successfully')
+      return response.data.token
+    }
+    return null
+  } catch (error) {
+    console.log('Error fetching JWT token:', error.message)
+    throw error
+  }
+};

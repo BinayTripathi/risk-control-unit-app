@@ -12,7 +12,7 @@ import { GEOFENCING_RADIUS_IN_METRES } from "@core/constants";
 const TEXT_LENGTH = 60
 const TEXT_HEIGHT = 14
 
-function CaseItem({ caseDetails, userLocPromise }) {
+function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
 
   let dispatch = useDispatch();
   const navigation = useNavigation()
@@ -47,13 +47,13 @@ function CaseItem({ caseDetails, userLocPromise }) {
     console.log(getDistance({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}))
     
-    if(caseDetails && isPointWithinRadius({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
-       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}, GEOFENCING_RADIUS_IN_METRES)) {
+    /*if(caseDetails && isPointWithinRadius({latitude: userLoc.coords.latitude, longitude: userLoc.coords.longitude},
+       {latitude: caseDetails.coordinate.lat, longitude: caseDetails.coordinate.lng}, GEOFENCING_RADIUS_IN_METRES)) {*/
       navigation.navigate('CaseDetailsScreen', {
         claimId : caseDetails.claimId,
         investigatable: true
       })
-    } else {
+    /*} else {
       Dialog.show({
         type: ALERT_TYPE.WARNING,
         title: 'Geofencing alert',
@@ -66,11 +66,11 @@ function CaseItem({ caseDetails, userLocPromise }) {
           })
         }
       })
-    }
+    }*/
     
    }
 
-  let clientPhoto = caseDetails?.customerPhoto?.replace('image/*;base64','image/png;base64')
+  let clientPhoto = 'data:image/*;base64,' + caseDetails?.customerPhoto
   return (
     <Pressable onPress={() =>handlePress()}> 
       <View style={styles.caseItemContainer}> 

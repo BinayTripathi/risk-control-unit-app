@@ -15,8 +15,10 @@ import { SCREENS, SESSION_TTL_IN_SEC } from '../core/constants'
 import LoadingModalWrapper from '@components/UI/LoadingModal';
 import Constanst from 'expo-constants'
 import LocalAuthComponent from './../components/AuthComponent/LocalAuthComponent'
-import {SECURE_USER_KEY, SECURE_USER_PIN, SECURE_REGISTRATION_COMPLETE} from '../core/constants'
-import {secureGet, secureRemove} from '@helpers/SecureStore'
+import {SECURE_USER_KEY, SECURE_USER_PIN, SECURE_REGISTRATION_COMPLETE, SECURE_BEARER_TOKEN} from '../core/constants'
+import {secureGet, secureRemove, secureSave} from '@helpers/SecureStore'
+import useNetworkInfo from '@hooks/useNetworkInfo'
+import {fetchJWTToken, setCachedBearerToken} from '@services/RestServiceCalls'
 
 import {
   CodeField,
@@ -34,7 +36,7 @@ export default function LoginScreen({navigation}) {
   let userLoggingTimestamp = useSelector((state) => state.user.lastLogin);
   let dispatch = useDispatch();
   const isFocused = useIsFocused()
-
+  const [isConnected] = useNetworkInfo()
 
   const [biometicCancelled, setBiometicCancelled] = useState(false)
   const [email, setEmail] = useState()
@@ -105,10 +107,27 @@ export default function LoginScreen({navigation}) {
     if(receivedPin !== pin) {
       setPinMatchFailed(true)
     } else {
+      // Check internet and fetch JWT token during PIN login
+      try {
+        if (isConnected) {
+          const token = await fetchJWTToken(email)
+          if (token) {
+            await secureSave(SECURE_BEARER_TOKEN, token)
+            // populate in-memory cache as well
+            setCachedBearerToken(token)
+            console.log('JWT Token stored securely')
+          }
+        } else {
+          console.log('No internet connection available')
+        }
+      } catch (err) {
+        console.log('Error fetching token during PIN login:', err.message || err)
+      }
       dispatch(requestValidateUser(dataToSendForAuth))
     }
           
   }
+
 
    const loggingError = userLoggingError || pinMatchFailed ? 
    <Text style={styles.errorTextStyle}>Invalid user id or PIN</Text> 

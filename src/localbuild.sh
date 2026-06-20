@@ -9,12 +9,20 @@ xcopy "build.gradle" ".\android\build.gradle" /Y
 xcopy "gradle.properties" ".\android\gradle.properties" /Y
 copy ".\assets\*.*"  ".\android\app\src\main\res\drawable"
 xcopy "release-key.keystore" ".\android" /Y
+
+comment line 17  in app/build.gradle  enableBundleCompression = (findProperty('android.enableBundleCompression') ?: false).toBoolean()
 cd android
-del /f /q .gradle/ && gradlew clean
+rmdir /s /q .gradle && gradlew clean
 
-npm run android
+npm run android 
 
-set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=AIzaSyAprINTY_E5slgC2DIb-ZXF8k9I2p
+OR
+
+yarn start --reset-cache
+yarn react-native run-android
+
+
+set EXPO_PUBLIC_GOOGLE_MAP_API_KEY=
 
 cd android
 gradlew bundleRelease 
@@ -51,3 +59,6 @@ Run the Project: Finally, launch your project from Android Studio.
 
 adb devices
 adb logcat -v time > log.txt
+
+Log on app in device
+adb logcat *:S ReactNative:V ReactNativeJS:V

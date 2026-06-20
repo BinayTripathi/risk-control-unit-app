@@ -26,6 +26,8 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
   let loading = useSelector((state) => state.casesUpdates.loading);
   let error = useSelector((state) => state.casesUpdates.error);
   const caseUpdates = allCaseUpdates[selectedClaimId]
+
+  //console.log('Updates in sbmit' + JSON.stringify(caseUpdates))
   
     const [remark, setRemark] = useState(null);
     const [isTermsAccepted, setTermsAccepted] = useState(false);
@@ -43,7 +45,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
       setRemark(remark => remark !== null ?  remark +". " + heardText : heardText)
     }
 
-    useEffect(()=>{
+    /*useEffect(()=>{
       if (submitRequestDispatched) {
         if(error) {
           Dialog.show({
@@ -69,46 +71,69 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
           })          
         }        
       }
-    },[loading, error, submitRequestDispatched])
+    },[loading, error, submitRequestDispatched])*/
+
+    useEffect(() => {
+      // Only run this after a submission was triggered
+      if (!submitRequestDispatched) return;
+
+      // When loading is done
+      if (!loading) {
+        if (error) {
+          Dialog.show({
+            type: ALERT_TYPE.WARNING,
+            title: 'Submission Failed',
+            textBody: 'Please try again',
+            button: 'OK',
+            onHide: () => {
+              setSubmitRequestDispatched(false);
+              navigation.navigate(SCREENS.CaseList);
+            }
+          });
+        } else {
+          Dialog.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: 'Case Submission',
+            textBody: 'Congratulations! Case submission successful.',
+            button: 'OK',
+            onHide: () => {
+              setSubmitRequestDispatched(false);
+              navigation.navigate(SCREENS.CaseList);
+            }
+          });
+        }
+      }
+    }, [loading, error, submitRequestDispatched]);
 
 
-    let docTypeList = [...DOC_TYPE.PHOTO_ID_SCANNER, ... DOC_TYPE.DOCUMENT_SCANNER, ...DOC_TYPE.FORM]
 
-    let checkList = docTypeList.filter(dt => ('enabled' in dt) && dt['enabled'] === true)
-                          .map(capability => {
-                            let checkedTask = caseUpdates !== undefined && Object.keys(caseUpdates).includes(capability.name)
-                            if(checkedTask === false) 
-                              completeCheckList = false
-                            return (
-                              <View style={styles.checklistCheckboxContainer} key={capability.name}>
-                                <Checkbox style={styles.checkbox} value={checkedTask}  />
-                                <Text style={styles.label1}>{capability.name === 'FORM_TEMPLATE1' ? "Form Template" : capability.name}</Text>
-                              </View>
-                            )
-                          } )
+    let checkList = caseUpdates !== undefined ? Object.entries(caseUpdates).map(([key, value]) => {
+          let checkedTask = value.completed.faceIds  && value.completed.documentId && value.completed.questions 
+          if(checkedTask === false && value.isRequired === true ) 
+            completeCheckList = false
+
+          //console.log(`Submit : ${key} ${value.isRequired} ${value.completed.faceIds} ${value.completed.documentId} ${value.completed.questions}`)
+      
+          return (
+            <View style={styles.checklistCheckboxContainer} key={key}>
+              <Checkbox style={styles.checkbox} value={checkedTask}  />
+              <Text style={styles.label1}>{key }{value.isRequired && <Text style={styles.label1}>*</Text>}</Text>
+            </View>
+          )
+        } ) : false
 
     const submitAlertBox = <OkayCancelDialogBox showDialog={showSubmitDialog} 
                                 setShowDialog={setShowSubmitDialog}
                                 title={'Submit Case'} 
                                 content={(`Are you submitting the case now?.`)} 
-                                okayHandler={ () => {
-                                  let dataAvailable = caseUpdates !== undefined && caseUpdates['FORM_TEMPLATE1'] !== undefined                                  
+                                okayHandler={ () => {                                
                                   const payload = {
-                                      claimId: selectedClaimId,  
                                       email: userId,
-                                      beneficiaryId: selectedClaim.beneficiary.beneficiaryId,
-                                      Question1:  dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question1 : '',
-                                      Question2: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question2: '',
-                                      Question3: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question3 : '',
-                                      Question4: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question4 : '',
-                                      Remarks: remark
+                                      caseId: selectedClaimId, 
+                                      remarks: remark
                                   }
                                   dispatch(requestSubmitCaseAction(payload))
-                                  setTimeout(() => {
-                                    setSubmitRequestDispatched(true)
-                                  }, 500);                         
-                                  
-
+                                  setSubmitRequestDispatched(true)
                                 }} 
                                 cancelHandler={ () => {} }/>
 
@@ -151,7 +176,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
                   <Button mode="elevated" style={[styles.button,!remark  || !isTermsAccepted || !isOnline || !completeCheckList? 
                   {backgroundColor: theme.colors.disabledSubmitButton} : {backgroundColor: theme.colors.submitButton}]} 
                               disabled={remark === null} onPress={() => {
-                                  if (!remark  || !isTermsAccepted || !isOnline || !completeCheckList) 
+                                  if (!remark  || !isTermsAccepted || !isOnline) 
                                     return
                                   
                                     setShowSubmitDialog(true)

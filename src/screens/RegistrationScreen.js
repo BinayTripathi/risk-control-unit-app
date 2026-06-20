@@ -59,6 +59,7 @@ export default function RegistrationScreen({ route, navigation }) {
 
     const [showCountryPicker, setShowCountryPicker] = useState(false);
     const [countryCode, setCountryCode] = useState('');
+    const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false)
 
     const countryCodeDropdown = [
       { label: '+91', value: '+91' },
@@ -69,7 +70,32 @@ export default function RegistrationScreen({ route, navigation }) {
       setIsPinValidated(false)
     },[])
 
+
+      const requestCameraPermission = async () => {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+              title: 'iCheckify Camera Permission',
+              message:
+                'iCheckify needs access to your camera',
+              buttonPositive: 'OK',
+            },
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('You can use the camera');
+            setCameraPermissionGranted(true)
+          } else {
+            console.log('Camera permission denied');
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      };
+
     useEffect(()=> {
+
+      requestCameraPermission()
       if (isLoading !== true && error === REGISTRATION_ERROR_MESSAGE) {
         setErrorRegistration(true)
         Dialog.show({
@@ -280,7 +306,7 @@ export default function RegistrationScreen({ route, navigation }) {
               <Button
                 mode="elevated"
                 //disabled = {pin.toString().length < CELL_COUNT  && emailValidator(email.value) === ''}
-                disabled = {registeredPhoneNumber === ''}
+                disabled = {registeredPhoneNumber === '' || cameraPermissionGranted === false}
                 style={[Styles.button, registeredPhoneNumber === '' ? Styles.buttonDisabled : '']}
                 onPress={registerUser }
                 onLongPress={() => {
@@ -320,6 +346,14 @@ export default function RegistrationScreen({ route, navigation }) {
                   }} >                
                 Verify OTP
               </Button>
+
+          <Button
+            mode="outlined"
+            style={[Styles.button, {marginTop: 10}]}
+            onPress={registerUser}
+            >
+            Resend PIN
+          </Button>
         </>  }
                 
               {step ===  2 && <RegistrationImageScanner/>}
@@ -378,10 +412,12 @@ export default function RegistrationScreen({ route, navigation }) {
     },
     placeholderStyle: {
       fontSize: 16,
+      color: theme.colors.text,
     },
     selectedTextStyle: {
       fontSize: 16,
-      fontWeight: '900'
+      fontWeight: '900',
+      color: theme.colors.text,
     },
     iconStyle: {
       width: 20,
@@ -390,17 +426,19 @@ export default function RegistrationScreen({ route, navigation }) {
     inputSearchStyle: {
       height: 40,
       fontSize: 16,
+      color: theme.colors.text,
     },
     phoneNoTextboxContainer: {
       width: '80%',
       marginVertical: 12,
       fontSize: 20,
       marginHorizontal: 1
-      
+
     },
     phoneNoTextbox : {
       fontWeight: '900',
-      fontSize: 20
+      fontSize: 20,
+      color: theme.colors.text,
     }
     
   });

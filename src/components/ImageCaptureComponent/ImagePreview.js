@@ -3,6 +3,7 @@ import { StyleSheet,Text,TouchableOpacity, View, Image, Alert, Dimensions} from 
 import { useDispatch} from 'react-redux'
 import { useNavigation } from "@react-navigation/native";
 import { PaperProvider } from 'react-native-paper';
+import * as FileSystem from 'expo-file-system';
 
 import {userRegisterPhoto} from '@services/RestServiceCalls'
 import useApi from '@hooks/useApi'
@@ -24,7 +25,8 @@ import OkayCancelDialogBox from "@components/UI/OkayCancelDialogBox";
 
 let imageRatio = 1
 //https://www.farhansayshi.com/post/how-to-save-files-to-a-device-folder-using-expo-and-react-native/
-const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimId, docType, email}) => {
+const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, sectionName,
+  investigationName, isLastMandatory}) => {
   
     const navigation = useNavigation();
     let savedPhoto = useRef(null);
@@ -46,8 +48,24 @@ const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimI
           title: 'Welcome Onboard',
           textBody: 'Continue to login...',
           button: 'OK',          
-          onHide:() => {
-            //secureSave(SECURE_REGISTRATION_COMPLETE,"true")
+          onHide: async () => {
+            // Save photo to device
+            try {
+              let base64Data;
+              if (photoData.startsWith('data:')) {
+                base64Data = photoData.replace(/^data:image\/[a-z]+;base64,/, '');
+              } else if (photoData.startsWith('file://')) {
+                base64Data = await FileSystem.readAsStringAsync(photoData, { encoding: FileSystem.EncodingType.Base64 });
+              } else {
+                throw new Error('Unsupported photo data format');
+              }
+              const filePath = FileSystem.documentDirectory + 'profile.jpg';
+              await FileSystem.writeAsStringAsync(filePath, base64Data, { encoding: FileSystem.EncodingType.Base64 });
+              console.log('Photo saved to:', filePath);
+            } catch (error) {
+              console.error('Error saving photo:', error);
+            }
+            // Then proceed
             const dataToSendForReg = {
               step: 3
             }
@@ -69,41 +87,38 @@ const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimI
         
       } 
     }, [data, error])
-
-      
+  
      
-    Image.getSize(`data:image/png;base64,${photoData}`, (width, height) => {imageRatio = width/ width});
-
-      console.log(imageRatio)
-
-
-       
+    //Image.getSize(`data:image/png;base64,${photoData}`, (width, height) => {imageRatio = width/ width});
+    Image.getSize(`${photoData}`, (width, height) => {imageRatio = width/ width});       
     
     const savePhoto = async () => {        
 
-      console.log(`Beneficiary is ${isSmiling ? "": 'NOT'} smiling and has both eyes ${isBothEyeOpen ? 'OPEN' : 'CLOSED'}`)
-      console.log(docType.name)
       const documentDetailsForSubmission = {
         email : email,
-        claimId: claimId,            
+        caseId: claimId,            
         Remarks:null,
         docType: docType.type,
         capability: docType.name,
-        type: docType.name === 'House' ? 0 : 1
+        sectionName,
+        investigationName,
+        isLastMandatory
       }
       
       if(docType.type === UPLOAD_TYPE.PHOTO){
         documentDetailsForSubmission.LocationLongLat = tracker
         documentDetailsForSubmission.locationImage = photoData
-        documentDetailsForSubmission.locationData = `Beneficiary is ${isSmiling ? "": 'NOT'} smiling and has both eyes ${isBothEyeOpen ? 'OPEN' : 'CLOSED'}`
       } else {
         documentDetailsForSubmission.OcrLongLat = tracker
         documentDetailsForSubmission.OcrImage = photoData
       } 
       
       const payloadToSave = {
-        claimId,
-        documentDetails : documentDetailsForSubmission,
+        caseId: claimId,
+        section : documentDetailsForSubmission.sectionName,
+        documentCategory: docType.type === UPLOAD_TYPE.PHOTO ? 'faceIds' : 'documentIds',
+        documentName: documentDetailsForSubmission.investigationName,
+        documentDetails :  documentDetailsForSubmission,
         id: Math.floor(1000 + Math.random() * 9000) * -1
       }
       setSavePayload(payloadToSave)
@@ -119,7 +134,7 @@ const ImagePreview = ({photoData, setPhotoData ,isSmiling, isBothEyeOpen, claimI
                               <UserTracker photoData={photoData} displayMapHandler={displayMapHandler} shouldDisplayMap = {displayMap}/>
                              : ( <>
                                  <UserTracker photoData={false}/>
-                                 <Image source={{uri: `data:image/jpg;base64,${photoData}`}} style={styles.middlePhoto}  />
+                                 <Image source={{uri: photoData}} style={styles.middlePhoto}  />
                                    </> )
 
   const saveImageAlertBox = <OkayCancelDialogBox showDialog={showSaveDialog} 

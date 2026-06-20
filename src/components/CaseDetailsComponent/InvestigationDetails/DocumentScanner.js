@@ -1,107 +1,175 @@
 import { StyleSheet,View, Text , Dimensions, TouchableHighlight, Image} from 'react-native';
+import { useRef } from 'react';
 import Card from '@components/UI/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@core/theme';
 import { useNavigation } from '@react-navigation/native';
-import { SCREENS, DOC_TYPE, checkLoading, checkSuccess } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingDoc, checkSuccessDoc, checkFailureDoc, documentIds } from '@core/constants';
 import * as Speech from 'expo-speech';
+import Button from '@components/UI/Button'
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import {updatePhotoOrDocumentUploadStatusAction, requestUpdatePanCaseAction} from '@store/ducks/case-submission-slice'
+import { useDispatch} from 'react-redux'
 
 
 const { width, height } = Dimensions.get('window');
 const iconSize = 50;
-const DocumentScanner = ({selectedClaimId, userId, caseUpdates}) => {
+
+const DocumentScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
   const navigation = useNavigation();
+  const mandatoryDocumentListRef = useRef(new Set());
+  const dispatch = useDispatch()
 
-  const onClickDigitalId = (documentObj) => {
 
+  const isEnabled = (investigationDoc) => {
+    return investigationDoc?.enabled === undefined ||  investigationDoc?.enabled === true ? true : false
+  }
+
+  const onClickDigitalId = (sectionName,documentObj, documentScannerType) => {
+    console.log('Mandatory document list' + Array.from(mandatoryDocumentListRef.current))
+    if(!isEnabled(documentObj)) return
     navigation.navigate(SCREENS.ImageCaptureScreen, {
-        docType: documentObj,
+        docType: documentScannerType,
         claimId: selectedClaimId,
-        email: userId})
+        email: userId,
+        sectionFromTemplate : sectionName,
+        investigationName: documentObj.reportType,
+        isLastMandatory: (mandatoryDocumentListRef.current.size === 1 && mandatoryDocumentListRef.current.has(documentObj.reportType)) || mandatoryDocumentListRef.current.size === 0
+      })
 }
 
 const speechHandler = (documentObj) => {
   Speech.speak(documentObj.speach);
 };
 
-  let capabilities = DOC_TYPE.DOCUMENT_SCANNER.map((documentType, index)=> {  
+   const retryFailedUpload = (sectionName, investigationName) => {
+        //console.log('Retrying - Mandatory document list' + Array.from(mandatoryDocumentListRef.current))
+        const retryStatusChangePayload = {
+            caseId: selectedClaimId,
+            section:sectionName,
+            documentCategory: documentIds,
+            documentName: investigationName
+        }
+        
+        let manualRetryPayload = JSON.parse(JSON.stringify(caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]?.manualRetryPayload || {}));
 
-    let panValid = caseUpdates !== undefined && Object.keys(caseUpdates).includes(documentType.name) === true ? 
-    (caseUpdates[documentType.name].panValid === ''? false : caseUpdates[documentType.name].panValid ) : false
+        // Modify safely without mutating state
+        manualRetryPayload.documentDetails = {
+            ...manualRetryPayload.documentDetails,
+            isLastMandatory: (mandatoryDocumentListRef.current.size === 1 && mandatoryDocumentListRef.current.has(investigationName))
+             || mandatoryDocumentListRef.current.size === 0
+        };
+        //console.log(`RETRYING : ${JSON.stringify(manualRetryPayload)}`)
+        dispatch(updatePhotoOrDocumentUploadStatusAction(retryStatusChangePayload))
+        dispatch(requestUpdatePanCaseAction(manualRetryPayload))
+    } 
 
-        return(
-            <Card style = {[styles.card, documentType?.enabled !== true? styles.cardDisabled: {}]}  key={index}>
+const sectionName = sectionFromTemplate.locationName
 
-              <TouchableHighlight onPress={()=> speechHandler(documentType)}  style={styles.button} underlayColor="#a2a1a0">
-                  <View style = {styles.labelContainer}>
-                      <Text style = {[styles.textBase , styles.label]}>{documentType.name} </Text>                    
-                      <Ionicons name='volume-medium' size={iconSize-30} color="orange" /> 
-                  </View>                
-              </TouchableHighlight>  
+let dataCapturePoints = sectionFromTemplate.documentIds.map((investigationDocument, index)=> {  
 
-              <View style= {styles.allIconContainerRow} >            
+  const investigationName = investigationDocument?.reportName ?? "test"
 
-                  <View style={{alignContent: 'center', alignItems: 'center'}}>
-                  <TouchableHighlight underlayColor="#ee5e33"  style={styles.touchable}
-                      disabled =  {documentType?.enabled == true ? false: true}
-                      onPress={()=> onClickDigitalId(documentType)}>
-                          <View style= {[styles.eachIconContainer,  documentType?.enabled == true ? {} : styles.disabled]}>
+  const documentScannerType = DOC_TYPE.DOCUMENT_SCANNER.find(docScanner => docScanner.name === investigationName)  ??  DOC_TYPE.DOCUMENT_SCANNER.at(-1)
+  const captureIcon = documentScannerType.icon
 
-                              { checkLoading(documentType, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
-                              { checkSuccess(documentType, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+  let panValid = caseUpdates?.[sectionName]?.[documentIds]?.[investigationName]?.valid ?? true
 
-                              <View style={styles.imageContainer} >
-                                <Image source={{uri:`${documentType.icon}`}} style={styles.iconImage} />
-                              </View>                              
-                          
-                          </View>
-                          
-                      </TouchableHighlight>   
-                      
-                  
-                  </View>     
+  let isDocumentUploaded = isEnabled(investigationDocument) === true && checkSuccessDoc(investigationName, sectionName, caseUpdates)
 
-                  <View style={styles.verticalSeperator}>
-                  </View>
-                 
+  let isDocumentSubmitted = isEnabled(investigationDocument) === true && (checkSuccessDoc(investigationName, sectionName, caseUpdates) || checkLoadingDoc(investigationName, sectionName, caseUpdates))
 
-                  {documentType?.enabled === true && checkSuccess(documentType, caseUpdates) &&
-                    <View style={styles.resultContainer}>
-                        <View style={styles.resultImageContainer}>
-                            <Image style = {[styles.image,panValid === false? {borderColor: 'red'} :{}]} 
-                                source = {{uri:`data:image/jpeg;base64,${caseUpdates[documentType.name].OcrImage}`}}/>               
+  let isDocumetSubmitFailed = isEnabled(investigationDocument) && checkFailureDoc(investigationName, sectionName, caseUpdates) 
+
+  //console.log(`${investigationName} Submitted: ${isDocumentSubmitted} Uploaded: ${isDocumentUploaded} Failed: ${isDocumetSubmitFailed}`)
+
+  if(investigationDocument.isRequired && !isDocumentSubmitted) { // Not loading or not successful, means not sent or possiblely failed
+    mandatoryDocumentListRef.current.add(investigationName)   
+  } else if(investigationDocument.isRequired && isDocumentSubmitted) //Either submited(loadin or success) - if failure happens - its gets added back
+    mandatoryDocumentListRef.current.delete(investigationName)  
+ 
+
+      return(
+          <Card style = {[styles.card, isEnabled(investigationDocument) !== true? styles.cardDisabled: {}]}  key={index}>
+
+            <TouchableHighlight onPress={()=> speechHandler(investigationName)}  style={styles.button} underlayColor="#a2a1a0">
+                <View style = {styles.labelContainer}>
+                    <Text style = {[styles.textBase , styles.label]}>{investigationName} </Text>                    
+                    <Ionicons name='volume-medium' size={iconSize-30} color="orange" /> 
+                </View>                
+            </TouchableHighlight>  
+
+            <View style= {styles.allIconContainerRow} >            
+
+                <View style={{alignContent: 'center', alignItems: 'center'}}>
+                <TouchableHighlight underlayColor="#ee5e33"  style={styles.touchable}
+                    disabled =  {isEnabled(investigationDocument) === true ? false: true}
+                    onPress={()=> onClickDigitalId(sectionName, investigationDocument, documentScannerType)}>
+                        <View style= {[styles.eachIconContainer,  isEnabled(investigationDocument) === true ? {} : styles.disabled]}>
+
+                            {isEnabled(investigationDocument) && checkLoadingDoc(investigationName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
+                            {isDocumentUploaded && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
+                            {isDocumetSubmitFailed && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} />}
+                                                                
+
+                            <View style={styles.imageContainer} >
+                              <Image source={{uri:`${captureIcon}`}} style={styles.iconImage} />
+                            </View>                              
+                        
                         </View>
-                        <View style= {styles.resultStatusContainer}>
-                            { checkSuccess(documentType, caseUpdates) &&
-                            <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{documentType.name} Check</Text> }
-                            { checkSuccess(documentType, caseUpdates) &&
-                            <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{panValid === false? 'FAIL' : 'PASS'}</Text> }
-                        </View>
-                        </View>
-                 }
-                  
+                        
+                    </TouchableHighlight>   
+                    
+                
+                </View>     
 
-                      {(documentType?.enabled !== true || 
-                      (documentType?.enabled === true &&  !checkSuccess(documentType, caseUpdates))) && 
-                      <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
-                          <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
-                      </View> }
-                      
+                <View style={styles.verticalSeperator}>
+                </View>
+                
+
+                {isDocumentUploaded &&
+                  <View style={styles.resultContainer}>
+                      <View style={styles.resultImageContainer}>
+                          <Image style = {[styles.image,panValid === false? {borderColor: 'red'} :{}]} 
+                              source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][documentIds][investigationName].OcrImage}`}}/>               
+                      </View>
+                      <View style= {styles.resultStatusContainer}>
+                          { isDocumentUploaded &&
+                          <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>Document Check</Text> }
+                          { isDocumentUploaded &&
+                          <Text style = {[styles.textBase , styles.resultStatusLabel, panValid === false? styles.resultStatusLabelFail: {}]}>{panValid === false? 'FAIL' : 'PASS'}</Text> }
+                      </View>
+                      </View>
+                }
+                
+
+                    {(isEnabled(investigationDocument) === false || (!isDocumentUploaded && !isDocumetSubmitFailed)) && 
+                    <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
+                        <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
+                    </View> }
+
+                    {isDocumetSubmitFailed  && 
+                    <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
+                        <Button mode="contained" disabled= {false}
+                              
+                                onPress = { () => retryFailedUpload(sectionName, investigationName) }
+                                style={[styles.retryButton]}>
+                            <Icon name="redo" size={16} color="#fff" style={styles.retryIcon} /> RETRY
+                            </Button>
+                    </View> }
+                    
 
 
-              </View>
-            </Card>
-      )
+            </View>
+          </Card>
+    )
    
   })
 
   return (
-    <View style =  {styles.capabilityCardContainer}>         
-      <View style = {styles.descriptionContainer}>
-            <Text style = {[styles.textBase, styles.description ]}>DOCUMENT VERIFIER</Text>
-      </View>          
-        {capabilities}
+    <View style =  {styles.capabilityCardContainer}>                
+        {dataCapturePoints}
   </View>  
 )
 }
@@ -109,7 +177,7 @@ const speechHandler = (documentObj) => {
 const styles = StyleSheet.create({
 
   capabilityCardContainer : {      
-    marginTop: 40,          
+    marginTop: 0,          
     alignContent: 'center',
     alignItems: 'center'       
     },   
@@ -257,7 +325,15 @@ resultStatusLabel : {
 },
 resultStatusLabelFail : {
   color: 'red'
-}
+},
+retryButton: {
+    backgroundColor: '#FF9800',
+    width: '80%',
+    elevation: 3,
+  },
+  retryIcon: {
+    marginTop: 1,
+  },
 })
 
   export default DocumentScanner;
