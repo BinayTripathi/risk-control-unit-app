@@ -9,6 +9,7 @@ import Drawer from '@components/NavigationComponent/Drawer';
 import {navigationRef} from '@services/NavigationService'
 
 import { SCREENS } from '@core/constants';
+import { palette } from '@core/theme';
 import RegistrationScreen from '@screens/RegistrationScreen';
 import LoginScreen from '@screens/LoginScreen';
 import CaseListScreen from '@screens/CaseListScreen';
@@ -36,15 +37,18 @@ export default function AppNavigator() {
   return (
     <NavigationContainer  ref={navigationRef}>
       <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-        <Stack.Navigator 
+        <Stack.Navigator
           screenOptions={{
             headerShown: true,
             animation: 'fade',
-            headerTransparent: true,
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
+            headerStyle: { backgroundColor: palette.primary },
+            headerTintColor: palette.onPrimary,
+            headerShadowVisible: false,
+            headerTitleStyle: { fontWeight: '600', fontSize: 18 },
+            statusBarStyle: 'light',
+            headerRight : () => (
+              <HeaderHamburger onPress={toggleDrawer}/>
+            ),
           }}
           screenListeners={{
             state: (e) => {
@@ -53,43 +57,19 @@ export default function AppNavigator() {
               //console.log('state changed', e.data);
             },
           }}
-          >      
-        
+          >
 
-          {registrationStepComplete < 3 && <Stack.Screen name={SCREENS.RegistrationScreen} component={RegistrationScreen}  options={{headerShown: false}}/>}
-           <Stack.Screen name={SCREENS.Login} component={LoginScreen} />
-          <Stack.Screen name={SCREENS.CaseList} component={CaseListScreen} options={
-            {title: 'Your Case List',
-            headerRight : () => (
-              <HeaderHamburger onPress={toggleDrawer}/>
-            ),
-            headerStyle: {
-              backgroundColor: 'transparent',
-            },
-            
-          }
-          } /> 
-            <Stack.Screen name={SCREENS.CaseDetailsScreen} component={CaseDetailsScreen} options={
-            {title: 'Case Details',
-            headerRight : () => (
-              <HeaderHamburger onPress={toggleDrawer}/>
-            ),
-            headerStyle: {
-              backgroundColor: 'transparent'//theme.colors.gradientALight,
-            },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }
-          } /> 
-          <Stack.Screen name={SCREENS.ImageCaptureScreen} component={ImageCaptureScreen} options={
-            {
-              title: 'Capture Image',
-              headerRight : () => (
-                <HeaderHamburger onPress={toggleDrawer}/>
-              ),
-          }}/>                         
+
+          {registrationStepComplete < 3 && <Stack.Screen name={SCREENS.RegistrationScreen} component={RegistrationScreen}  options={{headerShown: false, statusBarStyle: 'dark'}}/>}
+          <Stack.Screen name={SCREENS.Login} component={LoginScreen} options={{headerShown: false, statusBarStyle: 'dark'}} />
+          <Stack.Screen name={SCREENS.CaseList} component={CaseListScreen} options={{title: 'My Cases'}} />
+          <Stack.Screen name={SCREENS.CaseDetailsScreen} component={CaseDetailsScreen} options={{title: 'Case Details'}} />
+          {/* Camera layout relies on the header overlaying the preview */}
+          <Stack.Screen name={SCREENS.ImageCaptureScreen} component={ImageCaptureScreen} options={{
+              title: 'Capture',
+              headerTransparent: true,
+              headerStyle: { backgroundColor: 'transparent' },
+          }}/>
           </Stack.Navigator>
           <Drawer visible={drawerVisible} onClose={toggleDrawer} />
         </View>

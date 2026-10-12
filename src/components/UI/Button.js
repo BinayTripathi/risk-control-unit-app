@@ -1,19 +1,25 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { StyleSheet } from 'react-native'
 import { Button as PaperButton } from 'react-native-paper'
 
-import { theme } from '@core/theme';
+import { palette, radius } from '@core/theme';
 
-export default function Button({ mode, style, children, ...props }) {
+// variant: 'primary' (filled navy), 'secondary' (outlined), 'danger', 'warning'
+export default function Button({ mode, style, labelStyle, variant = 'primary', disabled, children, ...props }) {
+  const variantStyle = styles[variant] ?? styles.primary
+  const variantLabel = variant === 'secondary' ? styles.labelSecondary : styles.labelPrimary
   return (
     <PaperButton
       style={[
         styles.button,
-        { backgroundColor: theme.colors.primary },
+        variantStyle,
+        disabled && styles.disabled,
         style,
       ]}
-      labelStyle={[styles.text]}
+      contentStyle={styles.content}
+      labelStyle={[styles.text, variantLabel, labelStyle]}
       mode={mode}
+      disabled={disabled}
       {...props}
     >
       {children}
@@ -24,13 +30,39 @@ export default function Button({ mode, style, children, ...props }) {
 const styles = StyleSheet.create({
   button: {
     width: '100%',
-    marginVertical: 10,
-    paddingVertical: 2,
+    marginVertical: 8,
+    borderRadius: radius.md,
+  },
+  content: {
+    height: 48,
+  },
+  primary: {
+    backgroundColor: palette.primary,
+  },
+  secondary: {
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  danger: {
+    backgroundColor: palette.danger,
+  },
+  warning: {
+    backgroundColor: palette.warning,
+  },
+  disabled: {
+    backgroundColor: palette.muted,
+    borderWidth: 0,
   },
   text: {
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 15,
-    lineHeight: 26,
-    color: theme.colors.button_label,
+    letterSpacing: 0.3,
+  },
+  labelPrimary: {
+    color: palette.onPrimary,
+  },
+  labelSecondary: {
+    color: palette.text,
   },
 })

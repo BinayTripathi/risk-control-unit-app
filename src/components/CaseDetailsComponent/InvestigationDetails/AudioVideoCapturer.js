@@ -1,9 +1,8 @@
-import { StyleSheet, Image } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { actuatedNormalize, actuatedNormalizeVertical} from "@core/PixelScaling";
-import ElevatedSurface from '@components/UI/ElevatedSurface'
-import RoundButton from '@components/UI/RoundButton'
-import { Entypo , FontAwesome} from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import CaptureItemCard from '@components/UI/CaptureItemCard'
+import { palette } from '@core/theme';
 import { SCREENS, DOC_TYPE, checkLoadingMedia, checkSuccessMedia, checkFailureMedia } from '@core/constants';
 
 const AudioVideoCapturer = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
@@ -12,7 +11,7 @@ const AudioVideoCapturer = ({selectedClaimId, userId, caseUpdates, sectionFromTe
     const sectionName = sectionFromTemplate.locationName
 
     const documentScannerType = (investigationName) => DOC_TYPE.MEDIA_SCANNER.find(docScanner => docScanner.name === investigationName)  ??  DOC_TYPE.MEDIA_SCANNER.at(-1)
-  
+
 
     const onClickDigitalId = (documentObj, documentScannerType) => {
         //if(documentObj.enabled !== true ) return
@@ -25,55 +24,34 @@ const AudioVideoCapturer = ({selectedClaimId, userId, caseUpdates, sectionFromTe
           isLastMandatory: false//(mandatoryDocumentListRef.current.size === 1 && mandatoryDocumentListRef.current.has(documentObj.reportType)) || mandatoryDocumentListRef.current.size === 0
           })
     }
-    
-    return (
-        <ElevatedSurface style={styles.surface}>   
-            <RoundButton style={styles.button} onPressHandler = {() => onClickDigitalId(sectionFromTemplate.mediaReports[0], documentScannerType(sectionFromTemplate.mediaReports[0].reportName))}>
-                {sectionFromTemplate.mediaReports[0].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#8c0de0" style={styles.icons} />}
-                {sectionFromTemplate.mediaReports[0].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#8c0de0" style={styles.icons}/>}
-                {checkLoadingMedia(sectionFromTemplate.mediaReports[0].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
-                {checkSuccessMedia(sectionFromTemplate.mediaReports[0].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }          
-                {checkFailureMedia(sectionFromTemplate.mediaReports[0].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} /> }                        
-                          
-            </RoundButton>
 
-            <RoundButton style={styles.button} onPressHandler = {() => onClickDigitalId(sectionFromTemplate.mediaReports[1], documentScannerType(sectionFromTemplate.mediaReports[1].reportName))}>
-              {sectionFromTemplate.mediaReports[1].reportName === 'Audio' && <FontAwesome name="microphone" size={50} color="#8c0de0" style={styles.icons}/>}
-              {sectionFromTemplate.mediaReports[1].reportName === 'Video' && <Entypo name="video-camera" size={50} color="#8c0de0" style={styles.icons}/>}
-              {checkLoadingMedia(sectionFromTemplate.mediaReports[1].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} /> }
-              {checkSuccessMedia(sectionFromTemplate.mediaReports[1].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }                        
-              {checkFailureMedia(sectionFromTemplate.mediaReports[1].reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} /> }                        
-            </RoundButton>
-        </ElevatedSurface>
+    const mediaStatus = (reportName) =>
+        checkSuccessMedia(reportName, sectionName, caseUpdates) ? 'success'
+        : checkFailureMedia(reportName, sectionName, caseUpdates) ? 'failure'
+        : checkLoadingMedia(reportName, sectionName, caseUpdates) ? 'loading'
+        : 'idle'
+
+    return (
+        <View style={styles.container}>
+            {sectionFromTemplate.mediaReports.map((mediaReport, index) => (
+                <CaptureItemCard
+                    key={index}
+                    title={mediaReport.reportName === 'Video' ? 'Video recording' : mediaReport.reportName === 'Audio' ? 'Audio recording' : mediaReport.reportName}
+                    required={mediaReport.isRequired}
+                    icon={<Ionicons name={mediaReport.reportName === 'Video' ? 'videocam-outline' : 'mic-outline'} size={26} color={palette.accent} />}
+                    status={mediaStatus(mediaReport.reportName)}
+                    onCapture={() => onClickDigitalId(mediaReport, documentScannerType(mediaReport.reportName))}
+                />
+            ))}
+        </View>
         )
-  
+
     };
 
     export default AudioVideoCapturer;
 
 const styles = StyleSheet.create({
-  surface: {
-    height: actuatedNormalizeVertical(120),
-    marginTop: actuatedNormalizeVertical(20),
-  },
-
-  button: {
-    elevation: 5, // Android
-    height:  actuatedNormalizeVertical(80),
-    width: actuatedNormalize(70),
-    borderRadius: actuatedNormalize(40),
-     justifyContent: 'center',
-    alignItems: 'center', 
-  },
-  icons: { 
-    position: 'relative', 
-    top: 10 
-  },
-   statusImage : {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    resizeMode: 'contain',
-    transform: [{ translateX: 30 }, { translateY: -45 }],
+  container: {
+    width: '100%',
   },
 });

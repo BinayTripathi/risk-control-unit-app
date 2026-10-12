@@ -1,13 +1,27 @@
 // components/Drawer.js
 import React from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, Image, PanResponder } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';import * as FileSystem from 'expo-file-system';import Logout from '@components/AuthComponent/LogoutComponent';
+import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import Constants from 'expo-constants';
+import Logout from '@components/AuthComponent/LogoutComponent';
+import { secureGet } from '@helpers/SecureStore';
+import { SECURE_USER_KEY } from '@core/constants';
+import { palette, spacing, shadow } from '@core/theme';
 
-const DRAWER_WIDTH = 250;
+const DRAWER_WIDTH = 280;
 
 export default function Drawer({ visible, onClose }) {
   const translateX = React.useRef(new Animated.Value(DRAWER_WIDTH)).current;
+  const [userEmail, setUserEmail] = React.useState(null);
+  const [profileImageFailed, setProfileImageFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    if (visible) {
+      secureGet(SECURE_USER_KEY).then(setUserEmail).catch(() => {});
+      setProfileImageFailed(false);
+    }
+  }, [visible]);
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -52,29 +66,30 @@ export default function Drawer({ visible, onClose }) {
           visible ? panResponder.current.panHandlers : {}
         ]}
       >
-        <LinearGradient
-          colors={['#FFB366', '#FF9933']}
-          style={styles.gradient}
-        >
+        <View style={styles.panel}>
           <View style={styles.header}>
-            <Pressable onPress={onClose} style={styles.closeButton}>
-              <AntDesign name="close" size={24} color="white" />
+            <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8} accessibilityLabel="Close menu">
+              <Ionicons name="close" size={24} color={palette.onPrimary} />
             </Pressable>
+            {profileImageFailed
+              ? <View style={[styles.profileImage, styles.profilePlaceholder]}>
+                  <Ionicons name="person" size={36} color={palette.primary} />
+                </View>
+              : <Image
+                  source={{ uri: FileSystem.documentDirectory + 'profile.jpg' }}
+                  style={styles.profileImage}
+                  onError={() => setProfileImageFailed(true)}
+                />}
+            <Text style={styles.roleText}>Field Agent</Text>
+            {userEmail && <Text style={styles.nameText} numberOfLines={1}>{userEmail}</Text>}
           </View>
-          <View style={styles.profileContainer}>
-            <Image
-              source={{ uri: FileSystem.documentDirectory + 'profile.jpg' }}
-              style={styles.profileImage}
-            />
-            <View style={styles.row}>
-              <Text style={styles.nameText}>John Doe</Text>
-            </View>
+          <View style={styles.body}>
             <Logout />
           </View>
           <View style={styles.versionContainer}>
-            <Text style={styles.versionText}>Version 1.0.0</Text>
+            <Text style={styles.versionText}>Version {Constants.expoConfig?.version ?? '1.0.0'}</Text>
           </View>
-        </LinearGradient>
+        </View>
       </Animated.View>
     </View>
   );
@@ -94,7 +109,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(15,23,42,0.45)',
   },
   drawer: {
     position: 'absolute',
@@ -102,57 +117,60 @@ const styles = StyleSheet.create({
     top: 0,
     width: DRAWER_WIDTH,
     height: '100%',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    ...shadow.raised,
   },
-  gradient: {
+  panel: {
     flex: 1,
-    paddingTop: 40,
+    backgroundColor: palette.surface,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 10,
-    paddingTop: 10,
+    backgroundColor: palette.primary,
+    paddingTop: 48,
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   closeButton: {
-    padding: 5,
-  },
-  profileContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    alignItems: 'center',
+    position: 'absolute',
+    top: 44,
+    right: spacing.lg,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 20,
-    borderWidth: 3,
-    borderColor: '#fff',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginBottom: spacing.md,
+    borderWidth: 2,
+    borderColor: palette.onPrimary,
   },
-  row: {
-    marginBottom: 20,
+  profilePlaceholder: {
+    backgroundColor: palette.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.7)',
   },
   nameText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: palette.onPrimary,
+    marginTop: 2,
+  },
+  body: {
+    flex: 1,
+    paddingTop: spacing.sm,
   },
   versionContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+    padding: spacing.xl,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.border,
   },
   versionText: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.7,
+    fontSize: 12,
+    color: palette.muted,
   },
 });

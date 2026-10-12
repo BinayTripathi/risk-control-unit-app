@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { StyleSheet, TouchableOpacity, View, PermissionsAndroid,Text } from "react-native";
 import { FontAwesome, AntDesign, Ionicons } from '@expo/vector-icons';
+import { palette, radius, spacing } from '@core/theme';
 
 import { useCameraDevice, useCameraPermission, Camera, useFrameProcessor} from 'react-native-vision-camera'
 import { useFaceDetector } from 'react-native-vision-camera-face-detector'
@@ -560,11 +561,11 @@ const ImageCapture = ({setPhotoData, docType}) => {
   };
 
   if (hasPermission === null) {
-    return <Text>Checking camera permission...</Text>;
+    return <Text style={styles.statusMessage}>Checking camera permission...</Text>;
   }
 
   if (!device) {
-    return <Text>No camera device available</Text>;
+    return <Text style={styles.statusMessage}>No camera device available</Text>;
   }
 
   const ringColor = {
@@ -620,43 +621,28 @@ const ImageCapture = ({setPhotoData, docType}) => {
         <View style={styles.bottom}>
 
           <TouchableOpacity
+              style={styles.sideButton}
+              accessibilityLabel="Switch camera"
               onPress={() => {
               setType(
                 type === 'back'
                   ? 'front'
                   : 'back'
               );
-            }}
-              style={{
-                backgroundColor: type === 'back' ? "#0f0f0f" : "#f0f0f0",
-                color: type === 'back' ? "white" : "#fff",
-                borderRadius: 70,
-                height: 65,
-                width: 65,
-              }}><View style={{flex: 1, alignItems: "center", justifyContent: "center"}}>
-                {type === 'back'
-                  ? <AntDesign name="retweet" size={24} color="white" />
-                  : <AntDesign name="retweet" size={24} color="black" />
-              }
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.button} onPress={takePhoto} disabled={captureDisabled}>
-              <FontAwesome name="camera" style={[ captureDisabled ?
-                { color: "grey", fontSize: 40} :{ color: "white", fontSize: 40}]}  />
+            }}>
+              <Ionicons name="camera-reverse-outline" size={26} color={palette.onCamera} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={flashModeHandler}
-              style={{
-                borderRadius: 70,
-                height: 65,
-                width: 65,
-              }}
-            >
-              <View style={{flex: 1, alignItems: "center", justifyContent: "center", borderRadius: 1000,  borderColor: "white",borderWidth: 1,}}>
-                <Ionicons  name= { flashMode === "off" ? "flash":"flash-off"} style={{ color: "#fff", fontSize: 24}} />
-              </View>
+              style={[styles.shutter, captureDisabled && styles.shutterDisabled]}
+              onPress={takePhoto}
+              disabled={captureDisabled}
+              accessibilityLabel="Take photo">
+              <View style={styles.shutterInner} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.sideButton} onPress={flashModeHandler} accessibilityLabel="Toggle flash">
+              <Ionicons name={ flashMode === "off" ? "flash-off-outline" : "flash-outline"} size={24} color={palette.onCamera} />
             </TouchableOpacity>
         </View>
 
@@ -671,10 +657,16 @@ const styles = StyleSheet.create({
       flex:1,
       maxWidth: 450,
     },
+    statusMessage: {
+      color: palette.onCamera,
+      fontSize: 15,
+      textAlign: 'center',
+    },
     cameraContainer: {
       flex: 1,
       marginTop: cameraMarginTop,
-      borderRadius: 10
+      borderRadius: radius.lg,
+      overflow: 'hidden',
     },
     top: {
       flex: 6,
@@ -688,59 +680,80 @@ const styles = StyleSheet.create({
     progressLabel: {
       position: 'absolute',
       bottom: 12,
-      paddingHorizontal: 10,
-      paddingVertical: 2,
-      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
       overflow: 'hidden',
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: 14,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      color: palette.onCamera,
+      fontWeight: '600',
+      fontSize: 13,
     },
     bottom: {
-      flex: 1,
+      height: 120,
       flexDirection: "row",
-      height: 125,
-
       alignItems: "center",
-      justifyContent: "space-around",
+      justifyContent: "space-evenly",
     },
-    button: {
-      height: 65,
-      width: 65,
-      borderRadius: 1000,
-      borderColor: "white",
+    sideButton: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: palette.cameraSurface,
       borderWidth: 1,
+      borderColor: palette.cameraBorder,
       alignItems: "center",
       justifyContent: "center",
     },
-    instructions: {
-      fontSize: 20,
-      textAlign: "center",
+    shutter: {
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      borderWidth: 4,
+      borderColor: palette.onCamera,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    shutterDisabled: {
+      opacity: 0.35,
+    },
+    shutterInner: {
+      width: 58,
+      height: 58,
+      borderRadius: 29,
+      backgroundColor: palette.onCamera,
     },
     instructionsContainer: {
       flex: 1,
       justifyContent: "center",
-      alignItems: "center"
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+    },
+    instructions: {
+      fontSize: 15,
+      textAlign: "center",
+      color: palette.onCameraMuted,
     },
     action: {
-      fontSize: 24,
+      fontSize: 22,
       textAlign: "center",
-      fontWeight: "bold",
+      fontWeight: "700",
+      color: palette.onCamera,
+      marginTop: spacing.xs,
     },
     actionFailed: {
-      color: '#e53935',
+      color: '#F87171',
     },
     retryButton: {
-      marginTop: 8,
-      paddingHorizontal: 24,
-      paddingVertical: 8,
-      borderRadius: 20,
-      backgroundColor: '#2ecc40',
+      marginTop: spacing.md,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: 10,
+      borderRadius: radius.pill,
+      backgroundColor: palette.onCamera,
     },
     retryButtonText: {
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: 16,
+      color: palette.text,
+      fontWeight: '600',
+      fontSize: 15,
     },
   });

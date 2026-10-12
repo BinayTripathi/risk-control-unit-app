@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Collapsible from 'react-native-collapsible';
+import { Ionicons } from '@expo/vector-icons';
 
-const CollapsibleSection = ({ title, sectionComplete, children }) => {
+import { palette, radius, spacing, shadow } from '@core/theme';
+import StatusBadge from './StatusBadge';
+
+const CollapsibleSection = ({ title, icon, sectionComplete, children }) => {
   const [collapsed, setCollapsed] = useState(true);
 
   return (
     <View style={styles.section}>
-      <TouchableOpacity onPress={() => setCollapsed(!collapsed)} style={styles.header}>
+      <TouchableOpacity onPress={() => setCollapsed(!collapsed)} style={styles.header} activeOpacity={0.7}>
+        {icon && (
+          <View style={styles.iconWrap}>
+            <Ionicons name={icon} size={18} color={palette.primary} />
+          </View>
+        )}
         <Text style={styles.headerText}>{title}</Text>
-        {sectionComplete && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} />}
+        <StatusBadge status={sectionComplete ? 'success' : 'pending'} label={sectionComplete ? 'Done' : 'Pending'} />
+        <Ionicons name={collapsed ? 'chevron-down' : 'chevron-up'} size={20} color={palette.muted} style={styles.chevron} />
       </TouchableOpacity>
       <Collapsible collapsed={collapsed}>
         <View style={styles.content}>{children}</View>
@@ -20,33 +30,44 @@ const CollapsibleSection = ({ title, sectionComplete, children }) => {
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 30,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    overflow: 'hidden',
-    width : '100%'
+    marginBottom: spacing.md,
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    width: '100%',
+    ...shadow.card,
   },
   header: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    height: 50,
-    alignItems: 'center'
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 14,
+  },
+  iconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: palette.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   headerText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: palette.text,
+  },
+  chevron: {
+    marginLeft: spacing.sm,
   },
   content: {
-    backgroundColor: 'hidden',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.border,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
-  statusImage : {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        resizeMode: 'contain',
-        transform: [{ translateX: 30 }, { translateY: -30 }],
-      },
 });
 
 export default CollapsibleSection;

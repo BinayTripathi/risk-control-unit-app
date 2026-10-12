@@ -14,6 +14,7 @@ import MapCallout from '../UI/MapCallout'
 
 
 import Background from "@components/UI/Background";
+import { palette, radius, spacing } from '@core/theme';
 import { GEOFENCING_RADIUS_IN_METRES } from "@core/constants";
 
 
@@ -151,9 +152,14 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
       <View style={styles.container}>
 
          <View style= {styles.searchBoxContainer}>
-                  <Searchbar placeholder="Search By Name/Policy"
+                  <Searchbar placeholder="Search by name or policy"
                         onChangeText={onChangeSearch}
-                        value={searchQuery}/>
+                        value={searchQuery}
+                        style={styles.searchBox}
+                        inputStyle={styles.searchInput}
+                        iconColor={palette.subText}
+                        placeholderTextColor={palette.muted}
+                        elevation={0}/>
         </View>
 
         <View style={styles.mapContainer}>
@@ -187,38 +193,41 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
 const styles = StyleSheet.create({
 
   container: {
-    flex:1,
-    marginTop: 90,      
-    marginBottom: 10,
-    alignItems: 'center',
-    justifyContent: 'center'
+    flex: 1,
+    width: '100%',
   },
 
   searchBoxContainer : {
-    flex: 1,
-    width: 320,
-    height: 40,
-    alignContent: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   searchBox: {
-    width: 320
+    backgroundColor: palette.surface,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    height: 48,
   },
-  mapContainer: { 
-    marginTop:30,   
-    flex: 9,
-    width:  windowWidth *0.95,
-    padding: 0,       
-    alignContent: 'center',
-    borderRadius: 8,
-    overflow: 'hidden'
+  searchInput: {
+    fontSize: 15,
+    color: palette.text,
+    minHeight: 0,
+  },
+  mapContainer: {
+    flex: 1,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    overflow: 'hidden',
   },
   map: {
     width : '100%' ,
     height : '100%' ,
-    borderRadius: 10,
-    borderWidth: 1
   },
-  
+
 });
 
 export default CaseGeolocation;

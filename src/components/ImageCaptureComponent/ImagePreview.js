@@ -10,7 +10,8 @@ import useApi from '@hooks/useApi'
 import UserTracker from "./UserTracker";
 import {requestRegisterUser} from '@store/ducks/userSlice'
 
-import {theme} from '../../core/theme'
+import {theme, palette, radius, spacing} from '../../core/theme'
+import { Ionicons } from '@expo/vector-icons';
 import { UPLOAD_TYPE, SECURE_REGISTRATION_COMPLETE } from '@core/constants';
 import {secureSave} from '@helpers/SecureStore'
 
@@ -167,15 +168,17 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
 
         <View style={[styles.bottomPrev]}>
           <TouchableOpacity
-            style={styles.prevBtn}
+            style={[styles.prevBtn, styles.retakeBtn]}
             onPress={() => setPhotoData(null)}>
+            <Ionicons name="refresh" size={18} color={palette.onCamera} />
             <Text style={styles.prevBtnText}>Retake</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.prevBtn, { marginLeft: 25 }]}
+            style={[styles.prevBtn, styles.saveBtn]}
             onPress={savePhoto}>
-            <Text style={styles.prevBtnText}>Save Photo</Text>
+            <Ionicons name="checkmark" size={20} color={palette.onPrimary} />
+            <Text style={styles.prevBtnText}>Use photo</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -189,15 +192,14 @@ const windowHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
   },
-  middlePhotoContainer: {   
- 
+  middlePhotoContainer: {
     marginTop: 80,
-    paddingHorizontal: 5,
-    borderWidth: 5,
-    borderRadius: 10,
-    
-    width: (windowWidth - 20),
+    width: (windowWidth - 32),
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    backgroundColor: palette.cameraSurface,
   },
 
   middlePhoto: {
@@ -208,27 +210,35 @@ const styles = StyleSheet.create({
     // figure out your image aspect ratio
     aspectRatio: imageRatio*0.75,
     resizeMode: 'center',
-  } ,    
+  } ,
   bottomPrev: {
-    height: 100,    
-    justifyContent: "center",
     flexDirection: "row",
-    paddingHorizontal: 10
+    justifyContent: "center",
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+    width: '100%',
   },
   prevBtn: {
-    height: 65,
-    width: 140,
-    backgroundColor: theme.colors.primary,
-    color: theme.colors.inversePrimary,
+    flex: 1,
+    height: 52,
+    flexDirection: 'row',
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 22,
-    marginTop: 20,
-    elevation: 4,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+  },
+  retakeBtn: {
+    borderWidth: 1,
+    borderColor: palette.cameraBorder,
+    backgroundColor: palette.cameraSurface,
+  },
+  saveBtn: {
+    backgroundColor: palette.primary,
   },
   prevBtnText: {
-    color: "white",
-    fontWeight: "700",
+    color: palette.onCamera,
+    fontWeight: "600",
     fontSize: 15,
   },
 });

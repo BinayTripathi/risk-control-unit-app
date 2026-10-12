@@ -1,6 +1,6 @@
 
-import {useState, useEffect} from "react";
-import { StyleSheet, View, ScrollView, Dimensions, PixelRatio}  from 'react-native';
+import {useState, useEffect, useRef} from "react";
+import { StyleSheet, View, ScrollView, Dimensions, Text, Pressable}  from 'react-native';
 import { useSelector, useDispatch} from 'react-redux'
 
 import CustomerDetails from "./CaseDetails/CustomerDetails";
@@ -10,22 +10,25 @@ import InvestigationDetails from './InvestigationDetails'
 import SubmitInvestigation from "./SubmitInvestigation";
 import {saveCaseTemplate} from '@store/ducks/case-submission-slice'
 import {getDefaultCaseTemplate} from '@core/defaultCaseTemplates'
+import { palette, spacing } from '@core/theme';
 import _ from "lodash";
 
-const { width, height } = Dimensions.get('window');
 export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userId, investigatable, isTemplateUpdated}) {
 
     const dispatch = useDispatch()
     //const [sliderState, setSliderState] = useState({ currentPage: 0 });
     const [sliderState, setSliderState] = useState(() => ({ currentPage: 0 }));
     const [localTemplateState, setLocalTemplateState] = useState(null)
+    // Pages are sized to the measured pager area (below the header and step bar)
+    const [pageSize, setPageSize] = useState(() => Dimensions.get('window'))
+    const scrollRef = useRef(null)
     // Template fetched from server on first load of the case and kept in redux.
     // Fall back to the bundled template for cases loaded before server templates existed.
     const storedTemplate = useSelector(state => state.casesDetails.caseTemplates?.[selectedClaimId])
     const caseTemplate = storedTemplate ?? getDefaultCaseTemplate(selectedClaim?.policy?.claimType)
 
     const setSliderPage = (event) => {
-      const indexOfNextScreen = Math.floor(event.nativeEvent.contentOffset.x / width);
+      const indexOfNextScreen = Math.round(event.nativeEvent.contentOffset.x / pageSize.width);
       setSliderState(prevState => 
         prevState.currentPage !== indexOfNextScreen ? { currentPage: indexOfNextScreen } : prevState
       );
@@ -146,10 +149,42 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
     };
     
 
-    return (
-        <View style={{ flex: 1 }}>
+    const { width, height } = pageSize;
+    const steps = selectedClaim === undefined ? [] : [
+      'Policy',
+      selectedClaim?.policy.claimType === "Death" ? 'Beneficiary' : 'Customer',
+      ...caseTemplate.map(section => section.locationName),
+      'Submit',
+    ];
 
+    const goToStep = (index) => scrollRef.current?.scrollTo({ x: index * width, animated: true });
+
+    return (
+        <View style={styles.container}>
+
+            {steps.length > 0 && (
+              <View style={styles.stepBar}>
+                <View style={styles.stepHeader}>
+                  <Text style={styles.stepTitle} numberOfLines={1}>{steps[pageIndex]}</Text>
+                  <Text style={styles.stepCount}>Step {Math.min(pageIndex + 1, steps.length)} of {steps.length}</Text>
+                </View>
+                <View style={styles.stepSegments}>
+                  {steps.map((step, index) => (
+                    <Pressable key={index} style={styles.segmentHit} onPress={() => goToStep(index)} hitSlop={{ top: 8, bottom: 8 }}
+                      accessibilityLabel={`Go to ${step}`}>
+                      <View style={[styles.segment, index <= pageIndex && styles.segmentActive]} />
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            <View style={styles.pager} onLayout={(event) => {
+              const { width: w, height: h } = event.nativeEvent.layout;
+              if (w !== pageSize.width || h !== pageSize.height) setPageSize({ width: w, height: h });
+            }}>
             <ScrollView
+            ref={scrollRef}
             style={{ flex: 1 }}
             horizontal={true}
             scrollEventThrottle={16}
@@ -157,14 +192,13 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
             showsHorizontalScrollIndicator={false}
             onScroll={(event) => {
                 setSliderPage(event);
-            }}>               
-                       
+            }}>
 
                 {selectedClaim !== undefined &&
                        <View style={{ width, height }}>
                     <PolicyDetailsComponent selectedClaim = {selectedClaim}/>
                 </View>}
-                
+
                 {selectedClaim !== undefined && selectedClaim?.policy.claimType !== "Death"  && <View style={{ width, height }}>
                     <CustomerDetails selectedClaim = {selectedClaim}/>
                 </View>}
@@ -173,17 +207,13 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
                 </View>}
 
                 {selectedClaim !== undefined && investigationSections(caseTemplate, selectedClaimId, userId, width, height)}
-                
+
                 {selectedClaim !== undefined &&
                 <View style={{ width, height }}>
                     <SubmitInvestigation selectedClaimId = {selectedClaimId} userId = {userId}  selectedClaim = {selectedClaim}/>
                 </View>}
-            
+
             </ScrollView>
-            <View style={styles.paginationWrapper}>
-            {selectedClaim !== undefined && Array.from(Array(3 + caseTemplate.length).keys()).map((key, index) => (
-                <View style={[styles.paginationDots, { opacity: pageIndex === index ? 1 : 0.2 }]} key={index} />
-            ))}
             </View>
    </View>
     )
@@ -192,31 +222,51 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#fff",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    imageStyle: {
-      height: PixelRatio.getPixelSizeForLayoutSize(135),
       width: '100%',
+      backgroundColor: palette.background,
     },
-  
-      
-    paginationWrapper: {
-      position: 'absolute',
-      //bottom: 20,
-      top: height - 20,
-      left: 0,
-      right: 0,
-      justifyContent: 'center',
-      alignItems: 'center',
+    pager: {
+      flex: 1,
+    },
+    stepBar: {
+      backgroundColor: palette.surface,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.border,
+    },
+    stepHeader: {
       flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
     },
-    paginationDots: {
-      height: 10,
-      width: 10,
-      borderRadius: 10 / 2,
-      backgroundColor: '#e8500f',
-      marginLeft: 10,
+    stepTitle: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '700',
+      color: palette.text,
+      marginRight: spacing.md,
+    },
+    stepCount: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: palette.subText,
+    },
+    stepSegments: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    segmentHit: {
+      flex: 1,
+    },
+    segment: {
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: palette.divider,
+    },
+    segmentActive: {
+      backgroundColor: palette.primary,
     },
   });

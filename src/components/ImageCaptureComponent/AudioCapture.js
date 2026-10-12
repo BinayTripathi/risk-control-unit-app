@@ -20,6 +20,8 @@ import {
 } from 'react-native';
 
 import RNFetchBlob from 'rn-fetch-blob';
+import { Ionicons } from '@expo/vector-icons';
+import { palette, radius, spacing } from '@core/theme';
 
 
 const screenWidth = Dimensions.get('screen').width;
@@ -135,14 +137,21 @@ const path = `${dirs.CacheDir}/${timestamp}.aac`
 
   return (
     <View style = {styles.container}>
-        <Text style={styles.titleTxt}>Record Audio</Text>
+        <View style={styles.micCircle}>
+          <Ionicons name="mic" size={40} color={palette.onCamera} />
+        </View>
+        <Text style={styles.titleTxt}>Record audio</Text>
         <Text style={styles.txtRecordCounter}>{recordTime}</Text>
 
-        <View style={styles.viewRecorder}>
-          <View style={styles.recordBtnWrapper}>
-            <Button style={styles.btn} onPress={onStartRecord} title="Record"> Record </Button>
-            <Button style={[styles.btn, { marginLeft: 30}]}  onPress={onStopRecord}   textStyle={styles.txt} title = "Stop"> Stop    </Button>
-          </View>
+        <View style={styles.recordBtnWrapper}>
+          <TouchableOpacity style={[styles.btn, styles.recordBtn]} onPress={onStartRecord} accessibilityLabel="Start recording">
+            <Ionicons name="radio-button-on" size={20} color={palette.onCamera} />
+            <Text style={styles.txt}>Record</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btn} onPress={onStopRecord} accessibilityLabel="Stop recording">
+            <Ionicons name="stop" size={18} color={palette.onCamera} />
+            <Text style={styles.txt}>Stop</Text>
+          </TouchableOpacity>
         </View>
 
     </View>
@@ -155,45 +164,61 @@ export default AudioCapture;
 
 const styles = StyleSheet.create({
   container: {
-    height: 300,
     marginTop: 100,
-    backgroundColor: '#455A64',
-    flexDirection: 'column',
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.lg,
+    backgroundColor: palette.cameraSurface,
+    borderWidth: 1,
+    borderColor: palette.cameraBorder,
     alignItems: 'center',
-    width: screenWidth*.95,
+    width: screenWidth - 32,
+  },
+  micCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(239,68,68,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   titleTxt: {
-    marginTop: 100,
-    color: 'white',
-    fontSize: 28,
+    marginTop: spacing.lg,
+    color: palette.onCamera,
+    fontSize: 20,
+    fontWeight: '600',
   },
-  viewRecorder: {
-    marginTop: 40,
-    width: '100%',
-    alignItems: 'center',
+  txtRecordCounter: {
+    marginTop: spacing.sm,
+    color: palette.onCameraMuted,
+    fontSize: 28,
+    fontWeight: '300',
+    letterSpacing: 2,
+    fontVariant: ['tabular-nums'],
   },
   recordBtnWrapper: {
     flexDirection: 'row',
-    width: '60%',
-    justifyContent: 'space-between'
+    marginTop: spacing.xl,
+    gap: spacing.md,
   },
   btn: {
-    borderColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    height: 48,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.pill,
     borderWidth: 1,
+    borderColor: palette.cameraBorder,
+    backgroundColor: palette.cameraSurface,
+  },
+  recordBtn: {
+    backgroundColor: '#EF4444',
+    borderColor: '#EF4444',
   },
   txt: {
-    color: 'white',
-    fontSize: 14,
-    marginHorizontal: 8,
-    marginVertical: 4,
-  },
-  txtRecordCounter: {
-    marginTop: 32,
-    color: 'white',
-    fontSize: 20,
-    textAlignVertical: 'center',
-    fontWeight: '200',
-    fontFamily: 'Helvetica Neue',
-    letterSpacing: 3,
+    color: palette.onCamera,
+    fontSize: 15,
+    fontWeight: '600',
   },
 })

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { palette, spacing } from '@core/theme';
 
 const Stepper = ({stepComplete}) => {
    
@@ -15,11 +16,10 @@ const Stepper = ({stepComplete}) => {
         {contents.map((_, i) => {
           return (
             <React.Fragment key={i}>
-              { i !== 0 && (<View style={stylesStepper.stepBackground} />)}
-              <View style={[stylesStepper.step, stepComplete < i ? {opacity: 0.5} : {}]}>
-                <Text style={stylesStepper.stepText}>{i+1}</Text>
+              <View style={[stylesStepper.step, stepComplete < i && stylesStepper.stepUpcoming]}>
+                <Text style={[stylesStepper.stepText, stepComplete < i && stylesStepper.stepTextUpcoming]}>{i+1}</Text>
               </View>
-              { i !== contents.length-1 && <View style={{height: 1, minWidth:50, backgroundColor: 'black', margin: 5}}></View> }
+              { i !== contents.length-1 && <View style={[stylesStepper.connector, stepComplete > i && stylesStepper.connectorDone]} /> }
             </React.Fragment>
           )
         })}
@@ -34,24 +34,36 @@ const stylesStepper = StyleSheet.create({
     content: {
       flexDirection: "row",
       justifyContent: "center",
-      alignItems: "center"
+      alignItems: "center",
+      marginVertical: spacing.lg,
     },
-    stepBackground: {
-      flex: 1,
-      height: 1,
-      backgroundColor: "black",
-      opacity: 1,
-      marginHorizontal: 0
+    connector: {
+      height: 2,
+      width: 48,
+      marginHorizontal: spacing.sm,
+      backgroundColor: palette.border,
+    },
+    connectorDone: {
+      backgroundColor: palette.primary,
     },
     step: {
-      backgroundColor: "#1976d2",
-      width: 40,
-      height: 40,
-      borderRadius: 40,
+      backgroundColor: palette.primary,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       justifyContent: "center",
       alignItems: "center",
     },
+    stepUpcoming: {
+      backgroundColor: palette.surface,
+      borderWidth: 1.5,
+      borderColor: palette.border,
+    },
     stepText: {
-      color: "white"
-    }
+      color: palette.onPrimary,
+      fontWeight: '700',
+    },
+    stepTextUpcoming: {
+      color: palette.muted,
+    },
   });

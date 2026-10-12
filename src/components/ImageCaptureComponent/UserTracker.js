@@ -83,7 +83,7 @@ function UserTracker({photoData, displayMapHandler, shouldDisplayMap}) {
                 </ModalComponent>             
           ) : (
             <View>
-              <Text>Waiting...</Text>
+              <Text style={styles.waiting}>Getting your location...</Text>
             </View>
           )}      
         </View>
@@ -131,6 +131,12 @@ const styles = StyleSheet.create({
   text: {
     color: '#3f2949',
     marginTop: 10,
+  },
+  waiting: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 8,
   },
   
 });

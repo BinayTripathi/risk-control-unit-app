@@ -6,6 +6,8 @@ import { useCameraDevice, useCameraPermission, CameraCaptureError, Camera, useFr
 import {useWindowDimensions} from 'react-native';
 import { VIDEO_FORMAT } from '@core/constants';
 
+import { palette, radius } from '@core/theme';
+
 const cameraMarginTop = 70
 
 export const VideoCapture = ({setPhotoData}) => {
@@ -107,26 +109,20 @@ export const VideoCapture = ({setPhotoData}) => {
         return <View />;
       }*/
       if (hasCameraPermission === false || hasAudioPermission === false) {
-        return <Text>No access to camera</Text>;
+        return <Text style={{ color: palette.onCamera, fontSize: 15, textAlign: 'center' }}>No access to camera</Text>;
       }
 
 
       let videoButon = (
-        <TouchableOpacity  onPress={takeVideo} style={styles.button}>
-            <View style={{flex: 1, alignItems: "center", justifyContent: "center", borderRadius: 1000,  borderColor: "black",borderWidth: 1,}}>
-                <Entypo name="video-camera" size={35} color="black" />
-            </View>          
+        <TouchableOpacity onPress={takeVideo} style={styles.shutter} accessibilityLabel="Start recording">
+            <View style={styles.recordDot} />
         </TouchableOpacity>
       );
-  
+
       if (recording) {
         videoButon = (
-          <TouchableOpacity
-            onPress={stopVideo}
-            style={[styles.button, { alignItems: "center", justifyContent: "center"}]}>
-            
+          <TouchableOpacity onPress={stopVideo} style={styles.shutter} accessibilityLabel="Stop recording">
             <View style={styles.stopRecording}></View>
-            
           </TouchableOpacity>
         );
       }
@@ -152,34 +148,22 @@ export const VideoCapture = ({setPhotoData}) => {
             <View style={styles.bottom}>
             
                 <TouchableOpacity
+                    style={styles.sideButton}
+                    accessibilityLabel="Switch camera"
                     onPress={() => {
                     setType(
                         type === 'back'
                         ? 'front'
                         : 'back'
                     );
-                    }}
-                    style={[{
-                        backgroundColor: type === 'back' ? "#0f0f0f" : "#f0f0f0",
-                        color: type === 'back' ? "white" : "#fff",
-
-                    }, styles.button]}><View style={{flex: 1, alignItems: "center", justifyContent: "center"}}>
-                        {type === 'back'
-                        ? <AntDesign name="retweet" size={24} color="white" />
-                        : <AntDesign name="retweet" size={24} color="black" />
-                    }
-                    </View>                 
+                    }}>
+                    <Ionicons name="camera-reverse-outline" size={26} color={palette.onCamera} />
                 </TouchableOpacity>
 
                 {videoButon}
 
-                <TouchableOpacity
-                    onPress={flashModeHandler}
-                    style={styles.button}
-                    >
-                    <View style={{flex: 1, alignItems: "center", justifyContent: "center", borderRadius: 1000,  borderColor: "black",borderWidth: 1,}}>
-                        <Ionicons  name= { flashMode === "off" ? "flash":"flash-off"} style={{ color: "#fff", fontSize: 24}} />
-                    </View>                                                                     
+                <TouchableOpacity onPress={flashModeHandler} style={styles.sideButton} accessibilityLabel="Toggle flash">
+                    <Ionicons name={ flashMode === "off" ? "flash-off-outline" : "flash-outline"} size={24} color={palette.onCamera} />
                 </TouchableOpacity>
             </View>
               
@@ -200,7 +184,8 @@ const styles = StyleSheet.create({
     cameraContainer: {
         flex: 1,
         marginTop: cameraMarginTop,
-        borderRadius: 10
+        borderRadius: radius.lg,
+        overflow: 'hidden',
     },
     fixedRatio:{
         flex: 1,
@@ -211,27 +196,42 @@ const styles = StyleSheet.create({
       width: 350,
       height: 220,
     },
-    
+
     bottom: {
-        flex: 1,
+        height: 120,
         flexDirection: "row",
-        height: 125,
-       
         alignItems: "center",
-        justifyContent: "space-around",
+        justifyContent: "space-evenly",
       },
-
+    sideButton: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: palette.cameraSurface,
+      borderWidth: 1,
+      borderColor: palette.cameraBorder,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    shutter: {
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      borderWidth: 4,
+      borderColor: palette.onCamera,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    recordDot: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#EF4444',
+    },
     stopRecording : {
-        borderRadius: 50,
-        height: 45,
-        width: 45,
-        backgroundColor: 'red'
+        borderRadius: 6,
+        height: 30,
+        width: 30,
+        backgroundColor: '#EF4444'
      },
-    button: {                
-        borderRadius: 70,
-        height: 65,
-        width: 65,
-        borderWidth: 1,
-    }
-
   })

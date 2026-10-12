@@ -22,7 +22,7 @@ import { Platform } from 'expo-modules-core';
 import RegistrationImageScanner from '@components/AuthComponent/RegistrationImageScanner'
 
 import {requestRegisterUser} from '@store/ducks/userSlice'
-import { theme } from '../core/theme'
+import { theme, palette, radius, spacing } from '../core/theme'
 import { SECURE_USER_KEY, SECURE_USER_PIN, REGISTRATION_ERROR_MESSAGE} from '../core/constants'
 import {secureSave, secureGet} from '@helpers/SecureStore'
 import { ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
@@ -256,7 +256,7 @@ export default function RegistrationScreen({ route, navigation }) {
           <Padder>
 
             <Logo />
-            <Header>REGISTRATION</Header>
+            <Header>Register this device</Header>
 
              <Stepper stepComplete={step}/>
             
@@ -312,13 +312,13 @@ export default function RegistrationScreen({ route, navigation }) {
                 mode="elevated"
                 //disabled = {pin.toString().length < CELL_COUNT  && emailValidator(email.value) === ''}
                 disabled = {registeredPhoneNumber === '' || cameraPermissionGranted === false}
-                style={[Styles.button, registeredPhoneNumber === '' ? Styles.buttonDisabled : '']}
+                icon="cellphone-check"
+                style={Styles.button}
                 onPress={registerUser }
                 onLongPress={() => {
                   dispatch({ type: "DESTROY_SESSION" });
                  }}>
-                Verify Mobile  
-                <AntDesign name="phone" size={24} color="white" style={{marginLeft: 20}}/>
+                Verify mobile
               </Button> 
             </>}
 
@@ -333,18 +333,18 @@ export default function RegistrationScreen({ route, navigation }) {
             keyboardType="number-pad"
             textContentType="oneTimeCode"
             renderCell={({index, symbol, isFocused}) => (
-              <Text
+              <View
                 key={index}
                 style={[Styles.cell, isFocused && Styles.focusCell]}
                 onLayout={getCellOnLayoutHandler(index)}>
-                {symbol || (isFocused ? <Cursor/> : null)}
-              </Text>
+                <Text style={Styles.cellText}>{symbol || (isFocused ? <Cursor/> : null)}</Text>
+              </View>
             )}/>
 
           <Button
                 mode="elevated"
                 disabled = {pin.toString().length < CELL_COUNT}
-                style={[Styles.button, pin.toString().length < CELL_COUNT ? Styles.buttonDisabled : '']}
+                style={Styles.button}
                 onPress={vaildateOtp }
                 onLongPress={() => {
                   dispatch({ type: "DESTROY_SESSION" });
@@ -354,10 +354,11 @@ export default function RegistrationScreen({ route, navigation }) {
 
           <Button
             mode="outlined"
-            style={[Styles.button, {marginTop: 10}]}
+            variant="secondary"
+            style={Styles.secondaryButton}
             onPress={registerUser}
             >
-            Resend PIN
+            Resend code
           </Button>
         </>  }
                 
@@ -373,28 +374,30 @@ export default function RegistrationScreen({ route, navigation }) {
 
   const Styles = StyleSheet.create({
     button: {
-      marginTop: 70
+      marginTop: spacing.xl
     },
-    buttonDisabled : {
-      backgroundColor: theme.colors.disabledPrimary,
-      opacity: 0.5
+    secondaryButton: {
+      marginTop: spacing.xs
     },
 
-    codeFieldRoot: {marginTop: 20},
+    codeFieldRoot: {marginTop: spacing.lg, gap: spacing.sm},
     cell: {
-      width: 40,
-      height: 40,
-      lineHeight: 38,
-      marginRight: 2,
-      fontSize: 24,
-      color: theme.colors.text,
-      borderWidth: 2,
-      borderRadius: 8,
-      borderColor: '#00000030',
+      width: 44,
+      height: 52,
+      borderWidth: 1.5,
+      borderRadius: radius.md,
+      borderColor: palette.border,
+      backgroundColor: palette.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cellText: {
+      fontSize: 22,
+      color: palette.text,
       textAlign: 'center',
     },
     focusCell: {
-      borderColor: '#000',
+      borderColor: palette.primary,
     },
 
     phoneNoContainer: {
@@ -407,11 +410,14 @@ export default function RegistrationScreen({ route, navigation }) {
     dropdown: {
       margin: 16,
       marginRight: 5,
-      height: 60,
-      width: 90,
-      backgroundColor: 'rgba(255,255,255,0.16)',
-      borderBottomColor: 'gray',
-      borderBottomWidth: 0.5,
+      height: 56,
+      width: 96,
+      paddingHorizontal: spacing.sm,
+      backgroundColor: palette.surface,
+      borderTopLeftRadius: radius.md,
+      borderTopRightRadius: radius.md,
+      borderBottomColor: palette.primary,
+      borderBottomWidth: 2,
     },
     icon: {
       marginRight: 5,
@@ -422,7 +428,7 @@ export default function RegistrationScreen({ route, navigation }) {
     },
     selectedTextStyle: {
       fontSize: 16,
-      fontWeight: '900',
+      fontWeight: '600',
       color: theme.colors.text,
     },
     iconStyle: {
@@ -454,7 +460,7 @@ export default function RegistrationScreen({ route, navigation }) {
 
     },
     phoneNoTextbox : {
-      fontWeight: '900',
+      fontWeight: '600',
       fontSize: 20,
       color: theme.colors.text,
     }
