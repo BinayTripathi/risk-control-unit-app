@@ -140,7 +140,7 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
   const saveImageAlertBox = <OkayCancelDialogBox showDialog={showSaveDialog} 
                                                 setShowDialog={setShowSaveDialog}
                                                 title={'Save Item'} 
-                                                content={(`Do you want to save ${docType.name}`)} 
+                                                content={(`Do you want to save ${investigationName ?? docType.name}`)}
                                                 okayHandler={ async () => {      
                                                     if (claimId !== "AGENT_ONBOARDING")   {
                                                       if(docType.type === 'PHOTO')
