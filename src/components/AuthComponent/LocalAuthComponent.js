@@ -3,8 +3,10 @@ import { Text, View } from 'react-native'
 import * as LA from 'react-native-local-auth'
 import { useDispatch} from 'react-redux'
 import {requestValidateUser, requestValidateUserAuto, navigateFromHomePage} from '@store/ducks/userSlice'
-import {secureGet} from '@helpers/SecureStore'
-import {SECURE_USER_KEY} from '@core/constants'
+import {secureGet, secureSave} from '@helpers/SecureStore'
+import {SECURE_USER_KEY, SECURE_BEARER_TOKEN} from '@core/constants'
+import {fetchJWTToken, setCachedBearerToken} from '@services/RestServiceCalls'
+import useNetworkInfo from '@hooks/useNetworkInfo'
 
 const LocalAuthComponent = ({setBiometicCancelled}) => {
 
@@ -12,13 +14,34 @@ const LocalAuthComponent = ({setBiometicCancelled}) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [user, setUser] = useState('')
     const [authCalled, setAuthCalled] = useState(false)
+    const [isConnected] = useNetworkInfo()
 
     let dispatch = useDispatch();
 
+    const checkInternetAndFetchToken = async () => {
+        try {
+            if (isConnected) {
+                const token = await fetchJWTToken(user)
+                if (token) {
+                    await secureSave(SECURE_BEARER_TOKEN, token)
+                    // populate in-memory cache to avoid future secure storage reads
+                    setCachedBearerToken(token)
+                    console.log('JWT Token stored securely')
+                }
+            } else {
+                console.log('No internet connection available')
+            }
+        } catch (error) {
+            console.log('Error fetching token:', error.message)
+        }
+    }
 
     const onAuthenticate = () => {
         setAuthCalled(true)
         try {            
+            // Check internet and fetch JWT token during login
+            checkInternetAndFetchToken()
+
             const auth = LA.authenticate({
                 reason: 'this is a secure area, please authenticate yourself',
                 fallbackToPasscode: true,    // fallback to passcode on cancel

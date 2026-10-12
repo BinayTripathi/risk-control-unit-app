@@ -10,13 +10,13 @@ export default ({setPhotoData}) => {
     // start the document scanner
     const { scannedImages } = await DocumentScanner.scanDocument({
      croppedImageQuality: 100,
-     responseType : ResponseType.Base64,
      maxNumDocuments: 1
     })
   
     // get back an array with scanned image file paths
     if (scannedImages.length > 0) {
       // set the img src, so we can view the first scanned image
+      console.log(scannedImages[0])
       setScannedImage(scannedImages[0])
       setPhotoData(scannedImages[0])
     }

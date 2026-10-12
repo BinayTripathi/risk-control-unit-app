@@ -87,6 +87,7 @@ export const logoutUser = createAction(TYPES.LOGOUT_USER);
             state.userId = action.payload.email,
             state.auth = action.payload.pin
             state.deviceId = action.payload.deviceId
+            state.sendSMSForRetry = action.payload.sendSMSForRetry
           },
 
           failureRegisterUser: (state) => {
@@ -140,7 +141,7 @@ export const logoutUser = createAction(TYPES.LOGOUT_USER);
   export function* asyncRequestRegisterUser(action) {
     try {      
       if(action.payload.step === 1) {
-        const response = yield call(userRegister, action.payload.phoneNo, action.payload.deviceId);
+        const response = yield call(userRegister, action.payload.phoneNo, action.payload.deviceId, action.payload.sendSMSForRetry);
         //const responseUserData = response.data?.token;     
         const responseUserData = response.data
         if (responseUserData) {          

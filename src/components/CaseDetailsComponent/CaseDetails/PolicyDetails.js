@@ -23,8 +23,6 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
     let policy = selectedClaim.policy
     if(policy === undefined)
       return null;
-
-    console.log(policy)
   
       return (            
         

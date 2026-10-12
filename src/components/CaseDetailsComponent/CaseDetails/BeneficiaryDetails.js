@@ -19,7 +19,7 @@ export default BeneficiaryDetailsComponent = ({selectedClaim}) => {
   if(beneficiaryDetails === undefined)
       return null;
 
-  let beneficiaryPhoto = beneficiaryDetails?.photo?.replace('image/*;base64','image/png;base64')
+  let beneficiaryPhoto = 'data:image/*;base64,' + beneficiaryDetails?.photo
     
     return (            
   

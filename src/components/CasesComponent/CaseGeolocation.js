@@ -121,11 +121,11 @@ const CaseGeolocation = ({reloadProp, userLocPromise, userId}) => {
   
 
     let allMarkers =  retriveAllCases().map((eachCase) => 
-        <Marker key ={eachCase.claimId} 
-                identifier={eachCase.claimId}
+        <Marker key ={eachCase.claimId.toString()} 
+                identifier={eachCase.claimId.toString()}
                 coordinate={{ latitude:eachCase.coordinate.lat, longitude: eachCase.coordinate.lng }}
                 title={eachCase.policyNumber} description={eachCase.address}>
-                  <MapCallout title={eachCase.policyNumber} description={eachCase.address} claimId={eachCase.claimId}></MapCallout>
+                  <MapCallout title={eachCase.policyNumber} description={eachCase.address} claimId={eachCase.claimId.toString()}></MapCallout>
                 </Marker >) 
 
         return allMarkers

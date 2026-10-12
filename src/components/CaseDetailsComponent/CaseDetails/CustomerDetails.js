@@ -24,7 +24,7 @@ export default CustomerDetailsComponent = ({selectedClaim}) => {
     if(policy === undefined)
       return null;
   
-      let customerPhoto = customerDetails?.photo?.replace('image/*;base64','image/png;base64')
+      let customerPhoto = 'data:image/*;base64,' + customerDetails?.photo
       return (            
         
          <Padder>

@@ -28,7 +28,7 @@ const OkayCancelDialogBox = ({showDialog, setShowDialog, title, content, okayHan
 
                     <View style={{marginTop: 30, marginBottom: 30, minWidth: 250}}>        
                         <Text style={styles.title}>{title}</Text>                
-                        <Divider bold={true}/>
+                        <Divider bold={true} style={{backgroundColor: '#555'}}/>
                     </View>
                     <View>
                         <Text style={styles.content}>{content}</Text>                        
@@ -37,12 +37,12 @@ const OkayCancelDialogBox = ({showDialog, setShowDialog, title, content, okayHan
                        
                         <View style={{padding: 10}}>
                             <Button mode="elevated" style={[styles.button, styles.okButton]} onPress={() => approveHandler()}> 
-                                <Text style={{color: 'black'}}>OK</Text> </Button>
+                                <Text style={{color: 'white'}}>OK</Text> </Button>
                         </View>
 
                         <View style={{padding: 10}}>
                             <Button mode="elevated" style={[styles.button, styles.cancelButton]} onPress={() => dismissHandler()}>
-                            <Text style={{color: 'black'}}>CANCEL</Text> </Button>
+                            <Text style={{color: 'white'}}>CANCEL</Text> </Button>
                         </View>
                     </View> 
                 </Surface>             
@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     surface: {
       minHeight: 230,
       width: 280,
+      backgroundColor: '#1e1e1e',
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 20
@@ -70,12 +71,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: 'black',
+        color: 'white',
         textAlign: 'left',
       },
       content: {
         fontSize: 18,
-        color: 'black',
+        color: 'white',
         textAlign: 'left',
       },
       image : {
