@@ -207,6 +207,19 @@ export const getCaseDetails = async (email, claim) => {
   }
 }
 
+export const getCaseTemplate = async (email, claim) => {
+  try {
+  const url = `${BASE_URL}/Agent/get-template?caseId=${encodeURIComponent(claim)}&email=${encodeURIComponent(email)}`
+  console.log(url)
+  const config = await addAuthHeader({})
+  let response = await  Request.get({url, config});
+  return response
+  }  catch (error) {
+    console.log(JSON.stringify(error.message));
+    throw JSON.stringify(error.message);
+  }
+}
+
 
 export const updateCaseDocument = async ({email, caseId, sectionName, investigationName, OcrLongLat, OcrImage}) => {
   try {
