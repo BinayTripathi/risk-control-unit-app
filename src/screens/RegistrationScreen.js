@@ -269,6 +269,11 @@ export default function RegistrationScreen({ route, navigation }) {
                 selectedTextStyle={Styles.selectedTextStyle}
                 inputSearchStyle={Styles.inputSearchStyle}
                 iconStyle={Styles.iconStyle}
+                containerStyle={Styles.dropdownList}
+                itemContainerStyle={Styles.dropdownItem}
+                itemTextStyle={Styles.dropdownItemText}
+                activeColor="#e0e0e0"
+                searchPlaceholderTextColor="#888"
                 data={countryCodeDropdown}
                 search
                 maxHeight={300}
@@ -382,6 +387,7 @@ export default function RegistrationScreen({ route, navigation }) {
       lineHeight: 38,
       marginRight: 2,
       fontSize: 24,
+      color: theme.colors.text,
       borderWidth: 2,
       borderRadius: 8,
       borderColor: '#00000030',
@@ -426,7 +432,19 @@ export default function RegistrationScreen({ route, navigation }) {
     inputSearchStyle: {
       height: 40,
       fontSize: 16,
-      color: theme.colors.text,
+      color: '#000',
+      backgroundColor: '#fff',
+    },
+    dropdownList: {
+      backgroundColor: '#fff',
+      borderRadius: 4,
+    },
+    dropdownItem: {
+      backgroundColor: '#fff',
+    },
+    dropdownItemText: {
+      fontSize: 16,
+      color: '#000',
     },
     phoneNoTextboxContainer: {
       width: '80%',

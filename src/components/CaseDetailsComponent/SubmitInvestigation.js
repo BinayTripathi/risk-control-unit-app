@@ -138,7 +138,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
                                 cancelHandler={ () => {} }/>
 
     return (
-      <PaperProvider>
+      <PaperProvider theme={theme}>
       <LoadingModalWrapper shouldModalBeVisible = {loading}>
       <View style={styles.container}>
         {submitAlertBox}

@@ -156,7 +156,7 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
                             
  
   return (
-    <PaperProvider>
+    <PaperProvider theme={theme}>
       <LoadingModalWrapper shouldModalBeVisible = {loading === undefined ? false: loading}>
       
       <View style={styles.container}>
