@@ -34,7 +34,23 @@ export const palette = {
   warningTint: '#FEF3C7',
 }
 
-export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 }
+// Colour pairs (strong foreground + soft tint) for icon tiles, chips and section accents.
+export const tones = {
+  navy: { fg: palette.primary, bg: palette.primaryTint },
+  indigo: { fg: '#4338CA', bg: '#EEF2FF' },
+  orange: { fg: '#EA580C', bg: '#FFF1E8' },
+  teal: { fg: '#0F766E', bg: '#CCFBF1' },
+  violet: { fg: '#7C3AED', bg: '#F3E8FF' },
+  sky: { fg: '#0369A1', bg: '#E0F2FE' },
+  rose: { fg: '#E11D48', bg: '#FFE4E6' },
+  green: { fg: '#15803D', bg: '#DCFCE7' },
+  amber: { fg: '#B45309', bg: '#FEF3C7' },
+}
+
+// Cycled through for lists of rows that have no inherent colour
+export const toneCycle = ['indigo', 'orange', 'teal', 'violet', 'sky', 'rose']
+
+export const spacing ={ xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 }
 
 export const radius = { sm: 6, md: 10, lg: 14, pill: 999 }
 
@@ -60,6 +76,14 @@ export const shadow = {
     shadowOpacity: 0.12,
     shadowRadius: 10,
     elevation: 6,
+  },
+  // Soft, deeper shadow for borderless cards
+  soft: {
+    shadowColor: '#1E3A8A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
 }
 

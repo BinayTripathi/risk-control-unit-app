@@ -24,23 +24,24 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
           overline="Investigation"
           title={sectionFromTemplate.locationName}
           required={sectionFromTemplate.isRequired}
-          subtitle="Capture each item below at this location." />
+          subtitle="Capture each item below at this location."
+          icon="location" />
 
         {caseUpdates !== undefined && <View>
 
-            <CollapsibleSection title="Face ID" icon="person-circle-outline" sectionComplete = {completed?.['faceIds']}>
+            <CollapsibleSection title="Face ID" icon="person-circle" tone="navy" sectionComplete = {completed?.['faceIds']}>
                 <PhotoIdScanner selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Documents" icon="document-text-outline" sectionComplete = {completed?.['documentId']}>
+            <CollapsibleSection title="Documents" icon="document-text" tone="navy" sectionComplete = {completed?.['documentId']}>
                   <DocumentScanner selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Questionnaire" icon="list-outline" sectionComplete = {completed?.['questions']}>
+            <CollapsibleSection title="Questionnaire" icon="list" tone="navy" sectionComplete = {completed?.['questions']}>
               <FormInitiator selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
             </CollapsibleSection>
 
-            {sectionFromTemplate['mediaReports'] !== undefined && sectionFromTemplate['mediaReports'].length > 0 && <CollapsibleSection title="Media" icon="mic-outline" sectionComplete = {completed?.['mediaReport']}>
+            {sectionFromTemplate['mediaReports'] !== undefined && sectionFromTemplate['mediaReports'].length > 0 && <CollapsibleSection title="Media" icon="mic" tone="navy" sectionComplete = {completed?.['mediaReport']}>
               <AudioVideoCapturer selectedClaimId = {selectedClaimId}  userId = {userId} caseUpdates = {caseUpdates} sectionFromTemplate = {sectionFromTemplate}/>
             </CollapsibleSection>}
 

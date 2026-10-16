@@ -8,7 +8,7 @@ import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
 import SectionHeading from '@components/UI/SectionHeading';
 import InfoCard from '@components/UI/InfoCard';
 
-import { palette, spacing } from '@core/theme';
+import { spacing, tones } from '@core/theme';
 
 
 export default PolicyDetailsComponent = ({selectedClaim}) => {
@@ -24,9 +24,9 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
 
       return (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-          <SectionHeading overline="Policy" title={policy.policyNumber} subtitle={policy.claimType} />
+          <SectionHeading overline="Policy" title={policy.policyNumber} subtitle={policy.claimType} icon="shield-checkmark" />
 
-          <InfoCard title="Policy details" rows={[
+          <InfoCard title="Policy details" titleIcon="document-text" tone="indigo" rows={[
             { label: 'Policy number', value: policy.policyNumber, icon: 'document-text-outline' },
             { label: 'Claim type', value: policy.claimType, icon: 'pricetag-outline' },
             { label: 'Issue date', value: policy.issueDate, icon: 'calendar-outline' },
@@ -38,12 +38,12 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
           <View style={styles.actions}>
             <View style={styles.action}>
               <CustomDateTimePicker dateTimeInParent={appointmentTime} setDateTimeInParent = {setAppointmentTime} label={'Select Date And Time'}>
-                <CircularButton label='Schedule visit'><Ionicons name="calendar-outline" size={22} color={palette.accent} /></CircularButton>
+                <CircularButton label='Schedule visit' tone="violet"><Ionicons name="calendar" size={22} color={tones.violet.fg} /></CircularButton>
               </CustomDateTimePicker>
             </View>
 
             <View style={styles.action}>
-              <CircularButton label='Get directions'><Ionicons name="navigate-outline" size={22} color={palette.accent} /></CircularButton>
+              <CircularButton label='Get directions' tone="teal"><Ionicons name="navigate" size={22} color={tones.teal.fg} /></CircularButton>
             </View>
           </View>
         </ScrollView>

@@ -7,7 +7,6 @@ import Header from '@components/UI/Header'
 import Button from '@components/UI/Button'
 import LoadingModalWrapper from '@components/UI/LoadingModal';
 import { useDispatch, useSelector } from 'react-redux'
-import { AntDesign } from '@expo/vector-icons';
 import TextInput from '@components/UI/TextInput'
 import {
   CodeField,
@@ -279,15 +278,12 @@ export default function RegistrationScreen({ route, navigation }) {
                 maxHeight={300}
                 labelField="label"
                 valueField="value"
-                placeholder="Select item"
+                placeholder="Code"
                 searchPlaceholder="Search..."
                 value={countryCode}
                 onChange={item => {
                   setCountryCode(item.value);
-                }}
-                renderLeftIcon={() => (
-                  <AntDesign style={Styles.icon} color="black" name="phone" size={20} />
-                )}/>
+                }}/>
             <TextInput
                 style = {Styles.phoneNoTextboxContainer}
                 label= "Phone Number"
@@ -418,9 +414,6 @@ export default function RegistrationScreen({ route, navigation }) {
       borderTopRightRadius: radius.md,
       borderBottomColor: palette.primary,
       borderBottomWidth: 2,
-    },
-    icon: {
-      marginRight: 5,
     },
     placeholderStyle: {
       fontSize: 16,

@@ -25,7 +25,7 @@ export default CustomerDetailsComponent = ({selectedClaim}) => {
             subtitle={customerDetails.occupation}
             photoBase64={customerDetails.photo} />
 
-          <InfoCard title="Customer details" rows={[
+          <InfoCard title="Customer details" titleIcon="person" tone="orange" rows={[
             { label: 'Policy number', value: policy.policyNumber, icon: 'document-text-outline' },
             { label: 'Date of birth', value: customerDetails.dateOfBirth, icon: 'calendar-outline' },
             { label: 'Phone', value: customerDetails.phone, icon: 'call-outline' },
