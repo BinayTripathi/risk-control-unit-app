@@ -4,12 +4,12 @@
     "slug": "RiskControlUnit",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/policyintel-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/policyintel-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0B1F33"
     },
     "newArchEnabled": true,
     "plugins": [
@@ -55,13 +55,13 @@
       "targetSdkVersion": 35,
       "buildToolsVersion": "35.0.0",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/policyintel-adaptive-icon.png",
+        "backgroundColor": "#0B1F33"
       },
       "splash": {
-        "image": "./assets/splash.png",
+        "image": "./assets/policyintel-splash.png",
         "resizeMode": "contain",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0B1F33"
       },
       "usesCleartextTraffic": true,
        "uses-permission android":"name",
