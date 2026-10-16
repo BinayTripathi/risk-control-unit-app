@@ -145,7 +145,7 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
       <LoadingModalWrapper shouldModalBeVisible = {loading}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {submitAlertBox}
-        <SectionHeading overline="Final step" title="Submit investigation" subtitle="Review the checklist, add your remarks and submit." />
+        <SectionHeading overline="Final step" title="Submit investigation" subtitle="Review the checklist, add your remarks and submit." icon="paper-plane" color="#34A56F" />
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Checklist</Text>

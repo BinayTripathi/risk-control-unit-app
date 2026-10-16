@@ -3,23 +3,25 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import { Ionicons } from '@expo/vector-icons';
 
-import { palette, radius, spacing, shadow } from '@core/theme';
+import { palette, radius, spacing, shadow, tones } from '@core/theme';
 import StatusBadge from './StatusBadge';
 
-const CollapsibleSection = ({ title, icon, sectionComplete, children }) => {
+const CollapsibleSection = ({ title, icon, tone = 'indigo', sectionComplete, children }) => {
   const [collapsed, setCollapsed] = useState(true);
+  const t = tones[tone] ?? tones.indigo
 
   return (
-    <View style={styles.section}>
-      <TouchableOpacity onPress={() => setCollapsed(!collapsed)} style={styles.header} activeOpacity={0.7}>
+    <View style={[styles.section, { borderLeftColor: sectionComplete ? tones.green.fg : t.fg }]}>
+      <TouchableOpacity onPress={() => setCollapsed(!collapsed)}
+        style={[styles.header, !collapsed && { backgroundColor: t.bg }]} activeOpacity={0.7}>
         {icon && (
-          <View style={styles.iconWrap}>
-            <Ionicons name={icon} size={18} color={palette.primary} />
+          <View style={[styles.iconWrap, { backgroundColor: collapsed ? t.bg : t.fg }]}>
+            <Ionicons name={icon} size={20} color={collapsed ? t.fg : palette.onPrimary} />
           </View>
         )}
         <Text style={styles.headerText}>{title}</Text>
         <StatusBadge status={sectionComplete ? 'success' : 'pending'} label={sectionComplete ? 'Done' : 'Pending'} />
-        <Ionicons name={collapsed ? 'chevron-down' : 'chevron-up'} size={20} color={palette.muted} style={styles.chevron} />
+        <Ionicons name={collapsed ? 'chevron-down' : 'chevron-up'} size={20} color={t.fg} style={styles.chevron} />
       </TouchableOpacity>
       <Collapsible collapsed={collapsed}>
         <View style={styles.content}>{children}</View>
@@ -33,10 +35,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     backgroundColor: palette.surface,
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.border,
+    borderLeftWidth: 5,
     width: '100%',
-    ...shadow.card,
+    overflow: 'hidden',
+    ...shadow.soft,
   },
   header: {
     flexDirection: 'row',
@@ -45,26 +47,23 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    backgroundColor: palette.primaryTint,
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   headerText: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
     color: palette.text,
   },
   chevron: {
     marginLeft: spacing.sm,
   },
   content: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.border,
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
   },

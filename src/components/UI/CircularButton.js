@@ -1,12 +1,13 @@
 import { StyleSheet, View, Text, Pressable} from 'react-native';
-import { palette, radius, spacing, shadow } from '@core/theme';
+import { palette, radius, spacing, shadow, tones } from '@core/theme';
 
 // Quick-action tile (icon + label). `title` is injected by CustomDateTimePicker once a date is chosen.
-export default CircularButton = ({label, title, children, onPress}) => {
+export default CircularButton = ({label, title, children, onPress, tone = 'orange'}) => {
+    const t = tones[tone] ?? tones.orange
 
     return (
-        <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, pressed && styles.pressed]}>
-            <View style={styles.icon}>
+        <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, { borderBottomColor: t.fg }, pressed && styles.pressed]}>
+            <View style={[styles.icon, { backgroundColor: t.bg }]}>
                 {children}
             </View>
             <Text style={styles.label} numberOfLines={2}>{label}</Text>
@@ -20,10 +21,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: palette.surface,
         borderRadius: radius.lg,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: palette.border,
+        borderBottomWidth: 3,
         padding: spacing.md,
-        ...shadow.card,
+        ...shadow.soft,
     },
     pressed: {
         opacity: 0.7,
@@ -32,7 +32,6 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: radius.md,
-        backgroundColor: palette.accentTint,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.md,

@@ -22,7 +22,7 @@ export default BeneficiaryDetailsComponent = ({selectedClaim}) => {
           subtitle={beneficiaryDetails.relation ? `Relation: ${beneficiaryDetails.relation}` : undefined}
           photoBase64={beneficiaryDetails.photo} />
 
-        <InfoCard title="Beneficiary details" rows={[
+        <InfoCard title="Beneficiary details" titleIcon="people" tone="orange" rows={[
           { label: 'Beneficiary ID', value: beneficiaryDetails.beneficiaryId, icon: 'id-card-outline' },
           { label: 'Date of birth', value: beneficiaryDetails.dateOfBirth, icon: 'calendar-outline' },
           { label: 'Phone', value: beneficiaryDetails.phone, icon: 'call-outline' },

@@ -172,7 +172,7 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
                   {steps.map((step, index) => (
                     <Pressable key={index} style={styles.segmentHit} onPress={() => goToStep(index)} hitSlop={{ top: 8, bottom: 8 }}
                       accessibilityLabel={`Go to ${step}`}>
-                      <View style={[styles.segment, index <= pageIndex && styles.segmentActive]} />
+                      <View style={[styles.segment, index < pageIndex && styles.segmentDone, index === pageIndex && styles.segmentActive]} />
                     </Pressable>
                   ))}
                 </View>
@@ -244,9 +244,9 @@ const styles = StyleSheet.create({
     },
     stepTitle: {
       flex: 1,
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '700',
-      color: palette.text,
+      color: palette.primary,
       marginRight: spacing.md,
     },
     stepCount: {
@@ -262,11 +262,14 @@ const styles = StyleSheet.create({
       flex: 1,
     },
     segment: {
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: palette.divider,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: palette.border,
+    },
+    segmentDone: {
+      backgroundColor: palette.primary,
     },
     segmentActive: {
-      backgroundColor: palette.primary,
+      backgroundColor: palette.accent,
     },
   });
