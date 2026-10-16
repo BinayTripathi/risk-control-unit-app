@@ -7,6 +7,7 @@ The text in every logo is converted to shapes, so no font is needed.
 | --- | --- |
 | Site header on a white or light background | `svg/policyintel-logo-on-light.svg` |
 | Site header or footer on navy (#0B1F33) | `svg/policyintel-logo-on-dark.svg` |
+| White Policy + amber Intel anywhere, with the navy background built in (social posts, slides, email) | `svg/policyintel-logo-navy-bg.svg`, `svg/policyintel-logo-stacked-navy-bg.svg`, or the `png/*-navy-bg-*` files |
 | Hero section, login page, about page | `svg/policyintel-logo-stacked-on-light.svg` or `-on-dark.svg` |
 | Small spaces, avatars, social profile pictures | `svg/policyintel-mark-on-light.svg` or `-on-dark.svg`, or `favicon/icon-512.png` |
 | Email signatures, Word documents, places that don't accept SVG | `png/` (the `128h` versions are for retina screens) |
@@ -29,6 +30,9 @@ The text in every logo is converted to shapes, so no font is needed.
 ```
 Put `favicon.ico` at the root of the site and everything else in `/brand/`.
 `icon-192.png` and `icon-512.png` are for a `manifest.json` if the site is a PWA.
+
+## Why the on-dark files look blank on GitHub
+The on-dark files have a transparent background and white "Policy" text, so on a white page only "Intel" shows. Put them on navy, or use the `navy-bg` files.
 
 ## Rules
 - Use the on-dark files on navy or dark backgrounds, and the on-light files on white or light backgrounds.
