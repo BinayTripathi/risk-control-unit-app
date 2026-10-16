@@ -27,7 +27,7 @@ const ImageCaptureScreen = ({ route }) => {
 
 
   const imageCaptureSceen =  (
-    <Background>
+    <Background variant="dark">
         <View style={styles.container}>
         { docType.type === "PHOTO" && <ImageCapture setPhotoData={setPhotoData}  docType = {docType} /> }
         { docType.type === "DOCUMENT" && <DocumentScanner setPhotoData={setPhotoData}  docType = {docType} /> }
@@ -39,7 +39,7 @@ const ImageCaptureScreen = ({ route }) => {
     )
 
   const imagePreviewScreen =  (
-    <Background>
+    <Background variant="dark">
       <View style={styles.container}>
         { (docType.type === "PHOTO" ||  docType.type === "DOCUMENT") &&
         <ImagePreview photoData= {photoData} setPhotoData={setPhotoData} 

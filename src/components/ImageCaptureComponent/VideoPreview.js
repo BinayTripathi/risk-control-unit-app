@@ -1,3 +1,4 @@
+import { palette, radius } from '@core/theme';
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet,Text,TouchableOpacity, View, Image, Alert, Dimensions, Button} from "react-native";
 import { actuatedNormalize, actuatedNormalizeVertical, isTab } from "@core/PixelScaling";
@@ -62,15 +63,15 @@ export const VideoPreview = ({photoData, setPhotoData, claimId, docType, email, 
     const playVideo = <TouchableOpacity  onPress={() =>  status.isPlaying ? video.current.pauseAsync() : video.current.playAsync()} 
         style={styles.button}>
             <View style={styles.buttonInside}>
-                {!status.isPlaying && <Ionicons name="play" size={50} color="blue" />}
-                {status.isPlaying && <MaterialCommunityIcons name="pause" size={50} color="green" />}
+                {!status.isPlaying && <Ionicons name="play" size={28} color={palette.onCamera} />}
+                {status.isPlaying && <Ionicons name="pause" size={28} color={palette.onCamera} />}
             </View>          
     </TouchableOpacity>
 
     const uploadVideoBt = <TouchableOpacity  onPress={uploadVideo} 
-    style={styles.button}>
+    style={[styles.button, styles.primaryButton]} accessibilityLabel="Upload video">
         <View style={styles.buttonInside}>
-            <Entypo name="upload-to-cloud" size={45} color="blue" />
+            <Ionicons name="cloud-upload-outline" size={30} color={palette.onPrimary} />
         </View>          
     </TouchableOpacity>
 
@@ -78,7 +79,7 @@ export const VideoPreview = ({photoData, setPhotoData, claimId, docType, email, 
     const retakeVideoBt = <TouchableOpacity  onPress={() => setPhotoData(null)} 
     style={styles.button}>
         <View style={styles.buttonInside}>
-            <MaterialCommunityIcons name="camera-retake" size={50} color="blue" />
+            <Ionicons name="refresh" size={26} color={palette.onCamera} />
         </View>          
     </TouchableOpacity>
 
@@ -118,39 +119,45 @@ export const VideoPreview = ({photoData, setPhotoData, claimId, docType, email, 
    const styles = StyleSheet.create({
 
     container: {
-        flex: 1, 
+        flex: 1,
         marginTop: actuatedNormalizeVertical(cameraMarginTop),
         alignItems: 'center',
     },
     cameraContainer: {
-        flexDirection: 'row',    
-        borderRadius: 10 
+        flexDirection: 'row',
+        borderRadius: radius.lg
     },
     video: {
       alignSelf: 'center',
       width: actuatedNormalize(400),
       height: actuatedNormalizeVertical(630),
-      borderRadius: 10    
+      borderRadius: radius.lg
     },
     buttons: {
       flex: 1,
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      justifyContent: 'space-evenly',
       alignItems: 'center',
-      width: 300
+      width: '100%',
     },
 
-    button: {                
-        borderRadius: 70,
-        height: 65,
-        width: 65,
+    button: {
+        borderRadius: 32,
+        height: 64,
+        width: 64,
         borderWidth: 1,
+        borderColor: palette.cameraBorder,
+        backgroundColor: palette.cameraSurface,
+    },
+    primaryButton: {
+        width: 76,
+        height: 76,
+        borderRadius: 38,
+        borderWidth: 0,
+        backgroundColor: palette.primary,
     },
     buttonInside: {
-        flex: 1, 
-        alignItems: "center", 
-        justifyContent: "center", 
-        borderRadius: 1000,  
-        borderColor: "black",
-        borderWidth: 1}
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center"}
   })

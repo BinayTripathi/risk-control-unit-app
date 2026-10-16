@@ -1,217 +1,70 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Image,  Dimensions} from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 
-import { AntDesign, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
-
-import Card from '@components/UI/Card';
 import CircularButton from '@components/UI/CircularButton';
 import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
+import SectionHeading from '@components/UI/SectionHeading';
+import InfoCard from '@components/UI/InfoCard';
 
-import { theme } from '@core/theme';
-import { Padder } from '@components//UI/Wrapper';
+import { palette, spacing } from '@core/theme';
 
 
-const { width,  height } = Dimensions.get('window');
-export default PolicyDetailsComponent = ({selectedClaim}) => {  
+export default PolicyDetailsComponent = ({selectedClaim}) => {
 
   const [appointmentTime, setAppointmentTime] = useState('');
-  
+
     if(selectedClaim === undefined)
       return null;
 
     let policy = selectedClaim.policy
     if(policy === undefined)
       return null;
-  
-      return (            
-        
-         <Padder>
-          <View  style={styles.container} >   
 
-            <View style={{paddingLeft: 10, marginTop: 10}}> 
-                <Text style = {[styles.textBase, styles.description ]}>POLICY DETAILS</Text>
+      return (
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+          <SectionHeading overline="Policy" title={policy.policyNumber} subtitle={policy.claimType} />
+
+          <InfoCard title="Policy details" rows={[
+            { label: 'Policy number', value: policy.policyNumber, icon: 'document-text-outline' },
+            { label: 'Claim type', value: policy.claimType, icon: 'pricetag-outline' },
+            { label: 'Issue date', value: policy.issueDate, icon: 'calendar-outline' },
+            { label: 'Incident date', value: policy.incidentDate, icon: 'alert-circle-outline' },
+            { label: 'Reason', value: policy.reason, icon: 'information-circle-outline' },
+            { label: 'Appointment', value: appointmentTime, icon: 'time-outline' },
+          ]} />
+
+          <View style={styles.actions}>
+            <View style={styles.action}>
+              <CustomDateTimePicker dateTimeInParent={appointmentTime} setDateTimeInParent = {setAppointmentTime} label={'Select Date And Time'}>
+                <CircularButton label='Schedule visit'><Ionicons name="calendar-outline" size={22} color={palette.accent} /></CircularButton>
+              </CustomDateTimePicker>
             </View>
-         
 
-              <View style =  {styles.detailsCardContainer}>      
-
-              <Card style = {styles.card}>     
-
-                <View style= {styles.detailsContainer}>                          
-                    <Text style = {[styles.textBase , styles.label]}>Policy Number</Text>                 
-                    <Text style = {[styles.textBase , styles.personDetail]}>{policy.policyNumber}</Text>                   
-                  </View>
-                <View style= {[styles.detailsContainer,  styles.seperator]}>                          
-                    <Text style = {[styles.textBase , styles.label]}>Claim Type</Text>                 
-                    <Text style = {[styles.textBase , styles.personDetail]}>{policy.claimType}</Text>                   
-                  </View>
-
-                  <View style= {styles.detailsContainer}>                          
-                    <Text style = {[styles.textBase , styles.label ]}>Issue Date</Text>                 
-                    <Text style = {[styles.textBase, styles.personDetail ]}>{policy.issueDate}</Text>                   
-                  </View>
-
-                  <View style= {[styles.detailsContainer,  styles.seperator]}>                          
-                  <Text style = {[styles.textBase , styles.label ]}>Incident Date</Text>                 
-                    <Text style = {[styles.textBase, styles.personDetail ]}>{policy.incidentDate}</Text>                
-                  </View>
-
-                  <View style= {[styles.detailsContainer]}>                          
-                    <Text style = {[styles.textBase , styles.label]}>Reason</Text>                 
-                    <View style={{paddingLeft: 20,  flexShrink: 1}}><Text style = {[styles.textBase , styles.personDetail]}>{policy.reason}</Text></View>                       
-                  </View>   
-
-                  { appointmentTime && <View style= {styles.detailsContainer}>                          
-                    <Text style = {[styles.textBase , styles.label ]}>Appointment</Text>                 
-                    <Text style = {[styles.textBase, styles.personDetail ]}>{appointmentTime}</Text>                   
-                  </View> }
-
-                </Card>                            
-                <Image source={require('@root/assets/policydocument.png')} style={styles.image} /> 
-                                     
-               </View>  
-
-                <View style =  {[styles.detailsCardContainer, { flexDirection: 'row',justifyContent: 'space-around'}]}>
-
-                  <View style={styles.actionButton}>
-                    <CustomDateTimePicker dateTimeInParent={appointmentTime} setDateTimeInParent = {setAppointmentTime} label={'Select Date And Time'}>
-                      <CircularButton label='Schedule Visit'><AntDesign name="calendar" size={40} color="#f53708" /></CircularButton>
-                    </CustomDateTimePicker>
-                  </View>
-
-                  <View style={styles.actionButton}>
-                    <CircularButton label='Get Direction'><FontAwesome5 name="directions" size={40} color="#f53708" /></CircularButton>
-                  </View>
-                
-                
-                </View>
-                        
+            <View style={styles.action}>
+              <CircularButton label='Get directions'><Ionicons name="navigate-outline" size={22} color={palette.accent} /></CircularButton>
+            </View>
           </View>
-          </Padder>       
-       
-   
-          
-              
-              )
+        </ScrollView>
+      )
   }
-  
-  
-  
+
   const styles = StyleSheet.create({
-  
-      container : {
-         flex: 1,
-         width: width,
-         marginTop: 70,
-      },  
-
-      description: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#181818',
-        fontSize: 28,
-        fontWeight: 'bold',
-        textShadowColor: 'rgba(22, 6, 96, 0.75)',
-        textShadowOffset: {width: 1, height: 1},
-        textShadowRadius: 20,
-      },
-      ovalContainer : {            
-         
-      },
-      oval: {        
-          height: width,
-          borderRadius: width/2,
-          backgroundColor:'transparent',
-          transform: [{ scaleX: 2 }],
-      },   
-      transformCompress : {
-          transform: [{ scaleX: 1/2 }],
-      },
-  
-      titleContainer : {
-          padding: 10,
-          marginTop: 70,  
-     },
-        image: {
-          width: 80,
-          height: 80,
-          borderRadius: 80,  
-          transform: [{ translateY: -25 }],
-        },
-        shadowContainer : {
-          marginTop: 20,
-          shadowOffset: { width: 1, height: 1 },
-          shadowColor: '#333',
-          shadowOpacity: 0.3,
-          shadowRadius: 2,
-          alignItems: 'center'
-        },
-
-        mainTitle: {
-          fontSize: 20,
-          fontWeight: 'bold',
-          color: '#181818'
-        },
-
-       detailsCardContainer : {     
-        marginTop: 20,          
-        alignContent: 'center',
-        alignItems: 'center', 
-    }, 
-
-    card : { 
-      alignItems: 'flex-start', 
-      padding: 20, 
-      width: '90%', 
-      backgroundColor: theme.colors.details_card_color
-      //backgroundColor:'#cccccc'
-    },
-
-    detailsContainer : {      
-      flexDirection: 'row', 
-      alignItems: 'center', 
-      justifyContent: 'space-between', 
+    scrollView: {
+      flex: 1,
       width: '100%',
-      marginVertical: 3
-  }, 
-
-  detailsContainerColumn : {      
-    
-    alignItems: 'flex-start', 
-    justifyContent: 'flex-start', 
-    width: '100%',
-    marginVertical: 3
-}, 
-
-  seperator: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderSeperator,
-  },
-
-  textBase: {
-      color: 'black',
     },
-    
-    
-    label: {
-      fontWeight: '400',
-      fontSize: 16,
-      color: '#FFC334'
+    content: {
+      padding: spacing.lg,
+      paddingBottom: spacing.xxl * 2,
     },
-
-    personDetail: {
-      fontSize: 17,
-      fontWeight: 'bold',
-      color: '#cccccc'
+    actions: {
+      flexDirection: 'row',
+      marginTop: spacing.md,
+      gap: spacing.md,
     },
-
-    actionButton: {
-      width: '38%',
-      aspectRatio: 1,    
-        borderRadius: 50,
-        backgroundColor: 'red'
-    }
-    
-
+    action: {
+      flex: 1,
+    },
 })

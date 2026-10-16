@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { View, Text , TextInput, StyleSheet, Dimensions , ScrollView, Platform} from "react-native"
+import { View, Text , TextInput, StyleSheet, ScrollView, Platform, Pressable} from "react-native"
 import Checkbox from 'expo-checkbox';
-import { FontAwesome } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import Button from '@components/UI/Button'
 import { SCREENS } from '@core/constants';
 import {requestSubmitCaseAction} from '@store/ducks/case-submission-slice'
-import { theme } from '@core/theme';
+import { theme, palette, radius, spacing, shadow, typography } from '@core/theme';
+import SectionHeading from '@components/UI/SectionHeading';
 import useNetworkInfo from "../../hooks/useNetworkInfo";
 import { DOC_TYPE } from '@core/constants';
 import LoadingModalWrapper from '@components/UI/LoadingModal';
@@ -19,7 +19,6 @@ import OkayCancelDialogBox from "@components/UI/OkayCancelDialogBox";
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
 
-const { width, height } = Dimensions.get('window');
 const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
     
   let allCaseUpdates = useSelector((state) => state.casesUpdates.casesUpdates);
@@ -112,12 +111,14 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
           if(checkedTask === false && value.isRequired === true ) 
             completeCheckList = false
 
-          //console.log(`Submit : ${key} ${value.isRequired} ${value.completed.faceIds} ${value.completed.documentId} ${value.completed.questions}`)
-      
           return (
-            <View style={styles.checklistCheckboxContainer} key={key}>
-              <Checkbox style={styles.checkbox} value={checkedTask}  />
-              <Text style={styles.label1}>{key }{value.isRequired && <Text style={styles.label1}>*</Text>}</Text>
+            <View style={styles.checklistRow} key={key}>
+              <Ionicons
+                name={checkedTask ? 'checkmark-circle' : 'ellipse-outline'}
+                size={22}
+                color={checkedTask ? palette.success : palette.muted} />
+              <Text style={styles.checklistText}>{key}{value.isRequired && <Text style={styles.required}> *</Text>}</Text>
+              <Text style={[styles.checklistStatus, checkedTask && styles.checklistStatusDone]}>{checkedTask ? 'Complete' : 'Incomplete'}</Text>
             </View>
           )
         } ) : false
@@ -137,81 +138,58 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
                                 }} 
                                 cancelHandler={ () => {} }/>
 
+    const canSubmit = !!remark && isTermsAccepted && isOnline
+
     return (
       <PaperProvider theme={theme}>
       <LoadingModalWrapper shouldModalBeVisible = {loading}>
-      <View style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {submitAlertBox}
-        <View style = {{marginTop: 40, marginBottom: 20}}>
-          <Text style = {[styles.textBase, styles.description ]}>SUBMIT INVESTIGATION</Text>
+        <SectionHeading overline="Final step" title="Submit investigation" subtitle="Review the checklist, add your remarks and submit." />
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Checklist</Text>
+          {checkList}
         </View>
 
-        <ScrollView style={styles.scrollView}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Investigation remarks</Text>
+          <View style={styles.remarksBox}>
+            <TextInput
+                    placeholder="Enter investigation comments"
+                    placeholderTextColor={palette.muted}
+                    onChangeText={setRemark}
+                    value={remark}
+                    multiline={true}
+                    numberOfLines={6}
+                    keyboardType={
+                    Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
+                    style={styles.input}  />
+            <SpeechToText getSpeechToTextResult= {setRemarksBySpeechToText}/>
+          </View>
+        </View>
 
-            <View style={styles.checklistContainer}>
-            <Text style={[styles.label, {textDecorationLine: 'underline'}]}>CHECKLIST:</Text>
-              {checkList}
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <TextInput
-                      placeholder="Enter investigation comments"
-                      onChangeText={setRemark}
-                      value={remark}
-                      multiline={true}
-                      numberOfLines={50}
-                      keyboardType={
-                      Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
-                      style={styles.input}  />
-                      <SpeechToText getSpeechToTextResult= {setRemarksBySpeechToText}/>
-            </View>     
+        <Pressable style={styles.termsRow} onPress={() => setTermsAccepted(!isTermsAccepted)}>
+          <Checkbox color={palette.primary} value={isTermsAccepted} onValueChange={setTermsAccepted} />
+          <Text style={styles.termsText}>I confirm the information captured is accurate and agree to the Terms & Conditions</Text>
+        </Pressable>
 
-            <View style={styles.checkboxContainer}>
-              <Checkbox style={styles.checkbox} value={isTermsAccepted} onValueChange={setTermsAccepted} />
-              <Text style={styles.label}>I agree to the Terms & Conditions</Text>
-            </View>
+        {!completeCheckList && <Text style={styles.hint}>Some required locations are incomplete.</Text>}
+        {!isOnline && <Text style={styles.hint}>You are offline. Connect to the internet to submit.</Text>}
 
-            <View style={{flexDirection: 'row', marginTop: 20}}>
-              <View style={{padding: 10}}>
-                  <Button mode="elevated" style={[styles.button,!remark  || !isTermsAccepted || !isOnline || !completeCheckList? 
-                  {backgroundColor: theme.colors.disabledSubmitButton} : {backgroundColor: theme.colors.submitButton}]} 
-                              disabled={remark === null} onPress={() => {
-                                  if (!remark  || !isTermsAccepted || !isOnline) 
-                                    return
-                                  
-                                    setShowSubmitDialog(true)
-                                  /*let dataAvailable = caseUpdates !== undefined && caseUpdates['FORM_TEMPLATE1'] !== undefined                                  
-                                  const payload = {
-                                      claimId: selectedClaimId,  
-                                      email: userId,
-                                      beneficiaryId: selectedClaim.beneficiary.beneficiaryId,
-                                      Question1:  dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question1 : '',
-                                      Question2: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question2: '',
-                                      Question3: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question3 : '',
-                                      Question4: dataAvailable == true? caseUpdates['FORM_TEMPLATE1'].question4 : '',
-                                      Remarks: remark
-                                  }
-                                  dispatch(requestSubmitCaseAction(payload))
-                                  navigation.navigate(SCREENS.CaseList)*/
-                              }
-                              }>
-                              
-                                <FontAwesome name="binoculars" size={20} color="white"/>
-                                <Text style={{marginLeft: 2}}>SUBMIT</Text> 
-                        
-                              </Button>
-              </View>
+        <Button mode="contained" icon="send" disabled={!canSubmit}
+                onPress={() => {
+                    if (!remark  || !isTermsAccepted || !isOnline)
+                      return
+                    setShowSubmitDialog(true)
+                }}>
+          Submit case
+        </Button>
+        <Button mode="outlined" variant="secondary" icon="eraser" disabled={!remark} onPress={() => setRemark('')}>
+          Clear remarks
+        </Button>
 
-              <View style={{padding: 10}}>
-                  <Button mode="elevated" style={[styles.button,!remark? {backgroundColor: 'grey'} : {backgroundColor: 'black'}]} 
-                              disabled={remark === null} onPress={() => setRemark('')}><AntDesign name="delete" size={20} color="white" />RESET </Button>
-              </View>
-            </View>
-
-          </ScrollView>
-
-        
-    </View>
+      </ScrollView>
     </LoadingModalWrapper>
     </PaperProvider>
     )
@@ -220,104 +198,82 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
 export default submitInvestigation
 
 const styles = StyleSheet.create({
-    container: {
-      height: height,
-      overflow: 'hidden',
-      alignItems: "center",     
-      paddingHorizontal: 20,
-      padding: 50,
+    scrollView: {
+      flex: 1,
+      width: '100%',
     },
-
-    textBase: {
-        color: 'black',
-      },
-      description: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#181818',
-        fontSize: 28,
-        fontWeight: 'bold',
-        textShadowColor: 'rgba(22, 6, 96, 0.75)',
-        textShadowOffset: {width: 1, height: 1},
-        textShadowRadius: 20,
-      },
-      label: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        margin: 8,
-      },
-      label1: {
-        fontSize: 15,
-        fontWeight: 'bold',
-        margin: 8,
-      },
-
-      checklistContainer : {
-        marginTop: 5,
-        width: '90%',
-        backgroundColor: '#d1cbcb',
-        opacity: 0.7,
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        shadowOffset: {width: 0, height: 1},
-        shadowRadius: 2,
-        elevation: 2,
-        shadowOpacity: 0.4,
-    } ,
-
-    customInputBox:{
-
-      width: '90%'
+    content: {
+      padding: spacing.lg,
+      paddingBottom: spacing.xxl * 2,
     },
-
-    inputContainer : {
-        marginTop: 30,
-        width: '90%',
-        //alignItems: "center",
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        height: 160,
-        borderRadius: 20,
-        padding: 0,
-        shadowOffset: {width: 0, height: 1},
-        shadowRadius: 2,
-        elevation: 2,
-        shadowOpacity: 0.4,
-
-    } ,
-
-    input:{
-        alignItems: 'center',
-        width: '80%',
-        backgroundColor: 'white',        
-        textAlignVertical:'top',
-        borderRadius: 20,
-        padding: 20
-      },
-      button: {
-        marginRight: 5,
-        marginBottom: 10
-      },
-      checkboxContainer: {
-        flexDirection: 'row',
-        marginBottom: 20,
-        marginTop: 20,
-      },
-      checklistCheckboxContainer: {
-        flexDirection: 'row',
-      },
-      checkbox: {
-        margin: 8,
-      },
-
-      relationContainer : {
-        flexDirection: 'row',
-        marginVertical: 30,    
-        paddingHorizontal: 5,
-        alignItems: 'center',
-        width: '95%',
-        zIndex: 200,
-      },
+    card: {
+      backgroundColor: palette.surface,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: palette.border,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+      ...shadow.card,
+    },
+    cardTitle: {
+      ...typography.label,
+      marginBottom: spacing.sm,
+    },
+    checklistRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    checklistText: {
+      flex: 1,
+      marginLeft: spacing.md,
+      fontSize: 15,
+      fontWeight: '500',
+      color: palette.text,
+    },
+    checklistStatus: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: palette.muted,
+    },
+    checklistStatusDone: {
+      color: palette.success,
+    },
+    required: {
+      color: palette.danger,
+    },
+    remarksBox: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: radius.md,
+      backgroundColor: palette.surfaceAlt,
+      paddingRight: spacing.sm,
+    },
+    input: {
+      flex: 1,
+      minHeight: 120,
+      padding: spacing.md,
+      fontSize: 15,
+      color: palette.text,
+      textAlignVertical: 'top',
+    },
+    termsRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginVertical: spacing.md,
+    },
+    termsText: {
+      flex: 1,
+      marginLeft: spacing.md,
+      fontSize: 14,
+      lineHeight: 20,
+      color: palette.subText,
+    },
+    hint: {
+      fontSize: 13,
+      color: palette.warning,
+      marginBottom: spacing.sm,
+    },
 })

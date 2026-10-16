@@ -1,59 +1,38 @@
-import { ImageBackground, StyleSheet, View, Dimensions } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, View } from 'react-native'
 
-import { theme } from '@core/theme';
+import { palette } from '@core/theme';
 import Toast from 'react-native-root-toast';
 import useNetworkInfo from '@hooks/useNetworkInfo';
 
 
 export default function Background({ children }) {
 
-  const { width, height } = Dimensions.get('window');
   let [isNetworkConnected] = useNetworkInfo()
-  
+
   return (
-    <LinearGradient
-      colors={[theme.colors.gradientA, theme.colors.gradientB, theme.colors.gradientB,theme.colors.gradientC]}
-      style={styles.rootContainer}
-    >
-     
-    
+    <View style={styles.rootContainer}>
         <Toast
             visible={!isNetworkConnected}
             position={50}
             shadow={false}
             animation={true}
             duration={Toast.durations.SHORT}
-            backgroundColor='red'
-        >No Internet Connection</Toast>
-      <ImageBackground
-        source={require('../../../assets/backgroundimg.jpg')}
-        resizeMode="cover"
-        style={styles.rootContainer}
-        imageStyle={styles.background}
-      >
-        <View style={[styles.container, { width, height }]}>
+            backgroundColor={palette.danger}
+        >No internet connection</Toast>
+        <View style={styles.container}>
           {children}
         </View>
-         
-        
-      </ImageBackground>
-      </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  background: {
-    opacity: 0.085,
-  },
   rootContainer: {
     flex: 1,
     width: '100%',
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: palette.background,
   },
-  container: {    
+  container: {
     flex: 1,
     width: '100%',
     alignSelf: 'center',

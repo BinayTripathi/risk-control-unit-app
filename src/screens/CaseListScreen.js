@@ -1,6 +1,7 @@
 import {useState, useEffect} from "react";
 import { StyleSheet,  View, useWindowDimensions } from "react-native";
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { TabView, TabBar, SceneMap } from 'react-native-tab-view';
+import { Ionicons } from '@expo/vector-icons';
 import * as Location from "expo-location";
 
 import CaseList from "@components/CasesComponent/CaseList";
@@ -8,6 +9,7 @@ import CaseGeolocation from "@components/CasesComponent/CaseGeolocation"
 
 import {SECURE_USER_KEY} from '@core/constants'
 import {secureGet} from '@helpers/SecureStore'
+import { palette } from '@core/theme'
 
 
 
@@ -45,8 +47,8 @@ export default function CaseListScreen() {
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    { key: 'first', title: 'ListView' },
-    { key: 'second', title: 'MapView' },
+    { key: 'first', title: 'List' },
+    { key: 'second', title: 'Map' },
   ]);
 
   const ListView = () => (
@@ -72,16 +74,42 @@ if (!userId) {
       onIndexChange={setIndex}
       initialLayout={{ width: layout.width }}
       tabBarPosition= "bottom"
-      options={{unmountOnBlur: true}}
+      renderTabBar={(props) => (
+        <TabBar
+          {...props}
+          style={styles.tabBar}
+          indicatorStyle={styles.tabIndicator}
+          activeColor={palette.primary}
+          inactiveColor={palette.muted}
+        />
+      )}
+      commonOptions={{
+        labelStyle: styles.tabLabel,
+        icon: ({ route, color }) => (
+          <Ionicons name={route.key === 'first' ? 'list' : 'map-outline'} size={20} color={color} />
+        ),
+      }}
     />
 
     
   );
 }
 const styles = StyleSheet.create({
-  container: {
-    flex:1,
-    marginTop: 50
-    
-  }
+  tabBar: {
+    backgroundColor: palette.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.border,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  tabIndicator: {
+    backgroundColor: palette.primary,
+    height: 3,
+    top: 0,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'none',
+  },
 });

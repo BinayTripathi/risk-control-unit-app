@@ -1,15 +1,15 @@
 import {useState, useEffect} from "react";
-import { StyleSheet,  View, FlatList, RefreshControl, Alert } from "react-native";
+import { StyleSheet,  View, Text, FlatList, RefreshControl } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import { Searchbar } from 'react-native-paper';
 import { useIsFocused } from '@react-navigation/native'
 import { useDispatch, useSelector } from 'react-redux';
 import Background from "@components/UI/Background";
-import Paragraph from '@components/UI/Paragraph'
 import CaseItem from "@components/CasesComponent/CaseItem";
 import Button from "@components/UI/Button"
 
 import {requestCases, requestCasesOffline, requestCasesCoordinates} from '@store/ducks/cases-slice'
-import { Padder } from "../UI/Wrapper";
+import { palette, radius, spacing, typography } from '@core/theme';
 
 export default function CaseList({userLocPromise,userId}) {
   
@@ -94,71 +94,109 @@ export default function CaseList({userLocPromise,userId}) {
     return caseM
   }
 
-  let casesToShow = <View style = {{paddingTop: 20}}>
-      <Paragraph>
-        NO CASES TO DISPLAY
-      </Paragraph>
-      <Button mode="elevated" style={[styles.refreshButton]} 
+  let casesToShow = <View style={styles.emptyState}>
+      <View style={styles.emptyIcon}>
+        <Ionicons name="folder-open-outline" size={32} color={palette.primary} />
+      </View>
+      <Text style={styles.emptyTitle}>No cases to show</Text>
+      <Text style={styles.emptyText}>{searchQuery ? 'No cases match your search.' : 'New cases assigned to you will appear here.'}</Text>
+      <Button mode="outlined" variant="secondary" icon="refresh" style={styles.refreshButton}
                             onPress={() => setForceRerender((Math.random() + 1).toString(36).substring(7))}>
-                              REFRESH </Button>
+                              Refresh</Button>
     </View>
   if(retriveAllCases() !== null && retriveAllCases().length != 0 && retriveAllCases()[0].customerName !== undefined) {
-    casesToShow =    <FlatList data={retriveAllCases()} 
-                      renderItem={renderClaimItem} 
+    casesToShow =    <FlatList data={retriveAllCases()}
+                      style={styles.list}
+                      contentContainerStyle={styles.listContent}
+                      renderItem={renderClaimItem}
                       keyExtractor={(item) => item.claimId}
                       refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={dispatchFetchRequest} />
+                        <RefreshControl refreshing={refreshing} onRefresh={dispatchFetchRequest} colors={[palette.primary]} />
                       }/>
-           
+
   }
 
   return (
     <LoadingModalWrapper shouldModalBeVisible = {isLoading}>
-      <Background>      
-        <Padder>
+      <Background>
           <View style= {styles.container}>
-
               <View style= {styles.searchBoxContainer}>
                   <Searchbar
-                        placeholder="Search By Name/Policy"
+                        placeholder="Search by name or policy"
                         onChangeText={onChangeSearch}
-                        value={searchQuery}/>
+                        value={searchQuery}
+                        style={styles.searchBox}
+                        inputStyle={styles.searchInput}
+                        iconColor={palette.subText}
+                        placeholderTextColor={palette.muted}
+                        elevation={0}/>
               </View>
               <View style= {styles.listsContainer}>
                   {isLoading ? null : casesToShow}
-              </View>      
-          </View> 
-        </Padder>
-              
-        
+              </View>
+          </View>
       </Background>
     </LoadingModalWrapper>
   );
 }
 const styles = StyleSheet.create({
   container: {
-    flex:1,
-    marginTop: 90,      
-    justifyContent: 'center',
-    paddingBottom: 10
+    flex: 1,
+    width: '100%',
   },
   searchBoxContainer : {
-    flex: 1,
-    width: 320
-  },
-  listsContainer : {   
-    flex: 9,
-    padding: 2,
-    paddingTop: 25,
-    alignItems: 'center',    
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   searchBox: {
-    width: 320
+    backgroundColor: palette.surface,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    height: 48,
+  },
+  searchInput: {
+    fontSize: 15,
+    color: palette.text,
+    minHeight: 0,
+  },
+  listsContainer : {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.xxl * 2,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: palette.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  emptyTitle: {
+    ...typography.heading,
+    marginBottom: spacing.xs,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: palette.subText,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
   },
   refreshButton : {
-    marginRight: 5,
-    marginBottom: 10,
-    alignSelf: "center"
+    width: 160,
   },
-
 });

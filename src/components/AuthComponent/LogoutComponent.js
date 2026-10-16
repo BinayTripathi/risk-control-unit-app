@@ -10,6 +10,8 @@ import { SCREENS } from '@core/constants';
 import {secureRemove} from '@helpers/SecureStore'
 import {SECURE_USER_KEY} from '@core/constants'
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
+import { Ionicons } from '@expo/vector-icons';
+import { palette, spacing } from '@core/theme';
 
 export default function Logout() {
 
@@ -18,7 +20,7 @@ export default function Logout() {
 
     return (
        <Pressable 
-         style={styles.logoutRow} 
+         style={({ pressed }) => [styles.logoutRow, pressed && styles.pressed]}
          onPress={() => {
            dispatch(logoutUser())
            navigation.reset({
@@ -43,23 +45,26 @@ export default function Logout() {
            })
          }}
        >
-         <Text style={styles.logoutText}>Logout</Text>
+         <Ionicons name="log-out-outline" size={22} color={palette.danger} />
+         <Text style={styles.logoutText}>Log out</Text>
        </Pressable>
     )
 }
 
 const styles = StyleSheet.create({
   logoutRow: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 15,
-    borderRadius: 10,
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  pressed: {
+    backgroundColor: palette.dangerTint,
   },
   logoutText: {
-    fontSize: 18,
-    color: '#fff',
+    marginLeft: spacing.md,
+    fontSize: 16,
+    color: palette.danger,
     fontWeight: '600',
   },
 });
-
-

@@ -1,27 +1,23 @@
-import { StyleSheet,View, Text , Dimensions, TouchableHighlight, Image} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import Card from '@components/UI/Card';
-import { theme } from '@core/theme';
+import CaptureItemCard from '@components/UI/CaptureItemCard';
+import { palette } from '@core/theme';
 import { SCREENS, DOC_TYPE, checkLoadingPhoto, checkSuccessPhoto, checkFailurePhoto, faceIds } from '@core/constants';
 import * as Speech from 'expo-speech';
-import Button from '@components/UI/Button'
-import Icon from 'react-native-vector-icons/FontAwesome5';
 import {updatePhotoOrDocumentUploadStatusAction,requestUpdateBeneficiaryPhotoCaseAction} from '@store/ducks/case-submission-slice'
 import { useDispatch} from 'react-redux'
 
 
-
-const { width, height } = Dimensions.get('window');
-
+// Uploaded images are replaced by a placeholder in redux after upload, so only show real image data
+const toImageUri = (base64) => base64 && base64.length > 100 ? `data:image/jpeg;base64,${base64}` : undefined
 
 const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
     const navigation = useNavigation();
     const mandatoryFaceIdListRef = useRef(new Set());
-    const iconSize = 50;
     const dispatch = useDispatch()
 
     const isEnabled = (faceId) => {
@@ -86,231 +82,42 @@ const PhotoIdScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempla
         
         let faceMatch = parseInt(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]?.facePercent ?? "0")
 
+        const status = isPhotoUploaded ? 'success'
+            : isUploadFailed ? 'failure'
+            : isEnabled(faceId) && checkLoadingPhoto(faceId.reportName, sectionName, caseUpdates) ? 'loading'
+            : 'idle'
+
         return (
-            <Card style = {[styles.card, !isEnabled(faceId)? styles.cardDisabled: {}]}  key={index}>
-
-                <TouchableHighlight onPress={()=> speechHandler(faceId)}  style={styles.button} underlayColor="#a2a1a0">
-                    <View style = {styles.labelContainer}>
-                        <Text style = {[styles.textBase , styles.label]}>{investigationName} {faceId.isRequired && ( <Text style={{ color: 'red' }}>*</Text>)}</Text>                    
-                        <Ionicons name='volume-medium' size={iconSize-30} color="orange" /> 
-                    </View>                
-                </TouchableHighlight>  
-
-                <View style= {styles.allIconContainerRow} >   
-                    <View style={{alignContent: 'center', alignItems: 'center'}}>
-                        <TouchableHighlight underlayColor="#ee5e33"  style={styles.touchable} disabled =  {!isEnabled(faceId)}
-                            onPress={()=> onClickDigitalId(sectionName, faceId)}>
-                                <View style= {[styles.eachIconContainer,  isEnabled(isEnabled)? {} : styles.disabled]}>
-                                    {isEnabled(faceId) && checkLoadingPhoto(faceId.reportName, sectionName, caseUpdates) && <Image source={require('@root/assets/loading.gif')} style={styles.statusImage} />}
-                                    {isPhotoUploaded && <Image source={require('@root/assets/checkmark.png')} style={styles.statusImage} /> }
-                                    {isUploadFailed && <Image source={require('@root/assets/failure.png')} style={styles.statusImage} />}
-
-                                    <View style= {{position: 'absolute'}}>
-                                        <Ionicons name="camera" size={iconSize} color="orange" />
-                                    </View>
-                                </View>                               
-                        
-                        </TouchableHighlight>
-                    </View>
-
-                    <View style = {styles.verticalSeperator}></View>
-
-                    {isPhotoUploaded &&
-                        <View style={styles.resultContainer}>
-                            <View style={styles.resultImageContainer}>
-                                <Image style = {[styles.image,faceMatch === 0? {borderColor: 'red'} :{}]} 
-                                    source = {{uri:`data:image/jpeg;base64,${caseUpdates[sectionName][faceIds][investigationName].locationImage}`}}/>               
-                            </View>
-                            <View style= {styles.resultStatusContainer}>
-                                { isPhotoUploaded &&
-                                <Text style = {[styles.textBase , styles.resultStatusLabel, faceMatch === 0? styles.resultStatusLabelFail: {}]}>Face Match  </Text> }
-                                { isPhotoUploaded &&
-                                <Text style = {[styles.textBase , styles.resultStatusLabel,  faceMatch === 0? styles.resultStatusLabelFail: {}]}>{faceMatch === 0? 'FAIL' : 'PASS'}</Text> }
-                            </View>
-                        </View>
-                    }
-
-                    {(isEnabled(faceId) !== true || (!isPhotoUploaded && !isUploadFailed)) && 
-                    <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
-                        <Image style = {{width: 100, height: 70, borderRadius: 10}} source={require('@root/assets/noimage.png')}/>
-                    </View> }
-
-                    {isUploadFailed  && 
-                                        <View style={{width: '60%', alignItems: 'center', justifyContent: 'center'}}>
-                                            <Button mode="contained" disabled= {false}
-                                                  
-                                                    onPress = {() => retryFailedUpload(sectionName, investigationName) }
-                                                    style={[styles.retryButton]}>
-                                                <Icon name="redo" size={16} color="#fff" style={styles.retryIcon} /> RETRY
-                                                </Button>
-                                        </View> }
-
-                </View>
-
-            </Card>
+            <CaptureItemCard
+                key={index}
+                title={investigationName}
+                required={faceId.isRequired}
+                disabled={!isEnabled(faceId)}
+                icon={<Ionicons name="camera-outline" size={26} color={palette.accent} />}
+                status={status}
+                onCapture={() => onClickDigitalId(sectionName, faceId)}
+                onSpeak={() => speechHandler(faceId)}
+                onRetry={() => retryFailedUpload(sectionName, investigationName)}
+                resultImageUri={toImageUri(caseUpdates?.[sectionName]?.[faceIds]?.[investigationName]?.locationImage)}
+                resultLabel="Face match"
+                resultPass={faceMatch !== 0}
+            />
         )
 
       })
 
 
     return (
-
-        <View style =  {styles.capabilityCardContainer}>           
-               
-                {dataCapturePoints}            
-                           
-      </View>  
+        <View style={styles.container}>
+            {dataCapturePoints}
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
-
-    capabilityCardContainer : {      
-      marginTop: 0,          
-      alignContent: 'center',
-      alignItems: 'center'       
-      },   
-      descriptionContainer : {
-        marginBottom: 40,        
-      } ,
-
-      description: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        textShadowColor: 'rgba(22, 6, 96, 0.75)',
-        textShadowOffset: {width: 1, height: 1},
-        textShadowRadius: 20,
-      },  
-     
-    card : { 
-        alignItems: 'center', 
-        padding: 10, 
-        marginBottom: 10,
-        width: width*0.80,
-        //backgroundColor: theme.colors.caseItemBackground
-        //backgroundColor: theme.colors.capabilitiesCardBackgroundColor,
-        backgroundColor: theme.colors.details_card_color
-    },
-    cardDisabled: {
-        opacity: 0.5
-    },
-    allIconContainerRow : {
-        flexDirection: 'row',
-        marginTop: 10,
-        alignContent: 'center',
-        alignItems: 'center',
+    container: {
         width: '100%',
-
     },
-    eachIconContainer : {       
-        alignContent: 'center',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: 'orange',
-        borderRadius: 20,
-        width: 70,
-        height: 70,
-        marginHorizontal: 20        
-    },
-    labelContainer : {
-        flexDirection: 'row',
-        borderRadius: 10,
-        borderBottomWidth: 2,
-        padding: 2,
-        paddingHorizontal: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderColor: 'orange',
-    },
-    disabled: {
-        opacity: 0.5,
-        backgroundColor: '#858383'
-    },
-    touchable: {
-        borderRadius: 20,
-        borderRadius: 8,
-        elevation: 10,      
-        alignItems: 'center',
-        width: 70,
-        height: 70,
-        marginHorizontal: 20,
-      },
-
-    button: {
-        marginTop: 5,
-    },    
-    textBase: {
-        color: 'black',
-        textAlign: 'center'
-    },
-    capabilityDescription: {
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    label: {
-        fontWeight: '500',
-        fontSize: 18,
-        color: 'white'
-     },      
-    statusImage : {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        resizeMode: 'contain',
-        transform: [{ translateX: 30 }, { translateY: -30 }],
-      },
-
-      verticalSeperator: {
-        width: 2, 
-        paddingVertical: 30, 
-        borderWidth: 1, 
-        borderColor: '#b5b1b1',
-        marginRight: 10
-    },
-    resultContainer : {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 10,
-        padding: 2,
-        backgroundColor: '#E18A07'
-    },
-    resultImageContainer : {
-        borderColor: 'orange',
-        borderRadius: 20,
-        width: 50,
-        height: 50,
-        borderWidth:2,
-    },
-    image : {
-      width: '100%',
-      height: '100%',
-      borderRadius: 20, 
-      borderWidth: 2,
-      borderColor: 'green'
-    },
-    resultStatusContainer : {
-        flexDirection: 'column',
-        alignSelf: 'center',
-        marginLeft: 10,
-    },
-    resultStatusLabel : {
-        fontWeight: '800',
-        fontSize: 15,
-        color: 'green',
-        width : 85
-    },
-    resultStatusLabelFail : {
-        color: 'red'
-    },
-retryButton: {
-    backgroundColor: '#FF9800',
-    width: '80%',
-    elevation: 3,
-  },
-  retryIcon: {
-    marginTop: 1,
-  },
-  })
+})
 
   export default PhotoIdScanner;

@@ -3,33 +3,20 @@ import { Pressable, StyleSheet, Text, View, Image} from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 
-import { theme } from '@core/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { palette, radius, spacing, shadow } from '@core/theme';
 //import { selectCase } from "@store/ducks/case-slice";
 import {isPointWithinRadius, getDistance} from 'geolib'
 import { Dialog, ALERT_TYPE } from 'react-native-alert-notification';
 import { GEOFENCING_RADIUS_IN_METRES } from "@core/constants";
 
-const TEXT_LENGTH = 60
-const TEXT_HEIGHT = 14
 
 function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
 
   let dispatch = useDispatch();
   const navigation = useNavigation()
 
-  const caseType =  caseDetails.claimType && caseDetails.claimType != "Death" ? 
-  ( <View style={styles.caseTypeHealthContainer}>
-        <View style={{ width: 60 }}>
-            <Text style={styles.caseType}> RCU</Text>
-        </View>
-    </View>
-  ) :
-  ( <View style={styles.caseTypeDeathContainer}>
-      <View style={{ width: 60 }}>
-          <Text style={styles.caseType}> CLAIM</Text>
-      </View>
-    </View>
-  )
+  const isClaim = !caseDetails.claimType || caseDetails.claimType == "Death"
 
   const handlePress = async () => {
     console.log('case item pressed')
@@ -70,37 +57,46 @@ function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
     
    }
 
-  let clientPhoto = 'data:image/*;base64,' + caseDetails?.customerPhoto
+  const hasPhoto = !!caseDetails?.customerPhoto
+  const initials = (caseDetails.customerName ?? '').trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() ?? '').join('')
+
   return (
-    <Pressable onPress={() =>handlePress()}> 
-      <View style={styles.caseItemContainer}> 
+    <Pressable onPress={() =>handlePress()} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+      <View style={[styles.accent, { backgroundColor: isClaim ? palette.accent : palette.primary }]} />
 
-          {caseType}
+      <View style={styles.body}>
+        <View style={styles.topRow}>
+          {hasPhoto
+            ? <Image style={styles.avatar} source={{uri: `data:image/*;base64,${caseDetails.customerPhoto}`}}/>
+            : <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.avatarText}>{initials}</Text></View>}
 
-          <View style={styles.caseItem}>
-            <View style={styles.caseItemLeft}>
-              <Text style={[styles.textBase, styles.name]}>{caseDetails.customerName}</Text>
-              <Text style={[styles.textBase, styles.district]}>{caseDetails.district}</Text>
-
-              <View style={{paddingTop: 10, borderTopColor: theme.colors.borderSeperator, borderTopWidth: 1}}>
-                <Text style={[styles.textBase, styles.description]}>Policy Number</Text> 
-                <Text style={[styles.textBase]}>{caseDetails.policyNumber}</Text>  
-              </View>                      
-            </View>
-
-            <View style={styles.caseItemRight}>
-              <View style = {styles.profilePhotoContainer} >
-                  <Image style = {{width: 40, height: 40, borderRadius: 20}} source = {{uri:`${clientPhoto}`}}/>
+          <View style={styles.nameBlock}>
+            <Text style={styles.name} numberOfLines={1}>{caseDetails.customerName}</Text>
+            {!!caseDetails.district && (
+              <View style={styles.districtRow}>
+                <Ionicons name="location-outline" size={13} color={palette.subText} />
+                <Text style={styles.district} numberOfLines={1}>{caseDetails.district}</Text>
               </View>
-              <View style={styles.dueByContainer}>
-                <Text style={styles.dueBy}>Code</Text>
-                <Text style={styles.dueBy}>{caseDetails.code}</Text>
-              </View>
-            </View>
-          
+            )}
           </View>
-      </View> 
-      
+
+          <View style={[styles.typeChip, { backgroundColor: isClaim ? palette.accentTint : palette.primaryTint }]}>
+            <Text style={[styles.typeChipText, { color: isClaim ? palette.accent : palette.primary }]}>{isClaim ? 'CLAIM' : 'RCU'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Text style={styles.metaLabel}>Policy number</Text>
+            <Text style={styles.metaValue} numberOfLines={1}>{caseDetails.policyNumber}</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Text style={styles.metaLabel}>Case code</Text>
+            <Text style={styles.metaValue} numberOfLines={1}>{caseDetails.code}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={palette.muted} />
+        </View>
+      </View>
     </Pressable>
   );
 }
@@ -108,106 +104,94 @@ function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
 export default CaseItem;
 
 const styles = StyleSheet.create({
-  caseItemContainer: {
+  card: {
     flexDirection: 'row',
-    marginVertical: 10,
-    alignItems: 'center'
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+    ...shadow.card,
   },
-  caseTypeHealthContainer: {
-    width: 30,
-    padding: 5,
-    height: '100%',
-    backgroundColor:  theme.colors.title2Color,
-    borderTopLeftRadius : 8,
-    borderBottomLeftRadius : 8,
-    textAlign: 'center',
-    
+  pressed: {
+    opacity: 0.8,
   },
-  caseTypeDeathContainer: {
-    width: 30,
-    padding: 5,
-    height: '100%',
-    backgroundColor: theme.colors.title1Color,
-    borderTopLeftRadius : 8,
-    borderBottomLeftRadius : 8,
-    //paddingTop: 40
-    
+  accent: {
+    width: 4,
   },
-  caseType : {
-    transform: [{ rotate: '270deg' }, { translateX: -23 }, 
-    { translateY: -23 }],
-    fontSize: 15,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignContent: 'center',
+  body: {
+    flex: 1,
+    padding: spacing.lg,
+  },
+  topRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  caseItem: {
-    padding: 12,
-    //backgroundColor: theme.colors.caseItemBackground,
-    backgroundColor: theme.colors.details_card_color,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopRightRadius : 8,
-    borderBottomRightRadius : 25,
-    elevation: 8,
-    shadowColor: theme.colors.shadow,
-    shadowRadius: 8,
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.4,
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: palette.divider,
   },
-  caseItemLeft: {
-    width : '60%'
+  avatarFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.primaryTint,
   },
-
-  caseItemRight: {
-    alignContent: 'center'
+  avatarText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: palette.primary,
   },
-  textBase: {
-    //color: theme.colors.text,
-    color: 'white'
+  nameBlock: {
+    flex: 1,
+    marginHorizontal: spacing.md,
   },
   name: {
-    fontSize: 22,
-    marginBottom: 4,
-    width: 160,
-    maxWidth: 180,
-    fontWeight: 'bold',
-    flexWrap: 'wrap'
+    fontSize: 16,
+    fontWeight: '700',
+    color: palette.text,
+  },
+  districtRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
   },
   district: {
-   
-   
+    marginLeft: 3,
+    fontSize: 13,
+    color: palette.subText,
   },
-  description: {
-    fontSize: 16,
-    marginBottom: 4,
-    fontWeight: 'bold',
+  typeChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
   },
-  profilePhotoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderColor: '#93be6e',
-    borderWidth: 2,
-    shadowColor: "black",  
-    shadowOpacity: 0.5,
-    shadowRadius: 2,
-    elevation:8,
-    margin: 10
+  typeChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  dueByContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: 'white',
-    justifyContent: 'center',
+  metaRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 4,
-    minWidth: 80
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.border,
   },
-  dueBy: {
-    color: theme.colors.text,
-    fontWeight: 'bold',
+  metaItem: {
+    flex: 1,
+  },
+  metaLabel: {
+    fontSize: 11,
+    color: palette.muted,
+    marginBottom: 2,
+  },
+  metaValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.text,
   },
 });

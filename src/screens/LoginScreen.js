@@ -8,9 +8,9 @@ import Background from '@components/UI/Background'
 import Logo from '@components/UI/Logo'
 import Button from '@components/UI/Button'
 
-import { Entypo } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
-import { theme } from '../core/theme'
+import { palette, radius, spacing, shadow, typography } from '../core/theme'
 import { SCREENS, SESSION_TTL_IN_SEC } from '../core/constants'
 import LoadingModalWrapper from '@components/UI/LoadingModal';
 import Constanst from 'expo-constants'
@@ -129,54 +129,71 @@ export default function LoginScreen({navigation}) {
   }
 
 
-   const loggingError = userLoggingError || pinMatchFailed ? 
-   <Text style={styles.errorTextStyle}>Invalid user id or PIN</Text> 
+   const loggingError = userLoggingError || pinMatchFailed ?
+   <View style={styles.errorRow}>
+     <Ionicons name="alert-circle" size={16} color={palette.danger} />
+     <Text style={styles.errorTextStyle}>Incorrect PIN. Please try again.</Text>
+   </View>
    :null
   return (
     <LoadingModalWrapper shouldModalBeVisible = {isLoading}>
       <Background>
-        
+
         <View style = {styles.wrapper}>
           {!biometicCancelled && <LocalAuthComponent navigation = {navigation} setBiometicCancelled = {setBiometicCancelled}/> }
-          <Logo />         
-          <Text style={{fontWeight: '900'}}>PLEASE LOGIN {email}</Text> 
-          <Text style={{fontWeight: '900'}}></Text> 
-          <Text style={{fontWeight: '800'}}>DEMO VERSION</Text>                   
-          <Text>URL: {BASE_URL}</Text>
+          <Logo />
 
-          <CodeField
-            ref={ref}        
-            value={pin}
-            onChangeText={setPin}
-            cellCount={CELL_COUNT}
-            rootStyle={styles.codeFieldRoot}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            renderCell={({index, symbol, isFocused}) => (
-              <Text
-                key={index}
-                style={[styles.cell, isFocused && styles.focusCell]}
-                onLayout={getCellOnLayoutHandler(index)}>
-                {symbol || (isFocused ? <Cursor/> : null)}
-              </Text>
-            )}/>
-          
-          <View>{loggingError}</View>
-          <Button mode="contained" disabled= {pin.toString().length < CELL_COUNT}
-            onPress={onLoginPressed}
-            onLongPress={() => {
-              dispatch({ type: "DESTROY_SESSION" });
-              secureRemove(SECURE_USER_KEY)
-              secureRemove(SECURE_USER_PIN)
-              secureRemove(SECURE_REGISTRATION_COMPLETE)
-              navigation.navigate(SCREENS.RegistrationScreen)              
-              /*onLoginPressed()*/ }}
-              style={[styles.button, pin.toString().length < CELL_COUNT ? styles.buttonDisabled : '']}>
-          <Entypo name="key" size={18} color="white" /> LOGIN
-          </Button>
+          <View style={styles.card}>
+            <Text style={styles.title}>Welcome back</Text>
+            <Text style={styles.subtitle}>Enter your 4-digit PIN to continue</Text>
+            {email && (
+              <View style={styles.userChip}>
+                <Ionicons name="person-circle-outline" size={18} color={palette.primary} />
+                <Text style={styles.userChipText} numberOfLines={1}>{email}</Text>
+              </View>
+            )}
 
-        </View>    
-      
+            <CodeField
+              ref={ref}
+              value={pin}
+              onChangeText={(value) => { setPin(value); setPinMatchFailed(false) }}
+              cellCount={CELL_COUNT}
+              rootStyle={styles.codeFieldRoot}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              renderCell={({index, symbol, isFocused}) => (
+                <View
+                  key={index}
+                  style={[styles.cell, isFocused && styles.focusCell, (userLoggingError || pinMatchFailed) && styles.errorCell]}
+                  onLayout={getCellOnLayoutHandler(index)}>
+                  <Text style={styles.cellText}>
+                    {symbol ? '•' : (isFocused ? <Cursor/> : null)}
+                  </Text>
+                </View>
+              )}/>
+
+            {loggingError}
+            <Button mode="contained" disabled= {pin.toString().length < CELL_COUNT}
+              icon="lock-open-outline"
+              onPress={onLoginPressed}
+              onLongPress={() => {
+                dispatch({ type: "DESTROY_SESSION" });
+                secureRemove(SECURE_USER_KEY)
+                secureRemove(SECURE_USER_PIN)
+                secureRemove(SECURE_REGISTRATION_COMPLETE)
+                navigation.navigate(SCREENS.RegistrationScreen)
+                /*onLoginPressed()*/ }}
+                style={styles.button}>
+              Log in
+            </Button>
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Demo version</Text>
+            <Text style={styles.footerText} numberOfLines={1}>{BASE_URL}</Text>
+          </View>
+        </View>
+
       </Background>
     </LoadingModalWrapper>
   )
@@ -187,40 +204,96 @@ const styles = StyleSheet.create({
   wrapper : {
     flex:1,
     width: '100%',
-    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 10
+    paddingHorizontal: spacing.xl,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    padding: spacing.xl,
+    alignItems: 'center',
+    ...shadow.raised,
+  },
+  title: {
+    ...typography.title,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: palette.subText,
+    marginTop: spacing.xs,
+  },
+  userChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    maxWidth: '100%',
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: palette.primaryTint,
+  },
+  userChipText: {
+    marginLeft: 6,
+    fontSize: 13,
+    fontWeight: '600',
+    color: palette.primary,
+    flexShrink: 1,
   },
   button: {
-    marginTop: 50
+    marginTop: spacing.lg,
   },
-  buttonDisabled : {
-    backgroundColor: theme.colors.disabledPrimary,
-    opacity: 0.5
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
   },
-
   errorTextStyle: {
-    color: theme.colors.error,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: 'bold'
+    marginLeft: 6,
+    color: palette.danger,
+    fontSize: 13,
+    fontWeight: '600'
   },
 
-  codeFieldRoot: {marginTop: 20},
-    cell: {
-      width: 40,
-      height: 40,
-      lineHeight: 38,
-      marginRight: 2,
-      fontSize: 24,
-      borderWidth: 2,
-      borderRadius: 8,
-      borderColor: '#00000030',
-      textAlign: 'center',
-    },
-    focusCell: {
-      borderColor: '#000',
-    },
+  codeFieldRoot: {
+    marginTop: spacing.xl,
+    gap: spacing.md,
+  },
+  cell: {
+    width: 52,
+    height: 56,
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    borderColor: palette.border,
+    backgroundColor: palette.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cellText: {
+    fontSize: 26,
+    color: palette.text,
+    textAlign: 'center',
+  },
+  focusCell: {
+    borderColor: palette.primary,
+    backgroundColor: palette.surface,
+  },
+  errorCell: {
+    borderColor: palette.danger,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    left: spacing.xl,
+    right: spacing.xl,
+    alignItems: 'center',
+  },
+  footerText: {
+    ...typography.caption,
+  },
 
 })

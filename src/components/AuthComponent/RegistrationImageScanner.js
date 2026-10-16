@@ -35,8 +35,8 @@ const RegistrationImageScanner = () => {
 
   return (
    <>
-      {!photoTaken && <Button mode="contained" onPress={onClickPhoto} style={styles.button}>  Click Your Photo </Button>}
-      {photoTaken && <Button mode="contained" onPress={onClickDocument} style={styles.button}> Click Document's Photo </Button>}
+      {!photoTaken && <Button mode="contained" icon="camera-outline" onPress={onClickPhoto} style={styles.button}>Take your photo</Button>}
+      {photoTaken && <Button mode="contained" icon="file-document-outline" onPress={onClickDocument} style={styles.button}>Photograph your document</Button>}
    </>
   )
 };
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     padding: 10
   },
   button: {
-    marginTop: 50
+    marginTop: 24
   },
 
 

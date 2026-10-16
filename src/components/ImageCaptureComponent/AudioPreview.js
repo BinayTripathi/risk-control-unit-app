@@ -21,6 +21,8 @@ import AudioRecorderPlayer, {
   import {requestUpdateAudioVideoCaseAction} from '@store/ducks/case-submission-slice'
   import { useNavigation } from "@react-navigation/native";
   import useLocationTracker from "@hooks/useLocationTracker";
+  import { Ionicons } from '@expo/vector-icons';
+  import { palette, radius, spacing } from '@core/theme';
 
   const screenWidth = Dimensions.get('screen').width;
   const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -137,22 +139,28 @@ const AudioPreview = ({path, audioLength, claimId, docType, email, sectionName,
 
     return (
         <View style={styles.container}>
-            <View style={styles.viewPlayer}>
-                <TouchableOpacity style={styles.viewBarWrapper} onPress={onStatusPress}>
-                    <View style={styles.viewBar}>
-                        <View style={[styles.viewBarPlay, {width: playWidth}]}></View>   
-                    </View>
-                </TouchableOpacity>
-
-                <Text style={styles.txtCounter}>     {playTime} / {duration}   </Text>
-                <View style={styles.playBtnWrapper}>
-                    <Button  style={styles.btn} onPress={onStartPlay} textStyle={styles.txt}  title= "PLAY">  Play  </Button>
-                    {false && <Button style={[ styles.btn, {marginLeft: 12}]} onPress={onPausePlay} textStyle={styles.txt}  title= "PAUSE"> Pause  </Button> }
-                    {false && <Button style={[ styles.btn, { marginLeft: 12}]} onPress={onResumePlay} textStyle={styles.txt}  title= "RESUME">  Resume </Button> }
-                    <Button style={[styles.btn, {marginLeft: 12}]}  onPress={onStopPlay}   textStyle={styles.txt}  title= "STOP">   Stop  </Button>
-                    <Button  style={styles.btn} onPress={onSaveMedia} textStyle={styles.txt}  title= "SAVE">  Play  </Button>
+            <Text style={styles.titleTxt}>Review recording</Text>
+            <TouchableOpacity style={styles.viewBarWrapper} onPress={onStatusPress}>
+                <View style={styles.viewBar}>
+                    <View style={[styles.viewBarPlay, {width: playWidth}]}></View>
                 </View>
+            </TouchableOpacity>
+
+            <Text style={styles.txtCounter}>{playTime} / {duration}</Text>
+
+            <View style={styles.playBtnWrapper}>
+                <TouchableOpacity style={styles.iconBtn} onPress={onStartPlay} accessibilityLabel="Play">
+                    <Ionicons name="play" size={24} color={palette.onCamera} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconBtn} onPress={onStopPlay} accessibilityLabel="Stop">
+                    <Ionicons name="stop" size={22} color={palette.onCamera} />
+                </TouchableOpacity>
             </View>
+
+            <TouchableOpacity style={styles.saveBtn} onPress={onSaveMedia}>
+                <Ionicons name="cloud-upload-outline" size={20} color={palette.onPrimary} />
+                <Text style={styles.saveTxt}>Save recording</Text>
+            </TouchableOpacity>
         </View>
     )
 
@@ -162,70 +170,73 @@ export default AudioPreview;
 
 const styles = StyleSheet.create({
     container: {
-      height: 300,
       marginTop: 100,
-      backgroundColor: '#455A64',
-      flexDirection: 'column',
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+      borderRadius: radius.lg,
+      backgroundColor: palette.cameraSurface,
+      borderWidth: 1,
+      borderColor: palette.cameraBorder,
       alignItems: 'center',
-      width: screenWidth*.95,
+      width: screenWidth - 32,
     },
-    viewPlayer: {
-        marginTop: 60,
-        alignSelf: 'stretch',
-        alignItems: 'center',
-      },
-      viewBarWrapper: {
-        marginTop: 28,
-        marginHorizontal: 28,
-        alignSelf: 'stretch',
-      },
-      viewBar: {
-        backgroundColor: '#ccc',
-        height: 4,
-        alignSelf: 'stretch',
-      },
-      viewBarPlay: {
-        backgroundColor: 'white',
-        height: 4,
-        width: 0,
-      },
-      playStatusTxt: {
-        marginTop: 8,
-        color: '#ccc',
-      },
-      playBtnWrapper: {
-        flexDirection: 'row',
-        marginTop: 40,
-        width: '70%',
-    justifyContent: 'space-between'
-      },
-      btn: {
-        borderColor: 'white',
-        borderWidth: 1,
-      },
-      txt: {
-        color: 'white',
-        fontSize: 14,
-        marginHorizontal: 8,
-        marginVertical: 4,
-      },
-      txtRecordCounter: {
-        marginTop: 32,
-        color: 'white',
-        fontSize: 20,
-        textAlignVertical: 'center',
-        fontWeight: '200',
-        fontFamily: 'Helvetica Neue',
-        letterSpacing: 3,
-      },
-      txtCounter: {
-        marginTop: 12,
-        color: 'white',
-        fontSize: 20,
-        textAlignVertical: 'center',
-        fontWeight: '200',
-        fontFamily: 'Helvetica Neue',
-        letterSpacing: 3,
-      },
-    
+    titleTxt: {
+      color: palette.onCamera,
+      fontSize: 20,
+      fontWeight: '600',
+    },
+    viewBarWrapper: {
+      marginTop: spacing.xl,
+      alignSelf: 'stretch',
+      paddingVertical: spacing.sm,
+    },
+    viewBar: {
+      backgroundColor: palette.cameraBorder,
+      height: 4,
+      borderRadius: 2,
+      alignSelf: 'stretch',
+    },
+    viewBarPlay: {
+      backgroundColor: palette.onCamera,
+      height: 4,
+      borderRadius: 2,
+      width: 0,
+    },
+    txtCounter: {
+      marginTop: spacing.sm,
+      color: palette.onCameraMuted,
+      fontSize: 16,
+      fontVariant: ['tabular-nums'],
+    },
+    playBtnWrapper: {
+      flexDirection: 'row',
+      marginTop: spacing.xl,
+      gap: spacing.lg,
+    },
+    iconBtn: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      borderWidth: 1,
+      borderColor: palette.cameraBorder,
+      backgroundColor: palette.cameraSurface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    saveBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.xl,
+      height: 52,
+      alignSelf: 'stretch',
+      borderRadius: radius.md,
+      backgroundColor: palette.primary,
+    },
+    saveTxt: {
+      color: palette.onPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
 })

@@ -1,28 +1,28 @@
 import { View, Image, StyleSheet } from 'react-native'
 import Constants from 'expo-constants'
 
+import { spacing } from '@core/theme'
+
 export default function Logo() {
   // Derive APP_OWNER from baseURL since Constants doesn't expose APP_OWNER directly
   const baseURL = Constants.expoConfig?.extra?.baseURL || ''
   const appOwner = baseURL.includes('policy-intel') ? 'policyIntel' : 'icheckify'
-  console.log('Logo - Derived APP_OWNER:', appOwner)
-  console.log('Logo - baseURL:', baseURL)
-  
+
   // Select logo based on APP_OWNER
-  const logoSource = appOwner === 'policyIntel' 
+  const logoSource = appOwner === 'policyIntel'
     ? require('@root/assets/policyIntellogo.jpeg')
     : require('@root/assets/icheckifylogo.png')
-  
+
   return <View style={styles.imageContainer} >
     <Image source={logoSource} style={styles.image} />
-  </View> 
+  </View>
 }
 
 const styles = StyleSheet.create({
   imageContainer: {
-    width: 250,
-    height: 200, 
-    borderRadius: 150,
+    width: 200,
+    height: 120,
+    marginBottom: spacing.xl,
   },
   image : {
     flex: 1,

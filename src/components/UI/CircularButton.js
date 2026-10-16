@@ -1,40 +1,46 @@
 import { StyleSheet, View, Text, Pressable} from 'react-native';
-import Card from './Card';
-import { theme } from '@core/theme';
+import { palette, radius, spacing, shadow } from '@core/theme';
 
-export default CircularButton = ({label , children, onPress, selectedTime}) => {
+// Quick-action tile (icon + label). `title` is injected by CustomDateTimePicker once a date is chosen.
+export default CircularButton = ({label, title, children, onPress}) => {
 
     return (
-
-        <Pressable onPress={onPress}>
-            <Card style = {styles.actionIconsContainer}>  
-                <View style={styles.actionIcons}>
-                    {children}
-                </View>
-                <Text style = {[styles.textBase ]}>{label}</Text>
-            </Card>
+        <Pressable onPress={onPress} style={({ pressed }) => [styles.tile, pressed && styles.pressed]}>
+            <View style={styles.icon}>
+                {children}
+            </View>
+            <Text style={styles.label} numberOfLines={2}>{label}</Text>
         </Pressable>
     )
 }
 
 const styles = StyleSheet.create({
-
-
-    actionIconsContainer: {
-        backgroundColor: '#f8f7f4',
-        aspectRatio: 1
-      },
-      actionIcons: {
-        width: '70%',
-        aspectRatio: 1,      
-        borderRadius: 50,
-        backgroundColor: 'rgba(250, 92, 7, 0.30)',
+    tile: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center'
-      },
-      textBase: {
-        color: 'black',
-        fontSize: 16,
-        fontWeight: 'bold'
-      },
+        backgroundColor: palette.surface,
+        borderRadius: radius.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: palette.border,
+        padding: spacing.md,
+        ...shadow.card,
+    },
+    pressed: {
+        opacity: 0.7,
+    },
+    icon: {
+        width: 40,
+        height: 40,
+        borderRadius: radius.md,
+        backgroundColor: palette.accentTint,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.md,
+    },
+    label: {
+        flex: 1,
+        color: palette.text,
+        fontSize: 14,
+        fontWeight: '600',
+    },
 })

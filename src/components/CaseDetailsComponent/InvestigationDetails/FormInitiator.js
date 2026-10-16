@@ -1,14 +1,10 @@
-import { StyleSheet,View, Text , Dimensions, ScrollView, Button as RNButton, TextInput, TouchableOpacity, Platform} from 'react-native';
+import { StyleSheet,View, Text, TextInput, TouchableOpacity, Platform} from 'react-native';
 import Checkbox from 'expo-checkbox';
 import { useState, useRef } from "react";
 import { useDispatch } from 'react-redux';
-import { theme } from '@core/theme';
-import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
+import { palette, radius, spacing } from '@core/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import  CustomTextInput  from "@components/UI/TextInput";
 import RadioButtonGroup, { RadioButtonItem } from "expo-radio-button";
-import Slider from '@react-native-community/slider';
-import { useDebounce } from "use-debounce";
 import Button from '@components/UI/Button'
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,7 +12,6 @@ import {requestUpdateFormCaseAction} from '@store/ducks/case-submission-slice'
 import { UPLOAD_TYPE, questionsSubSection } from '@core/constants';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
-const { width, height } = Dimensions.get('window');
 
 const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplate}) => {
 
@@ -61,60 +56,73 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
     if(question.isRequired && !answers?.[question.questionText]?.answerText) {
       mandatoryQuestionsListRef.current.add(question.questionText)    }
       
-    return( <View style={{ marginTop: 10, marginBottom: 20, paddingBottom: 10, marginHorizontal: 10, borderBottomColor: 'grey', borderBottomWidth: 3 }} key={index}>
-              <Text style={styles.label1}>{question.questionText} {question.isRequired && ( <Text style={{ color: 'blue' }}>*</Text>)}</Text>
+    const answerText = answers[question.questionText]?.answerText
+    const options = question.options ? question.options.split(',').map(option => option.trim()).filter(Boolean) : []
+
+    return( <View style={[styles.question, index === sectionFromTemplate.questions.length - 1 && styles.lastQuestion]} key={index}>
+              <Text style={styles.questionText}>{question.questionText}{question.isRequired && <Text style={styles.required}> *</Text>}</Text>
 
               {question.questionType === 'multiText' && (
-                    <View style={styles.inputContainer}>
-                                  <TextInput
-                                          placeholder="Enter investigation comments"
-                                          onChangeText={(val) => handleInputChange(question, val)}
-                                          multiline={true}
-                                          numberOfLines={50}
-                                          keyboardType={
-                                          Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
-                                          style={styles.input}  
-                                          value={answers[question.questionText]?.answerText}/>
-                                </View>   
+                <TextInput
+                  placeholder="Enter investigation comments"
+                  placeholderTextColor={palette.muted}
+                  onChangeText={(val) => handleInputChange(question, val)}
+                  multiline={true}
+                  numberOfLines={4}
+                  keyboardType={Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
+                  style={[styles.input, styles.multiline]}
+                  value={answerText}/>
               )}
 
               {question.questionType === 'text' && (
-                    <TextInput style={{ borderBottomWidth: 1 }} value = {answers[question.questionText]?.answerText} onChangeText={(val) => handleInputChange(question, val)} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Type your answer"
+                  placeholderTextColor={palette.muted}
+                  value={answerText}
+                  onChangeText={(val) => handleInputChange(question, val)} />
               )}
-              
-              {question.questionType === 'date' && (
-                    <TouchableOpacity onPress={() => openDatePicker(question)}>
-                      <Text style={{ color: 'blue' }}>{answers[question.questionText]?.answerText || 'Select Date'}</Text> 
-                    </TouchableOpacity>
-                  )}
-              {(question.questionType === 'dropdown' || question.questionType === 'radio') && (
-                <RadioButtonGroup containerStyle={{ marginBottom: 10 }}
-                      selected={answers[question.questionText]?.answerText}
-                      onSelected={(value) => handleInputChange(question, value)}
-                      radioBackground="green">
-                        {question.options.split(', ').map((option, i) => (
-                          <RadioButtonItem key={i} value={option} label={option} />
-                      ))}
-              
-              </RadioButtonGroup>
 
-                )}
+              {question.questionType === 'date' && (
+                <TouchableOpacity style={[styles.input, styles.dateInput]} onPress={() => openDatePicker(question)}>
+                  <Text style={answerText ? styles.inputText : styles.placeholder}>
+                    {answerText ? new Date(answerText).toLocaleDateString() : 'Select date'}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={18} color={palette.subText} />
+                </TouchableOpacity>
+              )}
+
+              {(question.questionType === 'dropdown' || question.questionType === 'radio') && (
+                <RadioButtonGroup
+                  containerStyle={styles.optionGroup}
+                  selected={answerText}
+                  onSelected={(value) => handleInputChange(question, value)}
+                  radioBackground={palette.primary}
+                  radioStyle={styles.radio}
+                  labelStyle={styles.optionLabel}
+                  size={20}>
+                    {options.map((option, i) => (
+                      <RadioButtonItem key={i} value={option} label={option} />
+                    ))}
+                </RadioButtonGroup>
+              )}
 
               {question.questionType === 'checkbox' && (
-                <View style={{ flexDirection: 'column' }}>
-                  {question.options?.split(', ').map((option, i) => (
-                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.optionGroup}>
+                  {options.map((option, i) => (
+                    <View key={i} style={styles.checkboxRow}>
                       <Checkbox
-                        value={answers[question.questionText] !== undefined && answers[question.questionText].options.includes(option) ? true: false}
+                        color={palette.primary}
+                        value={Array.isArray(answerText) && answerText.includes(option)}
                         onValueChange={(isChecked) => {
-                          let updatedValues = answers[question.questionText]?.answerText || []; 
+                          let updatedValues = Array.isArray(answerText) ? answerText : [];
                           updatedValues = isChecked
                             ? [...updatedValues, option]
                             : updatedValues.filter((val) => val !== option);
                           handleInputChange(question, updatedValues);
                         }}
                       />
-                      <Text>{option}</Text>
+                      <Text style={styles.optionLabel}>{option}</Text>
                     </View>
                   ))}
                 </View>
@@ -177,128 +185,89 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
 
     return (
 
-      <View>
-      
-      <ScrollView style={styles.scrollView}>
-          <View style={styles.questionaireContainer}>
-            {dataCapturePoints}
-          </View>
-      </ScrollView>
+      <View style={styles.container}>
+        {dataCapturePoints}
 
-      <Button mode="contained" onPress={onSavePressed} 
-          style={[styles.button]}>
-          <Ionicons name="save" size={24} color="white" /> SAVE
-      </Button>
+        <Button mode="contained" onPress={onSavePressed} icon="content-save-outline" style={styles.button}>
+          Save answers
+        </Button>
 
       {showDatePicker && (
-
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <View style={{ backgroundColor: 'white' }}>
-                <DateTimePicker mode="date" value={selectedDate} onChange={handleDateChange} />
-            </View>
-          </View>
+          <DateTimePicker mode="date" value={selectedDate} onChange={handleDateChange} />
       )}
     </View>
-      
+
     )
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: height,
-    overflow: 'hidden',
-    alignItems: "center",      
-    paddingHorizontal: 20,
-    padding: 50,
+    width: '100%',
+    paddingTop: spacing.sm,
   },
-  descriptionContainer : {
-    marginTop: 40
-  } ,
-
-  description: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(22, 6, 96, 0.75)',
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 20,
-  }, 
-
-  textBase: {
-      color: 'black',
-    },
-
-    label: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      margin: 8,
-    },
-    label1: {
-      fontSize: 15,
-      fontWeight: 'bold',
-      margin: 8,
-    },
-
-    questionaireContainer : {
-      marginTop: 30,
-      width: 280,
-      backgroundColor: '#cccccc',
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      shadowOffset: {width: 0, height: 1},
-      shadowRadius: 2,
-      elevation: 2,
-      shadowOpacity: 0.4,
-  } ,
-
-  customInputBox:{
-
-    width: '90%'
+  question: {
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.border,
   },
-
-  inputContainer : {
-      marginTop: 30,
-      width: '90%',
-      //alignItems: "center",
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      backgroundColor: 'white',
-      height: 120,
-      borderRadius: 20,
-      padding: 0,
-      shadowOffset: {width: 0, height: 1},
-      shadowRadius: 2,
-      elevation: 2,
-      shadowOpacity: 0.4,
-
-  } ,
-
-  input:{
-      alignItems: 'center',
-      width: '80%',
-      backgroundColor: 'white',        
-      textAlignVertical:'top',
-      borderRadius: 20,
-      padding: 20
-    },
-    button: {
-      marginRight: 5,
-      marginBottom: 10
-    },
-    checkboxContainer: {
-      flexDirection: 'row',
-      marginBottom: 20,
-      marginTop: 20,
-    },
-    checkbox: {
-      margin: 8,
-    },
-    button: {
-      marginTop: 50
-    },
-    buttonDisabled: {
-      backgroundColor: 'grey'
-    },
+  lastQuestion: {
+    borderBottomWidth: 0,
+  },
+  questionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+    color: palette.text,
+    marginBottom: spacing.sm,
+  },
+  required: {
+    color: palette.danger,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: radius.md,
+    backgroundColor: palette.surfaceAlt,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: palette.text,
+  },
+  multiline: {
+    minHeight: 96,
+    textAlignVertical: 'top',
+  },
+  dateInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  inputText: {
+    fontSize: 15,
+    color: palette.text,
+  },
+  placeholder: {
+    fontSize: 15,
+    color: palette.muted,
+  },
+  optionGroup: {
+    gap: spacing.sm,
+  },
+  radio: {
+    borderColor: palette.primary,
+  },
+  optionLabel: {
+    fontSize: 14,
+    color: palette.text,
+    marginLeft: spacing.sm,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  button: {
+    marginTop: spacing.lg,
+  },
 })
 
   export default FormInitiator;

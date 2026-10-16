@@ -38,10 +38,12 @@ console.log(shouldModalBeVisible)
 };
 
 const styles = StyleSheet.create({
+  // Children must stretch: Paper's Provider wraps them in a flex:1 View with no width,
+  // which collapses to content width under alignItems:'center'. The spinner itself renders in a Portal.
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
+    alignSelf: 'stretch',
   },
   containerStyle:   {
     backgroundColor:'transparent', 
@@ -55,17 +57,16 @@ const styles = StyleSheet.create({
   },
 
   surface: {
-    minHeight: 230,
-    width: 280,
+    width: 96,
+    height: 96,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
   },
   image : {
-    width: 70,
-    height: 70,
-    borderRadius: 70,        
-    transform: [{ translateY: -30 }],
+    width: 56,
+    height: 56,
   },
  
 
