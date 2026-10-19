@@ -397,7 +397,7 @@ const initialState = {
                       ...action.payload.documentDetails, 
                       id: action.payload.id,
                       OcrImage: 'b',//responseUserData.ocrImage,                    
-                      panValid: responseUserData.panValid ,
+                      valid: String(responseUserData.isValid ?? responseUserData.valid ?? true).toLowerCase() !== 'false',
                       uploadStatus : "1", 
                       manualRetryPayload: {}                    
                     } 
