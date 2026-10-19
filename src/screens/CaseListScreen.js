@@ -7,7 +7,8 @@ import * as Location from "expo-location";
 import CaseList from "@components/CasesComponent/CaseList";
 import CaseGeolocation from "@components/CasesComponent/CaseGeolocation"
 
-import {SECURE_USER_KEY} from '@core/constants'
+import { useNavigation } from '@react-navigation/native';
+import {SECURE_USER_KEY, SCREENS} from '@core/constants'
 import {secureGet} from '@helpers/SecureStore'
 import { palette } from '@core/theme'
 
@@ -19,11 +20,19 @@ export default function CaseListScreen() {
   const [userId, setUserId] = useState(null)
   const [userLocation, setUserLocation] = useState(null)  
   const layout = useWindowDimensions();
+  const navigation = useNavigation();
 
   useEffect(() => {
     
     const getLocation = async () => {
-      const userPromise =  secureGet(SECURE_USER_KEY)
+      const user = await secureGet(SECURE_USER_KEY)
+      console.log('Case List screen : ' + user)
+      if (!user) {
+        // No stored user (e.g. SecureStore lost on reinstall) - let Login decide where to go
+        navigation.reset({index: 0, routes: [{name: SCREENS.Login}]})
+        return
+      }
+      setUserId(user)
 
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -33,12 +42,6 @@ export default function CaseListScreen() {
 
       let locationPromise = Location.getLastKnownPositionAsync({});
       setUserLocation(locationPromise);
-      console.log('promise in parent:', userLocation)  
-      setUserLocation(locationPromise);
-
-      const user = await userPromise
-      console.log('Case List screen : ' + user)
-      setUserId(user)
     };
     getLocation();
 

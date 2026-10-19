@@ -33,19 +33,19 @@ module.exports = () => {
         case 'policyIntel':
         default:
           return {
-            icon: "./assets/policyintel-icon.png",
+            icon: "./assets/policyintel_icon.png",
             splash: {
-              "image": "./assets/policyintel-splash.png",
+              "image": "./assets/policyintel_splash.png",
               "resizeMode": "contain",
               "backgroundColor": "#0B1F33"
             },
             adaptiveIcon: {
-              "foregroundImage": "./assets/policyintel-adaptive-icon.png",
+              "foregroundImage": "./assets/policyintel_adaptive_icon.png",
               "backgroundColor": "#0B1F33"
             },
             plugins: [
               ["expo-splash-screen", {
-                "image": "./assets/policyintel-splash.png",
+                "image": "./assets/policyintel_splash.png",
                 "imageWidth": 180,
                 "resizeMode": "contain",
                 "backgroundColor": "#0B1F33"
@@ -66,6 +66,7 @@ module.exports = () => {
         "plugins": branding.plugins,
         "android": {
             "adaptiveIcon": branding.adaptiveIcon,
+            "allowBackup": false,
             "splash": branding.splash,
             "permissions": [
              "android.permission.CAMERA",
@@ -95,6 +96,7 @@ module.exports = () => {
         "plugins": branding.plugins,
         "android": {
             "adaptiveIcon": branding.adaptiveIcon,
+            "allowBackup": false,
             "splash": branding.splash,
             "permissions": [
               "android.permission.CAMERA",

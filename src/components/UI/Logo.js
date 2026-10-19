@@ -10,7 +10,7 @@ export default function Logo() {
 
   // Select logo based on APP_OWNER
   const logoSource = appOwner === 'policyIntel'
-    ? require('@root/assets/policyIntellogo.jpeg')
+    ? require('@root/assets/policyintel_logo.jpeg')
     : require('@root/assets/icheckifylogo.png')
 
   return <View style={styles.imageContainer} >

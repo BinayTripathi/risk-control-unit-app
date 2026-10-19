@@ -4,10 +4,10 @@
     "slug": "RiskControlUnit",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/policyintel-icon.png",
+    "icon": "./assets/policyintel_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/policyintel-splash.png",
+      "image": "./assets/policyintel_splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0B1F33"
     },
@@ -55,11 +55,11 @@
       "targetSdkVersion": 35,
       "buildToolsVersion": "35.0.0",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/policyintel-adaptive-icon.png",
+        "foregroundImage": "./assets/policyintel_adaptive_icon.png",
         "backgroundColor": "#0B1F33"
       },
       "splash": {
-        "image": "./assets/policyintel-splash.png",
+        "image": "./assets/policyintel_splash.png",
         "resizeMode": "contain",
         "backgroundColor": "#0B1F33"
       },

@@ -1,101 +1,125 @@
-import {View, Text, StyleSheet, Image, Animated} from 'react-native'
+import {View, Text, StyleSheet, Pressable} from 'react-native'
 import { Modal, Portal } from 'react-native-paper';
-import { Surface, Divider} from 'react-native-paper'
-import Button from '@components/UI/Button'
+import { Ionicons } from '@expo/vector-icons';
+import { palette, radius, spacing, shadow } from '@core/theme';
 
 
-const OkayCancelDialogBox = ({showDialog, setShowDialog, title, content, okayHandler, cancelHandler}) => {
+const OkayCancelDialogBox = ({showDialog, setShowDialog, title, content, okayHandler, cancelHandler, okLabel = 'OK', cancelLabel = 'Cancel', icon = 'help-circle'}) => {
 
     const dismissHandler = () => {
         setShowDialog(false)
-        cancelHandler()
+        cancelHandler?.()
     }
 
     const approveHandler = () => {
         setShowDialog(false)
-        okayHandler()
+        okayHandler?.()
     }
 
     return (
-        
         <Portal>
-            <Modal  visible={showDialog} onDismiss={dismissHandler} contentContainerStyle={styles.containerStyle} dismissable={true} >            
-                <Surface style={[styles.surface]}>
-                    <View style={{alignItems: 'center', height: 1,       color: '#e96969'}}>
-                        <Image source={require('@root/assets/green_question.jpg')} style={styles.image} />  
-                    </View>                  
-                                      
-
-                    <View style={{marginTop: 30, marginBottom: 30, minWidth: 250}}>        
-                        <Text style={styles.title}>{title}</Text>                
-                        <Divider bold={true} style={{backgroundColor: '#555'}}/>
+            <Modal visible={showDialog} onDismiss={dismissHandler} contentContainerStyle={styles.containerStyle} dismissable={true}>
+                <View style={styles.card}>
+                    <View style={styles.iconTile}>
+                        <Ionicons name={icon} size={30} color={palette.primary} />
                     </View>
-                    <View>
-                        <Text style={styles.content}>{content}</Text>                        
-                    </View>
-                    <View style={{flexDirection: 'row', marginTop: 20}}>
-                       
-                        <View style={{padding: 10}}>
-                            <Button mode="elevated" style={[styles.button, styles.okButton]} onPress={() => approveHandler()}> 
-                                <Text style={{color: 'white'}}>OK</Text> </Button>
-                        </View>
 
-                        <View style={{padding: 10}}>
-                            <Button mode="elevated" style={[styles.button, styles.cancelButton]} onPress={() => dismissHandler()}>
-                            <Text style={{color: 'white'}}>CANCEL</Text> </Button>
-                        </View>
-                    </View> 
-                </Surface>             
+                    <Text style={styles.title}>{title}</Text>
+                    {!!content && <Text style={styles.content}>{content}</Text>}
+
+                    <View style={styles.actions}>
+                        <Pressable
+                            onPress={dismissHandler}
+                            style={({ pressed }) => [styles.button, styles.cancelButton, pressed && styles.pressed]}
+                        >
+                            <Text style={[styles.buttonLabel, styles.cancelLabel]}>{cancelLabel}</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={approveHandler}
+                            style={({ pressed }) => [styles.button, styles.okButton, pressed && styles.pressed]}
+                        >
+                            <Text style={[styles.buttonLabel, styles.okLabel]}>{okLabel}</Text>
+                        </Pressable>
+                    </View>
+                </View>
             </Modal>
-        </Portal> 
-       
+        </Portal>
     )
 }
 
 export default OkayCancelDialogBox
 
 const styles = StyleSheet.create({
-    containerStyle:   {
-        backgroundColor:'transparent', 
-        marginHorizontal: 5,
-        alignItems: 'center'
-      },
-    surface: {
-      minHeight: 230,
-      width: 280,
-      backgroundColor: '#1e1e1e',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 20
+    containerStyle: {
+        backgroundColor: 'transparent',
+        marginHorizontal: spacing.xl,
+        alignItems: 'center',
+    },
+    card: {
+        width: '100%',
+        maxWidth: 360,
+        backgroundColor: palette.surface,
+        borderRadius: radius.lg + 6,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.lg,
+        alignItems: 'center',
+        ...shadow.raised,
+    },
+    iconTile: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: palette.primaryTint,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.md,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: 'white',
-        textAlign: 'left',
-      },
-      content: {
-        fontSize: 18,
-        color: 'white',
-        textAlign: 'left',
-      },
-      image : {
-        width: 70,
-        height: 70,
-        borderRadius: 70,        
-        transform: [{ translateY: -30 }],
-      },
-      button: {
-        marginRight: 5,
-        marginBottom: 1
-      },
-      okButton: {
-        backgroundColor: '#80b526',
-        paddingHorizontal: 15,
-        opacity: 0.7
-      },
-      cancelButton: {
-        backgroundColor: '#e26221',
-        opacity: 0.7
-      },
-  });
+        fontSize: 19,
+        fontWeight: '700',
+        color: palette.text,
+        textAlign: 'center',
+    },
+    content: {
+        marginTop: spacing.sm,
+        fontSize: 15,
+        lineHeight: 21,
+        color: palette.subText,
+        textAlign: 'center',
+    },
+    actions: {
+        flexDirection: 'row',
+        alignSelf: 'stretch',
+        gap: spacing.md,
+        marginTop: spacing.xl,
+    },
+    button: {
+        flex: 1,
+        height: 46,
+        borderRadius: radius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButton: {
+        backgroundColor: palette.surface,
+        borderWidth: 1,
+        borderColor: palette.border,
+    },
+    okButton: {
+        backgroundColor: palette.primary,
+    },
+    pressed: {
+        opacity: 0.8,
+    },
+    buttonLabel: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    cancelLabel: {
+        color: palette.subText,
+    },
+    okLabel: {
+        color: palette.onPrimary,
+    },
+});

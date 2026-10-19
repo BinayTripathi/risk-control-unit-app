@@ -13,6 +13,18 @@ import {secureGet} from '@helpers/SecureStore'
 import {SECURE_REGISTRATION_COMPLETE} from '@core/constants'
 import { AlertNotificationRoot} from 'react-native-alert-notification';
 import { monitorNetworkQuality } from './src/helpers/customNetworkWatcher';
+import { palette } from './src/core/theme';
+
+// Match react-native-alert-notification dialogs/toasts to the app palette (always light)
+const alertColors = {
+  label: palette.text,
+  card: palette.surface,
+  overlay: 'rgba(15,23,42,0.45)',
+  success: palette.success,
+  danger: palette.danger,
+  warning: palette.warning,
+  info: palette.primary,
+};
 
 
 export default function App() {
@@ -47,7 +59,7 @@ export default function App() {
       <PersistGate persistor={persistor} loading={null}>
       <StatusBar style='dark'/>
         <RootSiblingParent>
-          <AlertNotificationRoot>
+          <AlertNotificationRoot theme="light" colors={[alertColors, alertColors]}>
             <AppNavigator/>             
           </AlertNotificationRoot>          
         </RootSiblingParent>                

@@ -3,7 +3,7 @@ import { StyleSheet, Text, Pressable, View, Image} from 'react-native';
 import { Provider, Modal, Portal, Surface } from 'react-native-paper';
 import LottieView  from "lottie-react-native";
 
-export default LoadingModalWrapper = ({shouldModalBeVisible, children}) => {
+const LoadingModalWrapper = ({shouldModalBeVisible, children}) => {
 
   const dismissHandler = () => {
     setShowDialog(false)
@@ -36,6 +36,8 @@ console.log(shouldModalBeVisible)
     </View>
   );
 };
+
+export default LoadingModalWrapper;
 
 const styles = StyleSheet.create({
   // Children must stretch: Paper's Provider wraps them in a flex:1 View with no width,

@@ -1,84 +1,112 @@
-import { StyleSheet, Text, Button, View, TouchableHighlight } from 'react-native';
-import { useEffect, useState } from 'react';
+import { StyleSheet, View, TouchableHighlight, Animated } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import Voice from '@react-native-voice/voice';
 import { Ionicons } from '@expo/vector-icons';
 
+// Voice is a singleton, so only the instance that started recording receives results.
+// This lets several mic buttons live on one screen (e.g. one per questionnaire answer).
+let activeOwner = null;
 
-export default function SpeechToText({getSpeechToTextResult}) {
-  const [result, setResult] = useState('');
+const LISTENING_COLOR = '#DC2626';
+
+// Voice binds these function references once, on the first start() after load/destroy, and ignores
+// later reassignments. So the handlers must be stable and forward to whichever instance is active.
+const onSpeechEnd = () => activeOwner?.stop();
+const onSpeechError = () => activeOwner?.stop();
+const onSpeechResults = e => {
+  const text = e.value?.[0];
+  if (text) activeOwner?.onResult(text);
+};
+
+export default function SpeechToText({getSpeechToTextResult, style}) {
   const [isLoading, setLoading] = useState(false);
+  const ownerRef = useRef({});
+  const callbackRef = useRef(getSpeechToTextResult);
+  callbackRef.current = getSpeechToTextResult;
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  // Expanding ring around the mic while listening
+  useEffect(() => {
+    if (!isLoading) return;
+    const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1000, useNativeDriver: true }));
+    loop.start();
+    return () => { loop.stop(); pulse.setValue(0); };
+  }, [isLoading]);
 
   useEffect(() => {
-    //Voice.onSpeechStart = speechStartHandler;
-    Voice.onSpeechEnd = speechEndHandler;
-    Voice.onSpeechResults = speechResultsHandler;
+    const owner = ownerRef.current;
+    owner.stop = () => setLoading(false);
+    owner.onResult = text => callbackRef.current(text);
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      if (activeOwner === owner) {
+        activeOwner = null;
+        Voice.destroy().then(Voice.removeAllListeners);
+      }
     };
   }, []);
-  
-    /*const speechStartHandler = e => {
-      console.log('speechStart successful', e);
-    };*/
-  
-    const speechEndHandler = e => {
-      setLoading(false);
-      //console.log('stop handler', e);
-    };
-  
-    const speechResultsHandler = e => {
-      const text = e.value[0];
-      setResult(text);
-      getSpeechToTextResult(text)
-    };
-  
-    const startRecording = async () => {
-      setLoading(true);
-      try {
-        await Voice.start('en-Us');
-      } catch (error) {
-        console.log('error', error);
-      }
-    };
-  
-    const stopRecording = async () => {
-      try {
-        await Voice.stop();
-        setLoading(false);
-      } catch (error) {
-        console.log('error', error);
-      }
-    };
-  
-    const clear = () => {
-      setResult('');
-    };
-  
-    return (
-      <View style={styles.container}>
-         {!isLoading ? <TouchableHighlight onPress={startRecording}  style={styles.button} underlayColor="#a2a1a0">
-                <View style = {styles.labelContainer}>                                    
-                    <Ionicons name='mic-circle-outline' size={30} color="orange" /> 
-                </View>                
-            </TouchableHighlight>  : undefined}
 
-            {isLoading ? <TouchableHighlight onPress={stopRecording}  style={styles.button} underlayColor="#a2a1a0">
-                <View style = {styles.labelContainer}>                                     
-                    <Ionicons name='mic-off-circle-outline' size={30} color="orange" /> 
-                </View>                
-            </TouchableHighlight>  : undefined}        
-      </View>
-    );
-  }
-  
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    button: {
-      marginTop: 5,
-  }, 
-  });
+  const startRecording = async () => {
+    const owner = ownerRef.current;
+    if (activeOwner && activeOwner !== owner) activeOwner.stop();
+    // Destroy (not just stop) any previous session: a stopped recognizer still emits end/error events
+    // later, which would otherwise reach this new owner and flip its button back to idle.
+    // Events already queued are delivered before this resolves, while the old owner is still active.
+    try { await Voice.destroy(); } catch (error) { console.log('error', error); }
+    activeOwner = owner;
+
+    Voice.onSpeechEnd = onSpeechEnd;
+    Voice.onSpeechError = onSpeechError;
+    Voice.onSpeechResults = onSpeechResults;
+
+    setLoading(true);
+    try {
+      await Voice.start('en-US');
+    } catch (error) {
+      console.log('error', error);
+      setLoading(false);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      await Voice.stop();
+    } catch (error) {
+      console.log('error', error);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <View style={[styles.container, style]}>
+      <TouchableHighlight onPress={isLoading ? stopRecording : startRecording} style={styles.button} underlayColor="transparent">
+        <View style={styles.iconWrap}>
+          {isLoading && <Animated.View style={[styles.pulse, { transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }], opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }) }]} />}
+          <Ionicons name={isLoading ? 'mic-circle' : 'mic-circle-outline'} size={30} color={isLoading ? LISTENING_COLOR : 'orange'} />
+        </View>
+      </TouchableHighlight>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  button: {
+    marginTop: 5,
+  },
+  iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pulse: {
+    position: 'absolute',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: LISTENING_COLOR,
+  },
+});

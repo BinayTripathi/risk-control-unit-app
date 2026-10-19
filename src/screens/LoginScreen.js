@@ -50,33 +50,37 @@ export default function LoginScreen({navigation}) {
   const [pinMatchFailed, setPinMatchFailed] = useState(false)
   // if loging within 30 sec of loggout, dispatch autologin
 
-  useEffect(() => { 
+  useEffect(() => {
+    dispatch(navigateFromHomePage())
 
-    (async() => {
+    ;(async() => {
         try{
           const user = await secureGet(SECURE_USER_KEY)
           const receivedPin = await secureGet(SECURE_USER_PIN)
           console.log(`Within login ${user}`)
+
+          // Persisted redux state can outlive SecureStore (e.g. Android backup restore on reinstall).
+          // Without a stored user there is nothing to log in as, so start registration again.
+          if (!user || !receivedPin) {
+            dispatch({ type: "DESTROY_SESSION" })
+            // Defer so the navigator re-renders with the Registration screen back in the stack
+            setTimeout(() => navigation.reset({index: 0, routes: [{name: SCREENS.RegistrationScreen}]}), 0)
+            return
+          }
+
           setEmail(user)
           setSavedPin(receivedPin)
+
+          console.log(Math.floor(new Date() - new Date(userLoggingTimestamp)))
+          if(Math.floor(new Date() - new Date(userLoggingTimestamp)) < SESSION_TTL_IN_SEC.USER_SESSION) {
+            dispatch(requestValidateUserAuto({ emailId: user }))
+            navigation.reset({routes: [{name: 'CaseList'}]});
+          }
         } catch (error) {
           console.log(error)
-        }      
+        }
       }
-    )()    
-  },[])
-
-  useEffect(() => { 
-    dispatch(navigateFromHomePage())
-    console.log(Math.floor(new Date() - new Date(userLoggingTimestamp)))
-    if(Math.floor(new Date() - new Date(userLoggingTimestamp)) < SESSION_TTL_IN_SEC.USER_SESSION) {
-      const dataforLogin = {
-        emailId: email
-      }
-      dispatch(requestValidateUserAuto(dataforLogin))
-      navigation.reset({routes: [{name: 'CaseList'}]});   
-    }
-    
+    )()
   }, [dispatch, isFocused, navigation])
 
 

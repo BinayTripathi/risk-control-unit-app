@@ -189,6 +189,7 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
             horizontal={true}
             scrollEventThrottle={16}
             pagingEnabled={true}
+            keyboardShouldPersistTaps="handled"
             showsHorizontalScrollIndicator={false}
             onScroll={(event) => {
                 setSliderPage(event);

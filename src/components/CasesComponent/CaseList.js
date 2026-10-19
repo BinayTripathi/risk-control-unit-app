@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Background from "@components/UI/Background";
 import CaseItem from "@components/CasesComponent/CaseItem";
 import Button from "@components/UI/Button"
+import LoadingModalWrapper from '@components/UI/LoadingModal';
 
 import {requestCases, requestCasesOffline, requestCasesCoordinates} from '@store/ducks/cases-slice'
 import { palette, radius, spacing, typography } from '@core/theme';

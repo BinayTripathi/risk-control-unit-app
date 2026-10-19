@@ -6,6 +6,7 @@ import { palette, radius, spacing } from '@core/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RadioButtonGroup, { RadioButtonItem } from "expo-radio-button";
 import Button from '@components/UI/Button'
+import SpeechToText from '@components/UI/SpeechToText'
 import { Ionicons } from '@expo/vector-icons';
 
 import {requestUpdateFormCaseAction} from '@store/ducks/case-submission-slice'
@@ -36,6 +37,16 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
     
   };
 
+  // Speech results arrive asynchronously, so append against the latest answers rather than a stale closure
+  const appendSpeechToAnswer = (question, heardText) => {
+    setAnswers(prev => {
+      const base = prev[question.questionText] ?? question
+      const answerText = base.answerText ? base.answerText + '. ' + heardText : heardText
+      return { ...prev, [question.questionText]: { ...base, answerText } }
+    })
+    mandatoryQuestionsListRef.current.delete(question.questionText)
+  };
+
   const openDatePicker = (question) => {
     setCurrentQuestion(question);
     setSelectedDate(new Date()); // Reset to default or previously selected value
@@ -63,24 +74,30 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
               <Text style={styles.questionText}>{question.questionText}{question.isRequired && <Text style={styles.required}> *</Text>}</Text>
 
               {question.questionType === 'multiText' && (
-                <TextInput
-                  placeholder="Enter investigation comments"
-                  placeholderTextColor={palette.muted}
-                  onChangeText={(val) => handleInputChange(question, val)}
-                  multiline={true}
-                  numberOfLines={4}
-                  keyboardType={Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
-                  style={[styles.input, styles.multiline]}
-                  value={answerText}/>
+                <View style={styles.voiceRow}>
+                  <TextInput
+                    placeholder="Enter investigation comments"
+                    placeholderTextColor={palette.muted}
+                    onChangeText={(val) => handleInputChange(question, val)}
+                    multiline={true}
+                    numberOfLines={4}
+                    keyboardType={Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
+                    style={[styles.input, styles.multiline, styles.voiceInput]}
+                    value={answerText}/>
+                  <SpeechToText style={styles.mic} getSpeechToTextResult={(heardText) => appendSpeechToAnswer(question, heardText)}/>
+                </View>
               )}
 
               {question.questionType === 'text' && (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Type your answer"
-                  placeholderTextColor={palette.muted}
-                  value={answerText}
-                  onChangeText={(val) => handleInputChange(question, val)} />
+                <View style={styles.voiceRow}>
+                  <TextInput
+                    style={[styles.input, styles.voiceInput]}
+                    placeholder="Type your answer"
+                    placeholderTextColor={palette.muted}
+                    value={answerText}
+                    onChangeText={(val) => handleInputChange(question, val)} />
+                  <SpeechToText style={styles.mic} getSpeechToTextResult={(heardText) => appendSpeechToAnswer(question, heardText)}/>
+                </View>
               )}
 
               {question.questionType === 'date' && (
@@ -236,6 +253,18 @@ const styles = StyleSheet.create({
   multiline: {
     minHeight: 96,
     textAlignVertical: 'top',
+  },
+  voiceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  voiceInput: {
+    flex: 1,
+  },
+  mic: {
+    flex: 0,
+    backgroundColor: 'transparent',
+    marginLeft: spacing.xs,
   },
   dateInput: {
     flexDirection: 'row',

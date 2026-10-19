@@ -4,6 +4,7 @@ import { StyleSheet, View, ScrollView, Text, Alert} from 'react-native';
 
 import { requestCaseDetails } from '@store/ducks/case-details-slice'
 import CaseDetailsSlider from "./CaseDetailsSlider";
+import LoadingModalWrapper from '@components/UI/LoadingModal';
 import useNetworkInfo from './../../hooks/useNetworkInfo'
 
 

@@ -19,7 +19,7 @@ export default InvestigationDetails = function ({selectedClaimId, userId, sectio
 
     return (
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <SectionHeading
           overline="Investigation"
           title={sectionFromTemplate.locationName}
