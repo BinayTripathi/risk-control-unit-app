@@ -31,7 +31,7 @@ const AudioCapture = ({setPhotoData, setAudioLength}) => {
 
 const timestamp = Date.now();
 const dirs = RNFetchBlob.fs.dirs;
-const path = `${dirs.CacheDir}/${timestamp}.aac`
+const path = `${dirs.CacheDir}/${timestamp}.m4a`
 
   audioRecorderPlayer.setSubscriptionDuration(0.1); // optional. Default is 0.5
 
@@ -86,7 +86,7 @@ const path = `${dirs.CacheDir}/${timestamp}.aac`
       AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
       AVNumberOfChannelsKeyIOS: 2,
       AVFormatIDKeyIOS: AVEncodingOption.aac,
-      OutputFormatAndroid: OutputFormatAndroidType.AAC_ADTS,
+      OutputFormatAndroid: OutputFormatAndroidType.MPEG_4,
     };
 
     console.log('audioSet', audioSet);

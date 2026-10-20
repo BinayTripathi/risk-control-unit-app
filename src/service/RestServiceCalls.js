@@ -338,8 +338,8 @@ export const saveForm = async ({email, caseId, sectionName, qna}) => {
     const formData = new FormData();
     formData.append("Image", {
       uri: isVideo? `file:///${mediaPath}`: mediaPath,
-      type: isVideo ? 'video/mp4' : 'audio/mpeg',
-      name: isVideo ? 'video.mp4' : 'audio.aac'
+      type: isVideo ? 'video/mp4' : 'audio/mp4',
+      name: isVideo ? 'video.mp4' : 'audio.m4a'
     });
 
     

@@ -13,9 +13,19 @@ const LISTENING_COLOR = '#DC2626';
 // later reassignments. So the handlers must be stable and forward to whichever instance is active.
 const onSpeechEnd = () => activeOwner?.stop();
 const onSpeechError = () => activeOwner?.stop();
+// Partial results stream in while the user speaks; the final result may revise them.
 const onSpeechResults = e => {
   const text = e.value?.[0];
   if (text) activeOwner?.onResult(text);
+};
+
+// Each result is the whole utterance so far, so callers replace the previously streamed text (prev)
+// rather than appending again. If the user edited the field mid-dictation, start a new sentence instead.
+export const mergeSpeechText = (current, text, prev) => {
+  const base = current ?? '';
+  if (prev && base.endsWith(prev)) return base.slice(0, base.length - prev.length) + text;
+  if (!base) return text;
+  return base + (/[.!?]\s*$/.test(base) ? ' ' : '. ') + text;
 };
 
 export default function SpeechToText({getSpeechToTextResult, style}) {
@@ -36,7 +46,13 @@ export default function SpeechToText({getSpeechToTextResult, style}) {
   useEffect(() => {
     const owner = ownerRef.current;
     owner.stop = () => setLoading(false);
-    owner.onResult = text => callbackRef.current(text);
+    owner.lastText = '';
+    owner.onResult = text => {
+      const prev = owner.lastText;
+      if (text === prev) return;
+      owner.lastText = text;
+      callbackRef.current(text, prev);
+    };
     return () => {
       if (activeOwner === owner) {
         activeOwner = null;
@@ -53,10 +69,12 @@ export default function SpeechToText({getSpeechToTextResult, style}) {
     // Events already queued are delivered before this resolves, while the old owner is still active.
     try { await Voice.destroy(); } catch (error) { console.log('error', error); }
     activeOwner = owner;
+    owner.lastText = '';
 
     Voice.onSpeechEnd = onSpeechEnd;
     Voice.onSpeechError = onSpeechError;
     Voice.onSpeechResults = onSpeechResults;
+    Voice.onSpeechPartialResults = onSpeechResults;
 
     setLoading(true);
     try {

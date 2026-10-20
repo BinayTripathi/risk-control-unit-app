@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, Linking, Alert } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -22,6 +22,20 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
     if(policy === undefined)
       return null;
 
+    // Claims visit the beneficiary; underwriting visits the life assured (customer)
+    const isClaim = policy.claimType === "Death"
+    const visitAddress = (isClaim ? selectedClaim.beneficiary : selectedClaim.customer)?.address
+
+    // Opens Google Maps (app if installed, otherwise browser) with directions from the agent's current location
+    const openDirections = () => {
+      if (!visitAddress) {
+        Alert.alert('No address', `No address is available for the ${isClaim ? 'beneficiary' : 'life assured'}.`)
+        return
+      }
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(visitAddress)}&travelmode=driving`
+      Linking.openURL(url).catch(() => Alert.alert('Unable to open maps', 'Please check a maps app or browser is installed.'))
+    }
+
       return (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           <SectionHeading overline="Policy" title={policy.policyNumber} subtitle={policy.claimType} icon="shield-checkmark" />
@@ -43,7 +57,12 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
             </View>
 
             <View style={styles.action}>
-              <CircularButton label='Get directions' tone="teal"><Ionicons name="navigate" size={22} color={tones.teal.fg} /></CircularButton>
+              <CircularButton label='Get directions' tone="teal" onPress={openDirections}><Ionicons name="navigate" size={22} color={tones.teal.fg} /></CircularButton>
+            </View>
+
+            {/* Placeholder for the demo: tappable, but calling the client is not wired up yet */}
+            <View style={styles.action}>
+              <CircularButton label={isClaim ? 'Call Beneficiary' : 'Call Life Assured'} tone="green"><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
             </View>
           </View>
         </ScrollView>
@@ -61,10 +80,12 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
     },
     actions: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       marginTop: spacing.md,
       gap: spacing.md,
     },
     action: {
-      flex: 1,
+      flexGrow: 1,
+      flexBasis: '40%',
     },
 })

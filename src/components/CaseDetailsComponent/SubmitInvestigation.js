@@ -14,7 +14,7 @@ import { DOC_TYPE } from '@core/constants';
 import LoadingModalWrapper from '@components/UI/LoadingModal';
 import { PaperProvider } from 'react-native-paper';
 
-import SpeechToText from '@components/UI/SpeechToText'
+import SpeechToText, { mergeSpeechText } from '@components/UI/SpeechToText'
 import OkayCancelDialogBox from "@components/UI/OkayCancelDialogBox";
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
@@ -39,9 +39,8 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
     
     let completeCheckList = true
 
-    let setRemarksBySpeechToText = (heardText) => {
-       console.log(remark)
-      setRemark(remark => remark !== null ?  remark +". " + heardText : heardText)
+    let setRemarksBySpeechToText = (heardText, prevText) => {
+      setRemark(remark => mergeSpeechText(remark, heardText, prevText))
     }
 
     /*useEffect(()=>{
@@ -153,7 +152,10 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Investigation remarks</Text>
+          <View style={styles.remarksHeader}>
+            <Text style={[styles.cardTitle, styles.remarksTitle]}>Investigation remarks</Text>
+            <SpeechToText style={styles.mic} getSpeechToTextResult= {setRemarksBySpeechToText}/>
+          </View>
           <View style={styles.remarksBox}>
             <TextInput
                     placeholder="Enter investigation comments"
@@ -165,7 +167,6 @@ const submitInvestigation = ({selectedClaimId, userId, selectedClaim}) => {
                     keyboardType={
                     Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
                     style={styles.input}  />
-            <SpeechToText getSpeechToTextResult= {setRemarksBySpeechToText}/>
           </View>
         </View>
 
@@ -242,14 +243,24 @@ const styles = StyleSheet.create({
     required: {
       color: palette.danger,
     },
-    remarksBox: {
+    remarksHeader: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    remarksTitle: {
+      marginBottom: 0,
+    },
+    remarksBox: {
       borderWidth: 1,
       borderColor: palette.border,
       borderRadius: radius.md,
       backgroundColor: palette.surfaceAlt,
-      paddingRight: spacing.sm,
+    },
+    mic: {
+      flex: 0,
+      backgroundColor: 'transparent',
     },
     input: {
       flex: 1,

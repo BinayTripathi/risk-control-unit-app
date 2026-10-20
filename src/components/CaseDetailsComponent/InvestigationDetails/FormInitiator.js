@@ -6,7 +6,7 @@ import { palette, radius, spacing } from '@core/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RadioButtonGroup, { RadioButtonItem } from "expo-radio-button";
 import Button from '@components/UI/Button'
-import SpeechToText from '@components/UI/SpeechToText'
+import SpeechToText, { mergeSpeechText } from '@components/UI/SpeechToText'
 import { Ionicons } from '@expo/vector-icons';
 
 import {requestUpdateFormCaseAction} from '@store/ducks/case-submission-slice'
@@ -38,10 +38,10 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
   };
 
   // Speech results arrive asynchronously, so append against the latest answers rather than a stale closure
-  const appendSpeechToAnswer = (question, heardText) => {
+  const appendSpeechToAnswer = (question, heardText, prevText) => {
     setAnswers(prev => {
       const base = prev[question.questionText] ?? question
-      const answerText = base.answerText ? base.answerText + '. ' + heardText : heardText
+      const answerText = mergeSpeechText(base.answerText, heardText, prevText)
       return { ...prev, [question.questionText]: { ...base, answerText } }
     })
     mandatoryQuestionsListRef.current.delete(question.questionText)
@@ -84,7 +84,7 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
                     keyboardType={Platform.OS == 'ios' ? 'ascii-capable' : 'visible-password' }
                     style={[styles.input, styles.multiline, styles.voiceInput]}
                     value={answerText}/>
-                  <SpeechToText style={styles.mic} getSpeechToTextResult={(heardText) => appendSpeechToAnswer(question, heardText)}/>
+                  <SpeechToText style={styles.mic} getSpeechToTextResult={(heardText, prevText) => appendSpeechToAnswer(question, heardText, prevText)}/>
                 </View>
               )}
 
@@ -96,7 +96,7 @@ const FormInitiator = ({selectedClaimId, userId, caseUpdates, sectionFromTemplat
                     placeholderTextColor={palette.muted}
                     value={answerText}
                     onChangeText={(val) => handleInputChange(question, val)} />
-                  <SpeechToText style={styles.mic} getSpeechToTextResult={(heardText) => appendSpeechToAnswer(question, heardText)}/>
+                  <SpeechToText style={styles.mic} getSpeechToTextResult={(heardText, prevText) => appendSpeechToAnswer(question, heardText, prevText)}/>
                 </View>
               )}
 
