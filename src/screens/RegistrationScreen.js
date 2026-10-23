@@ -22,7 +22,7 @@ import RegistrationImageScanner from '@components/AuthComponent/RegistrationImag
 
 import {requestRegisterUser} from '@store/ducks/userSlice'
 import { theme, palette, radius, spacing } from '../core/theme'
-import { SECURE_USER_KEY, SECURE_USER_PIN, REGISTRATION_ERROR_MESSAGE} from '../core/constants'
+import { SECURE_USER_KEY, SECURE_USER_PIN, SECURE_AGENT_PHONE, REGISTRATION_ERROR_MESSAGE} from '../core/constants'
 import {secureSave, secureGet} from '@helpers/SecureStore'
 import { ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
 //import DeviceNumber from 'react-native-device-number';
@@ -213,6 +213,8 @@ export default function RegistrationScreen({ route, navigation }) {
 
       if(auth === pin.toString()) {
         //navigation.navigate('Login')
+        // Saved only once the OTP proves the agent owns this number; the Call button rings it
+        secureSave(SECURE_AGENT_PHONE, countryCode+registeredPhoneNumber.replace(/\s/g, ''))
         
         setIsLoadSms(true)
         setTimeout(() => {

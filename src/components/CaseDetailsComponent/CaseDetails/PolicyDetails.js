@@ -9,9 +9,11 @@ import SectionHeading from '@components/UI/SectionHeading';
 import InfoCard from '@components/UI/InfoCard';
 
 import { spacing, tones } from '@core/theme';
+import { SECURE_AGENT_PHONE } from '@core/constants';
+import { secureGet } from '@helpers/SecureStore';
 
 
-export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId, userId}) => {
+export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
   const [appointmentTime, setAppointmentTime] = useState('');
 
@@ -38,16 +40,21 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId, userId
     }
 
     // Bridged call: the server rings the agent, then the client, and both see only the Twilio number.
-    // shortcut: demo sends the client's phone and a shared key from the app; for production the backend looks up both numbers from the agent's token
-    const callClient = () => {
+    // shortcut: demo sends both phones and a shared key from the app; for production the backend looks up both numbers from the agent's token
+    const callClient = async () => {
       if (!visitPerson?.phone) {
         Alert.alert('No phone number', `No phone number is available for the ${isClaim ? 'beneficiary' : 'life assured'}.`)
         return
       }
+      const agentPhone = await secureGet(SECURE_AGENT_PHONE)
+      if (!agentPhone) {
+        Alert.alert('No agent number', 'Your phone number was not saved at registration. Please register this device again.')
+        return
+      }
       const params = {
         caseId: selectedClaimId,
-        agent: userId,
-        clientPhone: visitPerson.phone,
+        from: agentPhone,
+        to: visitPerson.phone,
         key: process.env.EXPO_PUBLIC_DEMO_CALL_KEY,
       }
       fetch(process.env.EXPO_PUBLIC_DEMO_CALL_URL, {
