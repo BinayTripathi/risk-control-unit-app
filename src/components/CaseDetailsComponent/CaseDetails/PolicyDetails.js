@@ -11,7 +11,7 @@ import InfoCard from '@components/UI/InfoCard';
 import { spacing, tones } from '@core/theme';
 
 
-export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
+export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId, userId}) => {
 
   const [appointmentTime, setAppointmentTime] = useState('');
 
@@ -24,7 +24,8 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
     // Claims visit the beneficiary; underwriting visits the life assured (customer)
     const isClaim = policy.claimType === "Death"
-    const visitAddress = (isClaim ? selectedClaim.beneficiary : selectedClaim.customer)?.address
+    const visitPerson = isClaim ? selectedClaim.beneficiary : selectedClaim.customer
+    const visitAddress = visitPerson?.address
 
     // Opens Google Maps (app if installed, otherwise browser) with directions from the agent's current location
     const openDirections = () => {
@@ -36,13 +37,23 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
       Linking.openURL(url).catch(() => Alert.alert('Unable to open maps', 'Please check a maps app or browser is installed.'))
     }
 
-    // Masked call: the server rings the agent, then bridges to the client, so neither side sees the other's number.
-    // shortcut: demo Twilio Function with a shared key baked into the app, replace with an authenticated backend endpoint for production
+    // Bridged call: the server rings the agent, then the client, and both see only the Twilio number.
+    // shortcut: demo sends the client's phone and a shared key from the app; for production the backend looks up both numbers from the agent's token
     const callClient = () => {
+      if (!visitPerson?.phone) {
+        Alert.alert('No phone number', `No phone number is available for the ${isClaim ? 'beneficiary' : 'life assured'}.`)
+        return
+      }
+      const params = {
+        caseId: selectedClaimId,
+        agent: userId,
+        clientPhone: visitPerson.phone,
+        key: process.env.EXPO_PUBLIC_DEMO_CALL_KEY,
+      }
       fetch(process.env.EXPO_PUBLIC_DEMO_CALL_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `caseId=${encodeURIComponent(selectedClaimId)}&key=${encodeURIComponent(process.env.EXPO_PUBLIC_DEMO_CALL_KEY)}`,
+        body: Object.entries(params).map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('&'),
       })
         .then((res) => {
           if (!res.ok) throw new Error(res.status)
