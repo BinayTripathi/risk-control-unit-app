@@ -11,7 +11,7 @@ import InfoCard from '@components/UI/InfoCard';
 import { spacing, tones } from '@core/theme';
 
 
-export default PolicyDetailsComponent = ({selectedClaim}) => {
+export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
   const [appointmentTime, setAppointmentTime] = useState('');
 
@@ -34,6 +34,21 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
       }
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(visitAddress)}&travelmode=driving`
       Linking.openURL(url).catch(() => Alert.alert('Unable to open maps', 'Please check a maps app or browser is installed.'))
+    }
+
+    // Masked call: the server rings the agent, then bridges to the client, so neither side sees the other's number.
+    // shortcut: demo Twilio Function with a shared key baked into the app, replace with an authenticated backend endpoint for production
+    const callClient = () => {
+      fetch(process.env.EXPO_PUBLIC_DEMO_CALL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `caseId=${encodeURIComponent(selectedClaimId)}&key=${encodeURIComponent(process.env.EXPO_PUBLIC_DEMO_CALL_KEY)}`,
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(res.status)
+          Alert.alert('Calling', 'You will receive a call shortly. Answer it to be connected.')
+        })
+        .catch(() => Alert.alert('Unable to call', 'The call could not be started. Please try again.'))
     }
 
       return (
@@ -60,9 +75,8 @@ export default PolicyDetailsComponent = ({selectedClaim}) => {
               <CircularButton label='Get directions' tone="teal" onPress={openDirections}><Ionicons name="navigate" size={22} color={tones.teal.fg} /></CircularButton>
             </View>
 
-            {/* Placeholder for the demo: tappable, but calling the client is not wired up yet */}
             <View style={styles.action}>
-              <CircularButton label={isClaim ? 'Call Beneficiary' : 'Call Life Assured'} tone="green"><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
+              <CircularButton label={isClaim ? 'Call Beneficiary' : 'Call Life Assured'} tone="green" onPress={callClient}><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
             </View>
           </View>
         </ScrollView>
