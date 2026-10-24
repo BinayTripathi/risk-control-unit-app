@@ -4,6 +4,7 @@ rmdir /s /q node_modules
 rmdir /s /q android
 
 expo install
+npx expo prebuild         --no-install --platform android
 npx expo prebuild --clean --no-install --platform android
 xcopy "build.gradle" ".\android\build.gradle" /Y
 xcopy "gradle.properties" ".\android\gradle.properties" /Y

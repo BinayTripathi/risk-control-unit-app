@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, Linking, Alert } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -11,12 +11,28 @@ import InfoCard from '@components/UI/InfoCard';
 
 import { spacing, tones } from '@core/theme';
 import { SECURE_AGENT_PHONE } from '@core/constants';
-import { secureGet } from '@helpers/SecureStore';
+import { secureGet, secureSave } from '@helpers/SecureStore';
+import { sendSchedule, getSchedule } from '@services/RestServiceCalls';
 
 
 export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
-  const [appointmentTime, setAppointmentTime] = useState('');
+  const [requestedAt, setRequestedAt] = useState(null);
+  const [isAccepted, setIsAccepted] = useState(false);
+
+  // shortcut: get-schedule only returns accepted true/false, so the requested time lives on this phone (lost on reinstall or another device); switch to the server's ScheduleMeeting once get-schedule returns it
+  const scheduleKey = `schedule_${selectedClaimId}`
+
+  const loadSchedule = () => {
+    secureGet(scheduleKey).then(setRequestedAt)
+    getSchedule(selectedClaimId)
+      .then((res) => setIsAccepted(res.data === true))
+      .catch((err) => console.log('getSchedule error:', err))
+  }
+
+  useEffect(() => {
+    if (selectedClaimId) loadSchedule()
+  }, [selectedClaimId])
 
     if(selectedClaim === undefined)
       return null;
@@ -75,6 +91,21 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
         .catch(() => Alert.alert('Unable to call', 'The call could not be started. Please try again.'))
     }
 
+    const requestSchedule = (dateTime) => {
+      const iso = dateTime.toISOString()
+      sendSchedule(selectedClaimId, iso)
+        .then(async () => {
+          Alert.alert('Schedule requested', `Visit requested for ${dateTime.toLocaleString()}.`)
+          await secureSave(scheduleKey, iso)
+          loadSchedule()
+        })
+        .catch(() => Alert.alert('Unable to schedule', 'The schedule could not be sent. Please try again.'))
+    }
+
+    const appointmentRow = requestedAt
+      ? { label: isAccepted ? 'Scheduled' : 'Requested', value: new Date(requestedAt).toLocaleString() }
+      : { label: 'Scheduled', value: isAccepted ? 'Confirmed' : '' }
+
       return (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           <SectionHeading overline="Policy" title={policy.policyNumber} subtitle={policy.claimType} icon="shield-checkmark" />
@@ -85,12 +116,12 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
             { label: 'Issue date', value: policy.issueDate, icon: 'calendar-outline' },
             { label: 'Incident date', value: policy.incidentDate, icon: 'alert-circle-outline' },
             { label: 'Reason', value: policy.reason, icon: 'information-circle-outline' },
-            { label: 'Appointment', value: appointmentTime, icon: 'time-outline' },
+            { ...appointmentRow, icon: 'time-outline' },
           ]} />
 
           <View style={styles.actions}>
             <View style={styles.action}>
-              <CustomDateTimePicker dateTimeInParent={appointmentTime} setDateTimeInParent = {setAppointmentTime} label={'Select Date And Time'}>
+              <CustomDateTimePicker dateTimeInParent={appointmentRow.value} setDateTimeInParent = {requestSchedule} label={'Select Date And Time'}>
                 <CircularButton label='Schedule visit' tone="violet"><Ionicons name="calendar" size={22} color={tones.violet.fg} /></CircularButton>
               </CustomDateTimePicker>
             </View>

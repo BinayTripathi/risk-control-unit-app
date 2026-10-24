@@ -25,7 +25,6 @@ export default BeneficiaryDetailsComponent = ({selectedClaim}) => {
         <InfoCard title="Beneficiary details" titleIcon="people" tone="orange" rows={[
           { label: 'Beneficiary ID', value: beneficiaryDetails.beneficiaryId, icon: 'id-card-outline' },
           { label: 'Date of birth', value: beneficiaryDetails.dateOfBirth, icon: 'calendar-outline' },
-          { label: 'Phone', value: beneficiaryDetails.phone, icon: 'call-outline' },
           { label: 'Address', value: beneficiaryDetails.address, icon: 'location-outline' },
           { label: 'Annual income', value: beneficiaryDetails.income, icon: 'cash-outline' },
           { label: 'Relation', value: beneficiaryDetails.relation, icon: 'people-outline' },

@@ -43,7 +43,6 @@ import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
         setDt(new Date(params.date));        
         setShowDate(false);                   
         setShowTime(true);
-        setDateTimeInParent(dt.toLocaleString());
       }
 
     const onDismiss = () => {
@@ -57,7 +56,7 @@ import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
         currTime.setHours(hours)
         currTime.setMinutes(minutes)
         setDt(currTime)
-        setDateTimeInParent(currTime.toLocaleString());
+        setDateTimeInParent(new Date(currTime));
       }
 
     const DatePicker = () => showDate ?

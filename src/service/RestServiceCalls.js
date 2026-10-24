@@ -221,6 +221,35 @@ export const getCaseTemplate = async (email, claim) => {
 }
 
 
+export const sendSchedule = async (caseId, scheduleDateTime) => {
+  try {
+    const url = `${BASE_URL}/Agent/send-schedule`
+    console.log(url)
+    const config = await addAuthHeader({})
+    // caseId is int64 on the server; a string id would fail JSON binding
+    const data = { caseId: Number(caseId), scheduleDateTime }
+    let response = await Request.post({url, config, data});
+    return response
+  } catch (error) {
+    console.log(JSON.stringify(error.message));
+    throw JSON.stringify(error.message);
+  }
+}
+
+export const getSchedule = async (caseId) => {
+  try {
+    const url = `${BASE_URL}/Agent/get-schedule?caseId=${encodeURIComponent(caseId)}`
+    console.log(url)
+    const config = await addAuthHeader({})
+    let response = await Request.get({url, config});
+    return response
+  } catch (error) {
+    console.log(JSON.stringify(error.message));
+    throw JSON.stringify(error.message);
+  }
+}
+
+
 export const updateCaseDocument = async ({email, caseId, sectionName, investigationName, OcrLongLat, OcrImage}) => {
   try {
 
