@@ -57,6 +57,12 @@ module.exports = () => {
 
     const branding = getBranding(APP_OWNER);
 
+    // Masked call demo (Twilio Function). Values come from the build env, never commit them.
+    const twilio = {
+      callURL: process.env.EXPO_PUBLIC_DEMO_CALL_URL,
+      callKey: process.env.EXPO_PUBLIC_DEMO_CALL_KEY
+    };
+
     if (process.env.MY_ENVIRONMENT === 'production') {
       return {
         /* your production config */
@@ -85,7 +91,8 @@ module.exports = () => {
           },
           extra: {
             APP_OWNER: APP_OWNER,
-            baseURL: getBaseURL(APP_OWNER)
+            baseURL: getBaseURL(APP_OWNER),
+            twilio: twilio
           }
       };
     } else {
@@ -115,7 +122,8 @@ module.exports = () => {
           },
           extra: {
             APP_OWNER: APP_OWNER,
-            baseURL: getBaseURL(APP_OWNER)
+            baseURL: getBaseURL(APP_OWNER),
+            twilio: twilio
           },
       };
     }

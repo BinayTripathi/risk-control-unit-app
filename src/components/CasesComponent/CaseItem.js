@@ -84,7 +84,7 @@ function CaseItem({ caseDetails, userLocPromise, caseIndex }) {
 
           <View style={[styles.typeChip, { backgroundColor: tone.bg }]}>
             <Ionicons name={isClaim ? 'medkit' : 'shield-checkmark'} size={12} color={tone.fg} />
-            <Text style={[styles.typeChipText, { color: tone.fg }]}>{isClaim ? 'CLAIM' : 'RCU'}</Text>
+            <Text style={[styles.typeChipText, { color: tone.fg }]}>{isClaim ? 'CLAIM' : 'UNDERWRITING'}</Text>
           </View>
         </View>
 

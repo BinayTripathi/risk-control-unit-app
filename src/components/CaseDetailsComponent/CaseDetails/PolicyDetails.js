@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, ScrollView, Linking, Alert } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
 import CircularButton from '@components/UI/CircularButton';
 import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
@@ -42,6 +43,11 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
     // Bridged call: the server rings the agent, then the client, and both see only the Twilio number.
     // shortcut: demo sends both phones and a shared key from the app; for production the backend looks up both numbers from the agent's token
     const callClient = async () => {
+      const { callURL, callKey } = Constants.expoConfig?.extra?.twilio ?? {}
+      if (!callURL || !callKey) {
+        Alert.alert('Unable to call', 'Calling is not configured in this build.')
+        return
+      }
       if (!visitPerson?.phone) {
         Alert.alert('No phone number', `No phone number is available for the ${isClaim ? 'beneficiary' : 'life assured'}.`)
         return
@@ -55,9 +61,9 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
         caseId: selectedClaimId,
         from: agentPhone,
         to: visitPerson.phone,
-        key: process.env.EXPO_PUBLIC_DEMO_CALL_KEY,
+        key: callKey,
       }
-      fetch(process.env.EXPO_PUBLIC_DEMO_CALL_URL, {
+      fetch(callURL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: Object.entries(params).map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('&'),
@@ -94,7 +100,7 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
             </View>
 
             <View style={styles.action}>
-              <CircularButton label={isClaim ? 'Call Beneficiary' : 'Call Life Assured'} tone="green" onPress={callClient}><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
+              <CircularButton label={isClaim ? 'Talk to Beneficiary' : 'Talk to Life Assured'} tone="green" onPress={callClient}><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
             </View>
           </View>
         </ScrollView>
