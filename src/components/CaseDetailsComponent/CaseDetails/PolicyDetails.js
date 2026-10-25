@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Linking, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, Linking, Alert, AppState } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
 import CircularButton from '@components/UI/CircularButton';
 import CustomDateTimePicker from '@components/UI/CustomDateTimePicker'
@@ -12,6 +13,7 @@ import InfoCard from '@components/UI/InfoCard';
 import { spacing, tones } from '@core/theme';
 import { SECURE_AGENT_PHONE } from '@core/constants';
 import { secureGet, secureSave } from '@helpers/SecureStore';
+import { toDisplayDateTime } from '@helpers/date';
 import { sendSchedule, getSchedule } from '@services/RestServiceCalls';
 
 
@@ -19,14 +21,20 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
   const [requestedAt, setRequestedAt] = useState(null);
   const [isAccepted, setIsAccepted] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState(null);
+  const [isCalling, setIsCalling] = useState(false);
 
-  // shortcut: get-schedule only returns accepted true/false, so the requested time lives on this phone (lost on reinstall or another device); switch to the server's ScheduleMeeting once get-schedule returns it
+  // shortcut: get-schedule returns a date only once scheduled, so the requested time lives on this phone (lost on reinstall or another device); drop it once get-schedule also returns the requested time
   const scheduleKey = `schedule_${selectedClaimId}`
 
   const loadSchedule = () => {
     secureGet(scheduleKey).then(setRequestedAt)
+    // Response: { scheduled: boolean, scheduleDate?: "dd/MM/yyyy HH:mm" }
     getSchedule(selectedClaimId)
-      .then((res) => setIsAccepted(res.data === true))
+      .then((res) => {
+        setIsAccepted(res.data?.scheduled === true)
+        setScheduledAt(res.data?.scheduleDate ?? null)
+      })
       .catch((err) => console.log('getSchedule error:', err))
   }
 
@@ -58,21 +66,25 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
     // Bridged call: the server rings the agent, then the client, and both see only the Twilio number.
     // shortcut: demo sends both phones and a shared key from the app; for production the backend looks up both numbers from the agent's token
+    const visitPersonTitle = isClaim ? 'beneficiary' : 'life assured'
+    const showDialog = (type, title, textBody) => Dialog.show({ type, title, textBody, button: 'OK' })
+
     const callClient = async () => {
       const { callURL, callKey } = Constants.expoConfig?.extra?.twilio ?? {}
       if (!callURL || !callKey) {
-        Alert.alert('Unable to call', 'Calling is not configured in this build.')
+        showDialog(ALERT_TYPE.WARNING, 'Calling unavailable', 'Calling is not set up in this build of the app.')
         return
       }
       if (!visitPerson?.phone) {
-        Alert.alert('No phone number', `No phone number is available for the ${isClaim ? 'beneficiary' : 'life assured'}.`)
+        showDialog(ALERT_TYPE.WARNING, 'No phone number', `There is no phone number on file for the ${visitPersonTitle}.`)
         return
       }
       const agentPhone = await secureGet(SECURE_AGENT_PHONE)
       if (!agentPhone) {
-        Alert.alert('No agent number', 'Your phone number was not saved at registration. Please register this device again.')
+        showDialog(ALERT_TYPE.WARNING, 'Your number is missing', 'Your phone number was not saved at registration. Please register this device again.')
         return
       }
+      setIsCalling(true)
       const params = {
         caseId: selectedClaimId,
         from: agentPhone,
@@ -86,25 +98,44 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
       })
         .then((res) => {
           if (!res.ok) throw new Error(res.status)
-          Alert.alert('Calling', 'You will receive a call shortly. Answer it to be connected.')
+          // The incoming-call screen sends the app to the background; close then, or after 8s if the call shows only as a banner
+          const appStateSubscription = AppState.addEventListener('change', (state) => {
+            if (state !== 'active') Dialog.hide()
+          })
+          Dialog.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: 'Calling you now',
+            textBody: `Answer the incoming call and you will be connected to the ${visitPersonTitle}.`,
+            button: 'OK',
+            autoClose: 8000,
+            onHide: () => appStateSubscription.remove(),
+          })
         })
-        .catch(() => Alert.alert('Unable to call', 'The call could not be started. Please try again.'))
+        .catch(() => showDialog(ALERT_TYPE.DANGER, 'Call not started', "We couldn't start the call. Check your connection and try again."))
+        .finally(() => setIsCalling(false))
     }
 
     const requestSchedule = (dateTime) => {
       const iso = dateTime.toISOString()
       sendSchedule(selectedClaimId, iso)
         .then(async () => {
-          Alert.alert('Schedule requested', `Visit requested for ${dateTime.toLocaleString()}.`)
+          showDialog(ALERT_TYPE.SUCCESS, 'Visit requested', `Requested for ${toDisplayDateTime(dateTime)}.`)
           await secureSave(scheduleKey, iso)
           loadSchedule()
         })
-        .catch(() => Alert.alert('Unable to schedule', 'The schedule could not be sent. Please try again.'))
+        .catch(() => showDialog(ALERT_TYPE.DANGER, 'Visit not requested', "We couldn't send the schedule. Check your connection and try again."))
     }
 
-    const appointmentRow = requestedAt
-      ? { label: isAccepted ? 'Scheduled' : 'Requested', value: new Date(requestedAt).toLocaleString() }
-      : { label: 'Scheduled', value: isAccepted ? 'Confirmed' : '' }
+    const scheduleStatus = {
+      icon: 'calendar-outline',
+      tone: 'violet',
+      trailing: isAccepted
+        ? <Ionicons name="checkmark-circle" size={24} color={tones.green.fg} accessibilityLabel="Confirmed" />
+        : <Ionicons name="hourglass-outline" size={22} color={tones.amber.fg} accessibilityLabel="Awaiting confirmation" />,
+    }
+    const appointmentRow = isAccepted
+      ? { label: 'Scheduled', value: scheduledAt ?? 'Confirmed', ...scheduleStatus }
+      : { label: 'Requested · awaiting confirmation', value: requestedAt ? toDisplayDateTime(new Date(requestedAt)) : '', ...scheduleStatus }
 
       return (
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
@@ -116,13 +147,13 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
             { label: 'Issue date', value: policy.issueDate, icon: 'calendar-outline' },
             { label: 'Incident date', value: policy.incidentDate, icon: 'alert-circle-outline' },
             { label: 'Reason', value: policy.reason, icon: 'information-circle-outline' },
-            { ...appointmentRow, icon: 'time-outline' },
+            appointmentRow,
           ]} />
 
           <View style={styles.actions}>
             <View style={styles.action}>
               <CustomDateTimePicker dateTimeInParent={appointmentRow.value} setDateTimeInParent = {requestSchedule} label={'Select Date And Time'}>
-                <CircularButton label='Schedule visit' tone="violet"><Ionicons name="calendar" size={22} color={tones.violet.fg} /></CircularButton>
+                <CircularButton label={isAccepted ? 'Reschedule visit' : 'Schedule visit'} tone="violet"><Ionicons name="calendar" size={22} color={tones.violet.fg} /></CircularButton>
               </CustomDateTimePicker>
             </View>
 
@@ -131,7 +162,7 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
             </View>
 
             <View style={styles.action}>
-              <CircularButton label={isClaim ? 'Talk to Beneficiary' : 'Talk to Life Assured'} tone="green" onPress={callClient}><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
+              <CircularButton label={isClaim ? 'Talk to Beneficiary' : 'Talk to Life Assured'} tone="green" onPress={callClient} disabled={isCalling}><Ionicons name="call" size={22} color={tones.green.fg} /></CircularButton>
             </View>
           </View>
         </ScrollView>
