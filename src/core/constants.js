@@ -10,6 +10,7 @@ export const SECURE_USER_KEY = "userId"
 export const SECURE_USER_PIN = "pin"
 export const SECURE_REGISTRATION_COMPLETE = "reg_complete"
 export const SECURE_BEARER_TOKEN = "bearer_token"
+export const SECURE_AGENT_PHONE = "agent_phone"
 
 export const GEOFENCING_RADIUS_IN_METRES = 500
 export const VIDEO_FORMAT = "mp4"

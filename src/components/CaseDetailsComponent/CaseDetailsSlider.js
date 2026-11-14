@@ -197,7 +197,7 @@ export default function CaseDetailsSlider({selectedClaimId, selectedClaim, userI
 
                 {selectedClaim !== undefined &&
                        <View style={{ width, height }}>
-                    <PolicyDetailsComponent selectedClaim = {selectedClaim}/>
+                    <PolicyDetailsComponent selectedClaim = {selectedClaim} selectedClaimId = {selectedClaimId}/>
                 </View>}
 
                 {selectedClaim !== undefined && selectedClaim?.policy.claimType !== "Death"  && <View style={{ width, height }}>

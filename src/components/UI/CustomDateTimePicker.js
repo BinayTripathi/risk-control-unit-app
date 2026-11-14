@@ -1,107 +1,46 @@
-import React, { useState } from "react";
-import { StyleSheet, View} from "react-native"; 
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
+import React from "react";
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
+// Opens the native Android date dialog, then the time dialog, and reports the combined Date once both are confirmed.
+// NOTE: DateTimePickerAndroid is Android-only; the app ships only an Android build.
+const CustomDateTimePicker = ({ dateTimeInParent, setDateTimeInParent, label, children }) => {
 
- const CustomDateTimePicker = ({ dateTimeInParent, setDateTimeInParent, label, children}) => {
+    const openTimePicker = (date) =>
+      DateTimePickerAndroid.open({
+        value: date,
+        mode: 'time',
+        onChange: (event, dateTime) => {
+          if (event.type !== 'set') return
+          dateTime.setSeconds(0, 0)
+          // minimumDate only limits the calendar, so a time earlier today can still be picked
+          if (dateTime < new Date()) {
+            Dialog.show({ type: ALERT_TYPE.WARNING, title: 'Time has passed', textBody: 'Please pick a time later than now.', button: 'OK' })
+            return
+          }
+          setDateTimeInParent(dateTime)
+        },
+      })
 
-    const [showDate, setShowDate] = useState(false);
-    const [showTime, setShowTime] = useState(false);
-    const [dateTimeMod, setDateTimeMode] = useState("date")
-    const [dt, setDt] = useState(new Date());
-
-
-
-
-    const onChange = (e, selectedDate) => {
-       /* console.log(e)
-        console.log(showDate)
-        setDateTimeInParent(selectedDate.toLocaleString());
-        setDateTimeInt(selectedDate)
-        setShowDate(false)
-        if(dateTimeMod === 'date') {
-          setDateTimeMode('time')
-          setShowDate(false)
-          setShowTime(true)
-        } else {
-          setShowTime(false)
-        }*/
-        
-    };
-    
-    const showMode = (mode) => {
-        setShowDate(true)
-        setDateTimeMode(mode)        
-    }
-
-    const onDismissSingle = () => {
-      setShowDate(false);
-    }
-  
-    const onConfirmSingle = (params) => {   
-        setDt(new Date(params.date));        
-        setShowDate(false);                   
-        setShowTime(true);
-        setDateTimeInParent(dt.toLocaleString());
-      }
-
-    const onDismiss = () => {
-      setShowTime(false)
-    }
-  
-    const onConfirm = 
-      ({hours,minutes}) => {
-        setShowTime(false);
-        let currTime = dt
-        currTime.setHours(hours)
-        currTime.setMinutes(minutes)
-        setDt(currTime)
-        setDateTimeInParent(currTime.toLocaleString());
-      }
-
-    const DatePicker = () => showDate ?
-                      <View><DateTimePicker value={dt} mode={"date"} is24Hour={true} onChange={onChange} display="spinner"/></View> : null
-    
-    const TimePicker = () => showTime  ? <View><DateTimePicker value={dt} mode={"time"} is24Hour={true} onChange={onChange} display="spinner"/></View>
-                       : null
-  
-
-    let renderChildren= ()=> {
-      return React.Children.map(children, child => {
-        return React.cloneElement(child, {
-          ...child.props,
-          title: dateTimeInParent === '' ? label : dt.toLocaleString(),
-          onPress: () => showMode("date")
-        })
+    const openPicker = () => {
+      const now = new Date()
+      DateTimePickerAndroid.open({
+        value: now,
+        mode: 'date',
+        minimumDate: now,
+        onChange: (event, date) => {
+          if (event.type === 'set') openTimePicker(date)
+        },
       })
     }
 
-    return  (   
-    <View>
-          { renderChildren() }  
-          <DatePickerModal locale="en" mode="single" visible={showDate} date={dt} onDismiss={onDismissSingle}  onConfirm={onConfirmSingle}/>
-          <TimePickerModal visible={showTime}  onDismiss={onDismiss} onConfirm={onConfirm} hours={12} minutes={14}
-        />
-          
-    </View>)
-
+    return React.Children.map(children, child =>
+      React.cloneElement(child, {
+        title: dateTimeInParent === '' ? label : dateTimeInParent,
+        onPress: openPicker,
+      })
+    )
 }
-
-
-const styles = StyleSheet.create({
-
-textBase: {
-    color: 'black',
-  },
-
-  label1: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    margin: 8,
-  }
-
-})
 
 
 export default CustomDateTimePicker;

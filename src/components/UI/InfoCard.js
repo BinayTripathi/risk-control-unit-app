@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { palette, radius, spacing, shadow, tones, toneCycle } from '@core/theme';
 
-// Card listing label/value rows. rows: [{ label, value, icon, tone }]
+// Card listing label/value rows. rows: [{ label, value, icon, tone, trailing }]; `trailing` is an optional node shown at the row's right edge
 // Each row icon sits in a coloured tile; rows without a `tone` cycle through toneCycle.
 export default function InfoCard({ title, titleIcon = 'reader', tone = 'indigo', rows, style }) {
   const visibleRows = rows.filter(row => row.value !== undefined && row.value !== null && row.value !== '');
@@ -30,6 +30,7 @@ export default function InfoCard({ title, titleIcon = 'reader', tone = 'indigo',
                 <Text style={styles.label}>{row.label}</Text>
                 <Text style={styles.value}>{String(row.value)}</Text>
               </View>
+              {row.trailing}
             </View>
           )
         })}
