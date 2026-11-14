@@ -13,7 +13,7 @@ import InfoCard from '@components/UI/InfoCard';
 import { spacing, tones } from '@core/theme';
 import { SECURE_AGENT_PHONE } from '@core/constants';
 import { secureGet, secureSave } from '@helpers/SecureStore';
-import { toDisplayDateTime } from '@helpers/date';
+import { toDisplayDateTime, toLocalIsoString } from '@helpers/date';
 import { sendSchedule, getSchedule } from '@services/RestServiceCalls';
 
 
@@ -117,7 +117,7 @@ export default PolicyDetailsComponent = ({selectedClaim, selectedClaimId}) => {
 
     const requestSchedule = (dateTime) => {
       const iso = dateTime.toISOString()
-      sendSchedule(selectedClaimId, iso)
+      sendSchedule(selectedClaimId, toLocalIsoString(dateTime))
         .then(async () => {
           showDialog(ALERT_TYPE.SUCCESS, 'Visit requested', `Requested for ${toDisplayDateTime(dateTime)}.`)
           await secureSave(scheduleKey, iso)
