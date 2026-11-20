@@ -23,6 +23,7 @@ const ImageCaptureScreen = ({ route }) => {
   const sectionName = route.params?.sectionFromTemplate
   const investigationName = route.params?.investigationName
   const isLastMandatory = route.params?.isLastMandatory
+  const pageCount = route.params?.pageCount
   console.log(`PhotoData : ${photoData}`)
 
 
@@ -30,7 +31,7 @@ const ImageCaptureScreen = ({ route }) => {
     <Background variant="dark">
         <View style={styles.container}>
         { docType.type === "PHOTO" && <ImageCapture setPhotoData={setPhotoData}  docType = {docType} /> }
-        { docType.type === "DOCUMENT" && <DocumentScanner setPhotoData={setPhotoData}  docType = {docType} /> }
+        { docType.type === "DOCUMENT" && <DocumentScanner setPhotoData={setPhotoData}  docType = {docType} pageCount={pageCount} /> }
          { docType.type === "VIDEO" && <VideoCapture setPhotoData={setPhotoData} docType = {docType} /> }
         { docType.type === "AUDIO" && <AudioCapture setPhotoData={setPhotoData} docType = {docType} setAudioLength={setAudioLength}/> }
         </View>  
@@ -45,7 +46,7 @@ const ImageCaptureScreen = ({ route }) => {
         <ImagePreview photoData= {photoData} setPhotoData={setPhotoData} 
           claimId = {claimId} docType = {docType} email = {email} 
           sectionName = {sectionName} investigationName = {investigationName}
-          isLastMandatory = {isLastMandatory}/>
+          isLastMandatory = {isLastMandatory} pageCount={pageCount}/>
         }
 
           { docType.type === "VIDEO" &&  

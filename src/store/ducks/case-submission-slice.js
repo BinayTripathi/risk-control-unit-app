@@ -22,6 +22,9 @@ console.log(`Attempting to delete file : ${filePath}`)
 }
 
 
+// Retry payloads persisted before multi-page support hold a single OcrImage
+const getDocumentPages = (documentDetails) => documentDetails.OcrImages ?? [documentDetails.OcrImage]
+
 /*function mergeDeep(target, source, key = "id") {
   if (!target || typeof target !== "object") target = {};
   if (!source || typeof source !== "object") return target;
@@ -340,9 +343,12 @@ const initialState = {
         let postUpdatePayload = action.payload.documentDetails
         console.log('triggering upload')
         let response = ''
-        if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.DOCUMENT)
-          response = yield call(updateCaseDocument,postUpdatePayload);    
-        else if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.PHOTO)
+        if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.DOCUMENT) {
+          const pages = getDocumentPages(postUpdatePayload)
+          // Sequential so the server sees IsLastPage only after every earlier page; the last response carries validity
+          for (let index = 0; index < pages.length; index++)
+            response = yield call(updateCaseDocument, {...postUpdatePayload, OcrImage: pages[index], pageNumber: index + 1, isLastPage: index === pages.length - 1});
+        } else if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.PHOTO)
           response = yield call(updateCaseFace,postUpdatePayload);  
         else if (action.payload.documentDetails.docType ===  UPLOAD_TYPE.FORM)
           response = yield call(saveForm,postUpdatePayload); 
@@ -360,10 +366,10 @@ const initialState = {
           const section = action.payload.section
           const category = action.payload.documentCategory
           const documentName = action.payload.documentName
-          let fileToDelete = undefined
+          let filesToDelete = []
           console.log('checking is last mandatory' + JSON.stringify(postUpdatePayload))
           if(action.payload.documentDetails.docType === UPLOAD_TYPE.PHOTO) {
-            fileToDelete = postUpdatePayload.locationImage
+            filesToDelete = [postUpdatePayload.locationImage]
             successPayload = {
               [caseNo] : {
                 [section] : {
@@ -385,7 +391,7 @@ const initialState = {
             } 
 
           } else if (action.payload.documentDetails.docType === UPLOAD_TYPE.DOCUMENT) {
-            fileToDelete = postUpdatePayload.OcrImage
+            filesToDelete = getDocumentPages(postUpdatePayload)
             successPayload = {
               [action.payload.caseId] : {
                 [action.payload.section] : {
@@ -425,7 +431,7 @@ const initialState = {
               }        
             }
           } else if (action.payload.documentDetails.docType === UPLOAD_TYPE.AUDIO || action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO) {
-            fileToDelete = action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO? "file://"+postUpdatePayload.mediaPath : postUpdatePayload.mediaPath.replace(/^file:\/\/\/\//, "file://")
+            filesToDelete = [action.payload.documentDetails.docType === UPLOAD_TYPE.VIDEO? "file://"+postUpdatePayload.mediaPath : postUpdatePayload.mediaPath.replace(/^file:\/\/\/\//, "file://")]
             successPayload = {
               [caseNo] : {
                 [section] : {
@@ -447,8 +453,8 @@ const initialState = {
                   
             
           yield put(successUpdateCase(successPayload)); 
-          if(fileToDelete !== undefined)
-            yield call(deleteFile,fileToDelete)
+          for (const file of filesToDelete)
+            yield call(deleteFile, file)
         } else {    // TODO  :  retry on error
           yield put(failureUpdateCase());
         }

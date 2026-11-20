@@ -250,11 +250,11 @@ export const getSchedule = async (caseId) => {
 }
 
 
-export const updateCaseDocument = async ({email, caseId, sectionName, investigationName, OcrLongLat, OcrImage}) => {
+export const updateCaseDocument = async ({email, caseId, sectionName, investigationName, OcrLongLat, OcrImage, pageNumber, isLastPage}) => {
   try {
 
-    const API_URL = `${BASE_URL}/Agent/documentid`;    
-    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(OcrLongLat)}`;
+    const API_URL = `${BASE_URL}/Agent/documentid`;
+    const urlWithParams = `${API_URL}?Email=${encodeURIComponent(email)}&CaseId=${encodeURIComponent(caseId)}&LocationName=${encodeURIComponent(sectionName)}&ReportName=${encodeURIComponent(investigationName)}&LocationLatLong=${encodeURIComponent(OcrLongLat)}&PageNumber=${pageNumber}&IsLastPage=${isLastPage}`;
     //const urlWithParams = `https://icheckify-demo.azurewebsites.net/api/Agent/faceid?Email=agent%40verify.com&CaseId=1&LocationName=location&ReportName=report&LocationLatLong=-35%2F125`
     console.log(urlWithParams)
     

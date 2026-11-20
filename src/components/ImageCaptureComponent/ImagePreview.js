@@ -1,9 +1,10 @@
 import React, {  useEffect, useRef, useState  } from "react";
-import { StyleSheet,Text,TouchableOpacity, View, Image, Alert, Dimensions} from "react-native";
+import { StyleSheet,Text,TouchableOpacity, View, Image, Alert, Dimensions, ScrollView} from "react-native";
 import { useDispatch} from 'react-redux'
 import { useNavigation } from "@react-navigation/native";
 import { PaperProvider } from 'react-native-paper';
 import * as FileSystem from 'expo-file-system';
+import DocumentScanner from 'react-native-document-scanner-plugin'
 
 import {userRegisterPhoto} from '@services/RestServiceCalls'
 import useApi from '@hooks/useApi'
@@ -12,7 +13,7 @@ import {requestRegisterUser} from '@store/ducks/userSlice'
 
 import {theme, palette, radius, spacing} from '../../core/theme'
 import { Ionicons } from '@expo/vector-icons';
-import { UPLOAD_TYPE, SECURE_REGISTRATION_COMPLETE } from '@core/constants';
+import { UPLOAD_TYPE, SECURE_REGISTRATION_COMPLETE, PAGE_COUNT } from '@core/constants';
 import {secureSave} from '@helpers/SecureStore'
 
 import {requestUpdateBeneficiaryPhotoCaseAction, requestUpdatePanCaseAction} from '@store/ducks/case-submission-slice'
@@ -27,8 +28,11 @@ import OkayCancelDialogBox from "@components/UI/OkayCancelDialogBox";
 let imageRatio = 1
 //https://www.farhansayshi.com/post/how-to-save-files-to-a-device-folder-using-expo-and-react-native/
 const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, sectionName,
-  investigationName, isLastMandatory}) => {
-  
+  investigationName, isLastMandatory, pageCount}) => {
+
+    // Documents arrive as an array of page uris; photos as a single uri
+    const pages = Array.isArray(photoData) ? photoData : [photoData]
+
     const navigation = useNavigation();
     let savedPhoto = useRef(null);
     const [displayMap, setDisplayMap] = useState(false);
@@ -91,7 +95,7 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
   
      
     //Image.getSize(`data:image/png;base64,${photoData}`, (width, height) => {imageRatio = width/ width});
-    Image.getSize(`${photoData}`, (width, height) => {imageRatio = width/ width});       
+    Image.getSize(`${pages[0]}`, (width, height) => {imageRatio = width/ width});
     
     const savePhoto = async () => {        
 
@@ -111,8 +115,8 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
         documentDetailsForSubmission.locationImage = photoData
       } else {
         documentDetailsForSubmission.OcrLongLat = tracker
-        documentDetailsForSubmission.OcrImage = photoData
-      } 
+        documentDetailsForSubmission.OcrImages = pages
+      }
       
       const payloadToSave = {
         caseId: claimId,
@@ -126,6 +130,24 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
       setShowSaveDialog(true)
     }   
 
+    const isDocument = docType.type === UPLOAD_TYPE.DOCUMENT
+    const isMissingBack = pageCount === PAGE_COUNT.FRONT_BACK && pages.length < 2
+    const canAddPage = isMissingBack || pageCount === PAGE_COUNT.MULTIPLE
+
+    const scanOnePage = async () =>
+      (await DocumentScanner.scanDocument({ croppedImageQuality: 100, maxNumDocuments: 1 })).scannedImages?.[0]
+
+    // Replaces one page in place so the rest of a long document does not need rescanning
+    const retakePage = async (index) => {
+      const page = await scanOnePage()
+      if (page) setPhotoData(pages.map((uri, pageIndex) => pageIndex === index ? page : uri))
+    }
+
+    const addPage = async () => {
+      const page = await scanOnePage()
+      if (page) setPhotoData([...pages, page])
+    }
+
     const displayMapHandler = () => {
       setDisplayMap((displayMap) => !displayMap)     
     }
@@ -135,7 +157,22 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
                               <UserTracker photoData={photoData} displayMapHandler={displayMapHandler} shouldDisplayMap = {displayMap}/>
                              : ( <>
                                  <UserTracker photoData={false}/>
-                                 <Image source={{uri: photoData}} style={styles.middlePhoto}  />
+                                 <ScrollView horizontal pagingEnabled>
+                                   {pages.map((uri, index) => (
+                                     <View key={uri} style={styles.page}>
+                                       <Image source={{uri}} style={styles.middlePhoto} accessibilityLabel={getPageLabel(pageCount, index, pages.length)} />
+                                       {pages.length > 1 &&
+                                         <View style={styles.pageFooter}>
+                                           <Text style={styles.pageLabel}>{getPageLabel(pageCount, index, pages.length)}</Text>
+                                           <TouchableOpacity style={styles.pageRetakeBtn} onPress={() => retakePage(index)}
+                                             accessibilityLabel={`Retake ${getPageLabel(pageCount, index, pages.length)}`}>
+                                             <Ionicons name="camera-outline" size={18} color={palette.onCamera} />
+                                             <Text style={styles.prevBtnText}>Retake this page</Text>
+                                           </TouchableOpacity>
+                                         </View>}
+                                     </View>
+                                   ))}
+                                 </ScrollView>
                                    </> )
 
   const saveImageAlertBox = <OkayCancelDialogBox showDialog={showSaveDialog} 
@@ -166,19 +203,27 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
               {displayMapModal}
         </View>
 
+        {canAddPage &&
+          <TouchableOpacity style={[styles.prevBtn, styles.retakeBtn, styles.addPageBtn]} onPress={addPage}>
+            <Ionicons name="add" size={20} color={palette.onCamera} />
+            <Text style={styles.prevBtnText}>{isMissingBack ? 'Take back' : 'Add page'}</Text>
+          </TouchableOpacity>}
+
         <View style={[styles.bottomPrev]}>
           <TouchableOpacity
             style={[styles.prevBtn, styles.retakeBtn]}
             onPress={() => setPhotoData(null)}>
             <Ionicons name="refresh" size={18} color={palette.onCamera} />
-            <Text style={styles.prevBtnText}>Retake</Text>
+            <Text style={styles.prevBtnText}>{pages.length > 1 ? 'Retake all' : 'Retake'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.prevBtn, styles.saveBtn]}
-            onPress={savePhoto}>
+            style={[styles.prevBtn, styles.saveBtn, isMissingBack && styles.disabledBtn]}
+            onPress={savePhoto}
+            disabled={isMissingBack}
+            accessibilityState={{ disabled: isMissingBack }}>
             <Ionicons name="checkmark" size={20} color={palette.onPrimary} />
-            <Text style={styles.prevBtnText}>Use photo</Text>
+            <Text style={styles.prevBtnText}>{isDocument ? 'Done' : 'Use photo'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -186,6 +231,9 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
     </PaperProvider>
   );
 };
+
+const getPageLabel = (pageCount, index, total) =>
+  pageCount === PAGE_COUNT.FRONT_BACK ? (index === 0 ? 'Front' : 'Back') : `Page ${index + 1} of ${total}`
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -202,6 +250,38 @@ const styles = StyleSheet.create({
     backgroundColor: palette.cameraSurface,
   },
 
+  page: {
+    width: (windowWidth - 32),
+  },
+  addPageBtn: {
+    flex: 0,
+    width: (windowWidth - 2 * spacing.lg),
+    marginTop: spacing.lg,
+  },
+  disabledBtn: {
+    opacity: 0.4,
+  },
+  pageFooter: {
+    alignItems: 'center',
+    paddingBottom: spacing.md,
+  },
+  pageRetakeBtn: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.cameraBorder,
+    backgroundColor: palette.cameraSurface,
+  },
+  pageLabel: {
+    color: palette.onCamera,
+    fontWeight: "600",
+    textAlign: 'center',
+    paddingVertical: spacing.sm,
+  },
   middlePhoto: {
 
     width: '100%'   ,

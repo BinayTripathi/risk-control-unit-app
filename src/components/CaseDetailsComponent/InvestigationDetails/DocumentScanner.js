@@ -4,7 +4,7 @@ import CaptureItemCard from '@components/UI/CaptureItemCard';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '@core/theme';
 import { useNavigation } from '@react-navigation/native';
-import { SCREENS, DOC_TYPE, checkLoadingDoc, checkSuccessDoc, checkFailureDoc, documentIds } from '@core/constants';
+import { SCREENS, DOC_TYPE, checkLoadingDoc, checkSuccessDoc, checkFailureDoc, documentIds, PAGE_COUNT } from '@core/constants';
 import * as Speech from 'expo-speech';
 import {updatePhotoOrDocumentUploadStatusAction, requestUpdatePanCaseAction} from '@store/ducks/case-submission-slice'
 import { useDispatch} from 'react-redux'
@@ -33,6 +33,7 @@ const DocumentScanner = ({selectedClaimId, userId, caseUpdates, sectionFromTempl
         email: userId,
         sectionFromTemplate : sectionName,
         investigationName: documentObj.reportType,
+        pageCount: documentObj.pages ?? PAGE_COUNT.SINGLE,
         isLastMandatory: (mandatoryDocumentListRef.current.size === 1 && mandatoryDocumentListRef.current.has(documentObj.reportType)) || mandatoryDocumentListRef.current.size === 0
       })
 }

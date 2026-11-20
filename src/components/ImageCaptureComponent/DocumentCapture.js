@@ -1,46 +1,29 @@
-import React, { useState, useEffect } from 'react'
-import { Image, Platform, PermissionsAndroid, Alert, View, TouchableOpacity } from 'react-native'
-import DocumentScanner , {ResponseType} from 'react-native-document-scanner-plugin'
+import React, { useEffect } from 'react'
+import { View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import DocumentScanner from 'react-native-document-scanner-plugin'
 
-export default ({setPhotoData}) => {
-  const [scannedImage, setScannedImage] = useState(null);
+import { PAGE_COUNT } from '@core/constants'
+
+// Opens the scanner straight away; missing pages (e.g. the back side) are added from the preview
+export default ({setPhotoData, pageCount = PAGE_COUNT.SINGLE}) => {
+  const navigation = useNavigation()
 
   const scanDocument = async () => {
-    
-    // start the document scanner
+    // One scanner session can capture every page; MULTIPLE leaves the limit to the scanner default
     const { scannedImages } = await DocumentScanner.scanDocument({
-     croppedImageQuality: 100,
-     maxNumDocuments: 1
+      croppedImageQuality: 100,
+      maxNumDocuments: pageCount === PAGE_COUNT.FRONT_BACK ? 2 : pageCount === PAGE_COUNT.MULTIPLE ? undefined : 1
     })
-  
-    // get back an array with scanned image file paths
-    if (scannedImages.length > 0) {
-      // set the img src, so we can view the first scanned image
-      console.log(scannedImages[0])
-      setScannedImage(scannedImages[0])
-      setPhotoData(scannedImages[0])
-    }
+
+    // file uris, one per page in scan order; nothing scanned means the agent cancelled
+    if (scannedImages?.length > 0) setPhotoData(scannedImages)
+    else navigation.goBack()
   }
 
   useEffect(() => {
-    // call scanDocument on load
     scanDocument()
-  }, []);
+  }, [])
 
-  return (
-    <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
-       { scannedImage !== null && <Image style={{ width: '100%', height: '70%' }}  resizeMode='contain'  source={{ uri:  `data:image/jpg;base64,${scannedImage}` }}/>  }
-       {false && <TouchableOpacity style={{
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        backgroundColor: 'black',
-        position: 'absolute',
-        bottom: 20,
-        alignSelf: 'center'
-       }}></TouchableOpacity> }
-    </View>
-   
-    
-  )
+  return <View style={{flex: 1}} />
 }

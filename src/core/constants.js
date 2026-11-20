@@ -131,6 +131,9 @@ export const DOC_TYPE = {
 
 }
 
+// NOTE: mirrors the server PageCount enum sent as get-template documentIds[].pages
+export const PAGE_COUNT = { SINGLE: 0, FRONT_BACK: 1, MULTIPLE: 2 }
+
 export const faceIds = "faceIds"
 export const documentIds = 'documentIds'
 export const questionsSubSection = 'questions'
