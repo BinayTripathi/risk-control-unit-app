@@ -160,15 +160,16 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
                                  <ScrollView horizontal pagingEnabled>
                                    {pages.map((uri, index) => (
                                      <View key={uri} style={styles.page}>
-                                       <Image source={{uri}} style={styles.middlePhoto} accessibilityLabel={getPageLabel(pageCount, index, pages.length)} />
-                                       {pages.length > 1 &&
+                                       <Image source={{uri}} style={styles.middlePhoto} accessibilityLabel={getPageLabel(index, pages.length)} />
+                                       {isDocument &&
                                          <View style={styles.pageFooter}>
-                                           <Text style={styles.pageLabel}>{getPageLabel(pageCount, index, pages.length)}</Text>
-                                           <TouchableOpacity style={styles.pageRetakeBtn} onPress={() => retakePage(index)}
-                                             accessibilityLabel={`Retake ${getPageLabel(pageCount, index, pages.length)}`}>
-                                             <Ionicons name="camera-outline" size={18} color={palette.onCamera} />
-                                             <Text style={styles.prevBtnText}>Retake this page</Text>
-                                           </TouchableOpacity>
+                                           <Text style={styles.pageLabel}>{getPageLabel(index, pages.length)}</Text>
+                                           {pages.length > 1 &&
+                                             <TouchableOpacity style={styles.pageRetakeBtn} onPress={() => retakePage(index)}
+                                               accessibilityLabel={`Retake ${getPageLabel(index, pages.length)}`}>
+                                               <Ionicons name="camera-outline" size={18} color={palette.onCamera} />
+                                               <Text style={styles.prevBtnText}>Retake this page</Text>
+                                             </TouchableOpacity>}
                                          </View>}
                                      </View>
                                    ))}
@@ -232,8 +233,9 @@ const ImagePreview = ({photoData, setPhotoData ,claimId, docType, email, section
   );
 };
 
-const getPageLabel = (pageCount, index, total) =>
-  pageCount === PAGE_COUNT.FRONT_BACK ? (index === 0 ? 'Front' : 'Back') : `Page ${index + 1} of ${total}`
+// One or two pages are a card's sides; longer documents are numbered
+const getPageLabel = (index, total) =>
+  total <= 2 ? ['Front', 'Back'][index] : `Page ${index + 1} of ${total}`
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
